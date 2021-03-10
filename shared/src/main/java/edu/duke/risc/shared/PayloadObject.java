@@ -1,6 +1,7 @@
 package edu.duke.risc.shared;
 
 import edu.duke.risc.shared.board.GameStage;
+import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.users.GameUser;
 
 import java.io.Serializable;
@@ -16,11 +17,19 @@ public class PayloadObject implements Serializable {
 
     private GameUser receiver;
 
-    private String messageType;
+    private PayloadType messageType;
 
     private Map<String, Object> contents;
 
-    private GameStage gameStage;
+    public PayloadObject() {
+    }
+
+    public PayloadObject(GameUser sender, GameUser receiver, PayloadType messageType, Map<String, Object> contents) {
+        this.sender = sender;
+        this.receiver = receiver;
+        this.messageType = messageType;
+        this.contents = contents;
+    }
 
     @Override
     public String toString() {
@@ -29,7 +38,39 @@ public class PayloadObject implements Serializable {
                 ", receiver=" + receiver +
                 ", messageType='" + messageType + '\'' +
                 ", contents=" + contents +
-                ", gameStage=" + gameStage +
                 '}';
     }
+
+    public void setSender(GameUser sender) {
+        this.sender = sender;
+    }
+
+    public void setReceiver(GameUser receiver) {
+        this.receiver = receiver;
+    }
+
+    public void setMessageType(PayloadType messageType) {
+        this.messageType = messageType;
+    }
+
+    public void setContents(Map<String, Object> contents) {
+        this.contents = contents;
+    }
+
+    public GameUser getSender() {
+        return sender;
+    }
+
+    public GameUser getReceiver() {
+        return receiver;
+    }
+
+    public PayloadType getMessageType() {
+        return messageType;
+    }
+
+    public Map<String, Object> getContents() {
+        return contents;
+    }
+
 }

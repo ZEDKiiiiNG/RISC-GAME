@@ -3,6 +3,8 @@ package edu.duke.risc.shared.board;
 import edu.duke.risc.shared.commons.UnitType;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -23,7 +25,7 @@ public class Territory implements Serializable {
     /**
      * Territory Name
      */
-    private int territoryName;
+    private String territoryName;
 
     /**
      * Total unitsMap, key for unit type, value for counts
@@ -35,10 +37,28 @@ public class Territory implements Serializable {
      */
     private Set<Territory> adjacentTerritories;
 
+    public Territory(int territoryId, String territoryName) {
+        this(territoryId, territoryName, new HashMap<>(), new HashSet<>());
+    }
 
-    public Territory(int territoryId, Set<Territory> adjacentTerritories) {
+    public Territory(int territoryId, String territoryName, Map<UnitType, Integer> unitsMap, Set<Territory> adjacentTerritories) {
         this.territoryId = territoryId;
+        this.territoryName = territoryName;
+        this.unitsMap = unitsMap;
         this.adjacentTerritories = adjacentTerritories;
+    }
+
+    public void addNeighbor(Territory territory) {
+        this.adjacentTerritories.add(territory);
+    }
+
+    @Override
+    public String toString() {
+        return "Territory{" +
+                "territoryId=" + territoryId +
+                ", territoryName='" + territoryName + '\'' +
+                ", adjacentTerritories=" + adjacentTerritories +
+                '}';
     }
 
     @Override

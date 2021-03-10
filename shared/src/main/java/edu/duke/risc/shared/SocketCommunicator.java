@@ -37,6 +37,7 @@ public class SocketCommunicator implements Communicable {
     @Override
     public PayloadObject receiveMessage() throws IOException, ClassNotFoundException {
         return (PayloadObject) reader.readObject();
+
     }
 
 }

@@ -20,11 +20,12 @@ public class PlayerHandler extends Thread {
     @Override
     public void run() {
         try {
-            PayloadObject readObject = null;
-            communicator.writeMessage(new PayloadObject());
-            while ((readObject = communicator.receiveMessage()) != null) {
-                System.out.println("Message received: " + readObject);
-                barrier.objectReceived(readObject);
+            while (true) {
+                PayloadObject readObject = null;
+                if ((readObject = communicator.receiveMessage()) != null){
+                    System.out.println("Message received: " + readObject);
+                    barrier.objectReceived(readObject);
+                }
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();

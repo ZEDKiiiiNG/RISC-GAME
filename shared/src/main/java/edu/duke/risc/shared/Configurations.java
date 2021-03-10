@@ -10,4 +10,7 @@ public class Configurations {
 
     public static final int DEFAULT_SERVER_PORT = 8085;
 
+    public static final String GAME_BOARD_STRING = "game_board_string";
+    public static final String PLAYER_STRING = "player_string";
+
 }

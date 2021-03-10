@@ -4,6 +4,8 @@ import edu.duke.risc.shared.PayloadObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -16,11 +18,11 @@ public class ThreadBarrier {
 
     private AtomicInteger threadCounter;
 
-    private List<PayloadObject> cache;
+    private BlockingQueue<PayloadObject> cache;
 
     public ThreadBarrier(int maxPlayer) {
         threadCounter = new AtomicInteger(maxPlayer);
-        cache = new ArrayList<>();
+        cache = new ArrayBlockingQueue<>(20);
         barrierLock = new Object();
     }
 
@@ -30,6 +32,7 @@ public class ThreadBarrier {
 
     public void objectReceived(PayloadObject payloadObject) {
         cache.add(payloadObject);
+        //todo delete this
         threadCounter.decrementAndGet();
         if (threadCounter.get() == 0) {
             barrierLock.notifyAll();
