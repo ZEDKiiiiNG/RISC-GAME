@@ -74,4 +74,15 @@ public class Territory implements Serializable {
         return territoryId == territory.territoryId;
     }
 
+    public String getTerritoryName() {
+        return territoryName;
+    }
+
+    public Map<UnitType, Integer> getUnitsMap() {
+        return unitsMap;
+    }
+
+    public Set<Territory> getAdjacentTerritories() {
+        return adjacentTerritories;
+    }
 }

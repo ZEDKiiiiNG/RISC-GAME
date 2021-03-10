@@ -10,16 +10,26 @@ public enum UserColor {
     /**
      * Stands for blue user
      */
-    BLUE,
+    BLUE("Blue"),
 
     /**
      * Stands for green user
      */
-    GREEN,
+    GREEN("Green"),
 
     /**
      * Stands for red user
      */
-    RED,
+    RED("Red");
 
+    private final String name;
+
+    UserColor(String s) {
+        name = s;
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }

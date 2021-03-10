@@ -11,5 +11,16 @@ public enum UnitType {
     /**
      * soldier
      */
-    SOLDIER,
+    SOLDIER("Soldiers");
+
+    private final String name;
+
+    UnitType(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }

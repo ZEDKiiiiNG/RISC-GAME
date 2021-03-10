@@ -77,4 +77,24 @@ public class Player implements GameUser, Serializable {
                 ", status=" + status +
                 '}';
     }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public Map<UnitType, Integer> getUnitsMap() {
+        return unitsMap;
+    }
+
+    public Set<Territory> getOwnedTerritories() {
+        return ownedTerritories;
+    }
+
+    public UserColor getColor() {
+        return color;
+    }
+
+    public PlayerStatus getStatus() {
+        return status;
+    }
 }
