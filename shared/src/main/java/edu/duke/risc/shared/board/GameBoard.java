@@ -20,11 +20,14 @@ public class GameBoard implements Serializable {
 
     private TerritoryFactory territoryFactory;
 
+    private Displayable displayer;
+
     public GameBoard() {
         territoryFactory = new BasicTerritoryFactory();
         territories = territoryFactory.makeTerritories();
         players = new HashSet<>();
         gameStage = GameStage.GAME_START;
+        displayer = new TextDisplayer();
     }
 
     @Override
