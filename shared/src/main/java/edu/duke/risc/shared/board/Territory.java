@@ -3,11 +3,7 @@ package edu.duke.risc.shared.board;
 import edu.duke.risc.shared.commons.UnitType;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Stands for Territory on the game board
@@ -48,8 +44,8 @@ public class Territory implements Serializable {
         this.adjacentTerritories = adjacentTerritories;
     }
 
-    public void addNeighbor(Territory territory) {
-        this.adjacentTerritories.add(territory);
+    public void addNeighbor(Territory... territories) {
+        this.adjacentTerritories.addAll(Arrays.asList(territories));
     }
 
     @Override
