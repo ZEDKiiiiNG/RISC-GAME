@@ -14,4 +14,7 @@ public class GameBoard {
 
     private Set<Player> players;
 
+    private GameStage gameStage;
+
+
 }

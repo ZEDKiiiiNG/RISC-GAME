@@ -1,12 +1,15 @@
 package edu.duke.risc.server;
 
 import edu.duke.risc.shared.Configurations;
+import edu.duke.risc.shared.PayloadObject;
 import edu.duke.risc.shared.PlayerHandler;
 import edu.duke.risc.shared.SocketCommunicator;
 import edu.duke.risc.shared.ThreadBarrier;
 import edu.duke.risc.shared.board.GameBoard;
-import edu.duke.risc.shared.board.GameStage;
+import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UserColor;
+import edu.duke.risc.shared.users.GameUser;
+import edu.duke.risc.shared.users.Master;
 import edu.duke.risc.shared.users.Player;
 
 import java.io.IOException;
@@ -16,6 +19,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+
+import static edu.duke.risc.shared.Configurations.GAME_BOARD_STRING;
+import static edu.duke.risc.shared.Configurations.PLAYER_STRING;
 
 /**
  * @author eason
@@ -25,7 +32,7 @@ public class GameController {
 
     private GameBoard board;
 
-    private GameStage gameStage;
+    private GameUser root;
 
     private final List<UserColor> colors = new ArrayList<>();
 
@@ -36,8 +43,8 @@ public class GameController {
     private ThreadBarrier barrier;
 
     public GameController() {
-        gameStage = GameStage.WAITING_USERS;
         barrier = new ThreadBarrier(Configurations.MAX_PLAYERS);
+        root = new Master();
         playerConnections = new HashMap<>();
         this.addColors();
         try {
@@ -49,6 +56,7 @@ public class GameController {
 
     public void startGame() throws IOException {
         this.waitPlayers();
+
     }
 
     private void waitPlayers() throws IOException {
@@ -59,14 +67,23 @@ public class GameController {
             Socket clientSocket = serverSocket.accept();
             SocketCommunicator communicator = new SocketCommunicator(clientSocket);
             Player player = new Player(playerConnections.size(), this.colors.get(playerIndex));
+            //TODO assign territories
             playerConnections.put(player, communicator);
             System.out.println("Successfully connect with player " + player);
             PlayerHandler handler = new PlayerHandler(communicator, barrier);
             handler.start();
         }
         System.out.println("All player are ready");
+        //share game map with every player
+        for (Map.Entry<Player, SocketCommunicator> entry : playerConnections.entrySet()) {
+            Player player = entry.getKey();
+            Map<String, Object> content = new HashMap<>(10);
+            content.put(GAME_BOARD_STRING, this.board);
+            content.put(PLAYER_STRING, player);
+            PayloadObject payloadObject = new PayloadObject(root, player, PayloadType.UPDATE, content);
+            entry.getValue().writeMessage(payloadObject);
+        }
     }
-
 
     private void addColors() {
         colors.add(UserColor.BLUE);
