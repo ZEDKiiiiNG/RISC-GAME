@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 
 import static edu.duke.risc.shared.Configurations.GAME_BOARD_STRING;
 import static edu.duke.risc.shared.Configurations.PLAYER_STRING;
@@ -45,6 +44,7 @@ public class GameController {
     public GameController() {
         barrier = new ThreadBarrier(Configurations.MAX_PLAYERS);
         root = new Master();
+        board = new GameBoard();
         playerConnections = new HashMap<>();
         this.addColors();
         try {
