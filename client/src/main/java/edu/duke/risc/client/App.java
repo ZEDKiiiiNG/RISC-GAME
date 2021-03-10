@@ -3,12 +3,17 @@
  */
 package edu.duke.risc.client;
 
+import java.io.IOException;
+
+/**
+ *
+ */
 public class App {
     public String getGreeting() {
         return "Hello world from client.";
     }
 
-    public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        ClientController clientController = new ClientController();
     }
 }
