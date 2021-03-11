@@ -15,4 +15,11 @@ public interface GameUser {
      */
     public boolean isMaster();
 
+    /**
+     * get id
+     *
+     * @return
+     */
+    public int getId();
+
 }

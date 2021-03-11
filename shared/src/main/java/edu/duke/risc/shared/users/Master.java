@@ -1,5 +1,7 @@
 package edu.duke.risc.shared.users;
 
+import edu.duke.risc.shared.Configurations;
+
 import java.io.Serializable;
 
 /**
@@ -12,5 +14,11 @@ public class Master implements GameUser, Serializable {
     public boolean isMaster() {
         return true;
     }
+
+    @Override
+    public int getId() {
+        return Configurations.MASTER_ID;
+    }
+
 
 }

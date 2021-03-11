@@ -6,7 +6,6 @@ import edu.duke.risc.shared.PlayerHandler;
 import edu.duke.risc.shared.SocketCommunicator;
 import edu.duke.risc.shared.ThreadBarrier;
 import edu.duke.risc.shared.board.GameBoard;
-import edu.duke.risc.shared.board.Territory;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UserColor;
 import edu.duke.risc.shared.users.GameUser;
@@ -20,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static edu.duke.risc.shared.Configurations.GAME_BOARD_STRING;
 import static edu.duke.risc.shared.Configurations.PLAYER_STRING;
@@ -67,7 +67,7 @@ public class GameController {
                     + " players to join the game.");
             Socket clientSocket = serverSocket.accept();
             SocketCommunicator communicator = new SocketCommunicator(clientSocket);
-            Player player = new Player(playerConnections.size(), this.colors.get(playerIndex));
+            Player player = new Player(playerIndex + 1, this.colors.get(playerIndex));
             //assign territories
             this.assignTerritories(player, this.board);
             playerConnections.put(player, communicator);
@@ -76,13 +76,14 @@ public class GameController {
             handler.start();
         }
         System.out.println("All player are ready");
+        this.board.forwardPlacementPhase();
         //share game map with every player
         for (Map.Entry<Player, SocketCommunicator> entry : playerConnections.entrySet()) {
             Player player = entry.getKey();
             Map<String, Object> content = new HashMap<>(10);
             content.put(GAME_BOARD_STRING, this.board);
-            content.put(PLAYER_STRING, player);
-            PayloadObject payloadObject = new PayloadObject(root, player, PayloadType.UPDATE, content);
+            content.put(PLAYER_STRING, player.getId());
+            PayloadObject payloadObject = new PayloadObject(root.getId(), player.getId(), PayloadType.UPDATE, content);
             entry.getValue().writeMessage(payloadObject);
         }
     }
@@ -100,7 +101,7 @@ public class GameController {
      * @param gameBoard
      */
     private void assignTerritories(Player player, GameBoard gameBoard) {
-        List<Territory> assignedTerritories = gameBoard.addPlayer(player);
+        Set<Integer> assignedTerritories = gameBoard.addPlayer(player);
         player.setOwnedTerritories(assignedTerritories);
     }
 

@@ -1,8 +1,6 @@
 package edu.duke.risc.shared;
 
-import edu.duke.risc.shared.board.GameStage;
 import edu.duke.risc.shared.commons.PayloadType;
-import edu.duke.risc.shared.users.GameUser;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -13,9 +11,9 @@ import java.util.Map;
  */
 public class PayloadObject implements Serializable {
 
-    private GameUser sender;
+    private Integer sender;
 
-    private GameUser receiver;
+    private Integer receiver;
 
     private PayloadType messageType;
 
@@ -24,7 +22,7 @@ public class PayloadObject implements Serializable {
     public PayloadObject() {
     }
 
-    public PayloadObject(GameUser sender, GameUser receiver, PayloadType messageType, Map<String, Object> contents) {
+    public PayloadObject(Integer sender, Integer receiver, PayloadType messageType, Map<String, Object> contents) {
         this.sender = sender;
         this.receiver = receiver;
         this.messageType = messageType;
@@ -41,11 +39,19 @@ public class PayloadObject implements Serializable {
                 '}';
     }
 
-    public void setSender(GameUser sender) {
+    public Integer getSender() {
+        return sender;
+    }
+
+    public void setSender(Integer sender) {
         this.sender = sender;
     }
 
-    public void setReceiver(GameUser receiver) {
+    public Integer getReceiver() {
+        return receiver;
+    }
+
+    public void setReceiver(Integer receiver) {
         this.receiver = receiver;
     }
 
@@ -57,13 +63,6 @@ public class PayloadObject implements Serializable {
         this.contents = contents;
     }
 
-    public GameUser getSender() {
-        return sender;
-    }
-
-    public GameUser getReceiver() {
-        return receiver;
-    }
 
     public PayloadType getMessageType() {
         return messageType;

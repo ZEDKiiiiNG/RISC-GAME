@@ -13,7 +13,7 @@ public class App {
         return "Hello world from client.";
     }
 
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
+    public static void main(String[] args) throws IOException {
         ClientController clientController = new ClientController();
     }
 }

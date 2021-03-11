@@ -1,7 +1,7 @@
 package edu.duke.risc.shared.board;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author eason
@@ -12,17 +12,17 @@ public class BasicTerritoryFactory implements TerritoryFactory {
     private final int TOTAL_TERRITORIES = 9;
 
     @Override
-    public List<Territory> makeTerritories() {
-        List<Territory> result = new ArrayList<>();
-        Territory narnia = new Territory(1, "Narnia");
-        Territory midkemia = new Territory(2, "Midkemia");
-        Territory oz = new Territory(3, "Oz");
-        Territory gondor = new Territory(4, "Gondor");
-        Territory elantris = new Territory(5, "Elantris");
-        Territory scadrial = new Territory(6, "Scadrial");
-        Territory mordor = new Territory(7, "Mordor");
-        Territory roshar = new Territory(8, "Roshar");
-        Territory hogwarts = new Territory(9, "Hogwarts");
+    public Map<Integer, Territory> makeTerritories() {
+        Map<Integer, Territory> result = new HashMap<>(10);
+        Territory narnia = new Territory(0, "Narnia");
+        Territory midkemia = new Territory(1, "Midkemia");
+        Territory oz = new Territory(2, "Oz");
+        Territory gondor = new Territory(3, "Gondor");
+        Territory elantris = new Territory(4, "Elantris");
+        Territory scadrial = new Territory(5, "Scadrial");
+        Territory mordor = new Territory(6, "Mordor");
+        Territory roshar = new Territory(7, "Roshar");
+        Territory hogwarts = new Territory(8, "Hogwarts");
 
         narnia.addNeighbor(midkemia, elantris);
         midkemia.addNeighbor(narnia, elantris, scadrial, oz);
@@ -34,15 +34,15 @@ public class BasicTerritoryFactory implements TerritoryFactory {
         roshar.addNeighbor(elantris, scadrial, hogwarts);
         hogwarts.addNeighbor(roshar, scadrial, mordor);
 
-        result.add(narnia);
-        result.add(midkemia);
-        result.add(oz);
-        result.add(gondor);
-        result.add(elantris);
-        result.add(scadrial);
-        result.add(mordor);
-        result.add(roshar);
-        result.add(hogwarts);
+        result.put(narnia.getTerritoryId(), narnia);
+        result.put(midkemia.getTerritoryId(), midkemia);
+        result.put(oz.getTerritoryId(), oz);
+        result.put(gondor.getTerritoryId(), gondor);
+        result.put(elantris.getTerritoryId(), elantris);
+        result.put(scadrial.getTerritoryId(), scadrial);
+        result.put(mordor.getTerritoryId(), mordor);
+        result.put(roshar.getTerritoryId(), roshar);
+        result.put(hogwarts.getTerritoryId(), hogwarts);
         return result;
     }
 

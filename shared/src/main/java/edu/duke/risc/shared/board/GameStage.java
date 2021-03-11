@@ -11,6 +11,8 @@ public enum GameStage {
      */
     WAITING_USERS,
 
+    PLACEMENT,
+
     GAME_START,
 
     GAME_OVER,

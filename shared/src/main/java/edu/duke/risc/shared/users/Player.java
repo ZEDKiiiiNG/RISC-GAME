@@ -1,13 +1,14 @@
 package edu.duke.risc.shared.users;
 
-import edu.duke.risc.shared.board.Territory;
+import edu.duke.risc.shared.Configurations;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.commons.UserColor;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Player stands for players of the game.
@@ -25,12 +26,17 @@ public class Player implements GameUser, Serializable {
     /**
      * Total unitsMap, key for unit type, value for counts
      */
-    private Map<UnitType, Integer> unitsMap;
+    private Map<UnitType, Integer> totalUnitsMap;
+
+    /**
+     * Initial unitsMap, key for unit type, value for counts
+     */
+    private Map<UnitType, Integer> initUnitsMap;
 
     /**
      * Owned territories.
      */
-    private List<Territory> ownedTerritories;
+    private Set<Integer> ownedTerritories;
 
     /**
      * Assigned Color
@@ -43,13 +49,36 @@ public class Player implements GameUser, Serializable {
     private PlayerStatus status;
 
     public Player(int userId, UserColor color) {
+        //init units map
+        this.initUnitsMap = new HashMap<>();
+        initUnitsMap.put(UnitType.SOLDIER, Configurations.INIT_SOLDIER_NUM);
+
         this.userId = userId;
         this.color = color;
+        this.totalUnitsMap = new HashMap<>();
+    }
+
+    /**
+     * Get units information in string
+     *
+     * @return units info in string
+     */
+    public String getUnitsInfo() {
+        StringBuilder builder = new StringBuilder();
+        for (Map.Entry<UnitType, Integer> entry : this.initUnitsMap.entrySet()) {
+            builder.append(entry.getKey()).append(" : ").append(entry.getValue());
+        }
+        return builder.toString();
     }
 
     @Override
     public boolean isMaster() {
         return false;
+    }
+
+    @Override
+    public int getId() {
+        return this.userId;
     }
 
     @Override
@@ -82,11 +111,11 @@ public class Player implements GameUser, Serializable {
         return userId;
     }
 
-    public Map<UnitType, Integer> getUnitsMap() {
-        return unitsMap;
+    public Map<UnitType, Integer> getTotalUnitsMap() {
+        return totalUnitsMap;
     }
 
-    public List<Territory> getOwnedTerritories() {
+    public Set<Integer> getOwnedTerritories() {
         return ownedTerritories;
     }
 
@@ -94,11 +123,15 @@ public class Player implements GameUser, Serializable {
         return color;
     }
 
+    public void setOwnedTerritories(Set<Integer> ownedTerritories) {
+        this.ownedTerritories = ownedTerritories;
+    }
+
     public PlayerStatus getStatus() {
         return status;
     }
 
-    public void setOwnedTerritories(List<Territory> ownedTerritories) {
-        this.ownedTerritories = ownedTerritories;
+    public Map<UnitType, Integer> getInitUnitsMap() {
+        return initUnitsMap;
     }
 }

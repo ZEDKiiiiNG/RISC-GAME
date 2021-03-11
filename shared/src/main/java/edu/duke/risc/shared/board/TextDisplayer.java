@@ -4,7 +4,6 @@ import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.users.Player;
 
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author eason
@@ -14,14 +13,16 @@ public class TextDisplayer implements Displayable {
 
     @Override
     public void display(GameBoard gameBoard) {
-        Set<Player> players = gameBoard.getPlayers();
-        for (Player player : players) {
+        Map<Integer, Player> players = gameBoard.getPlayers();
+        for (Map.Entry<Integer, Player> entry : players.entrySet()) {
+            Player player = entry.getValue();
             System.out.println(player.getColor() + " player:");
             System.out.println("-----------------------");
-            for (Territory territory : player.getOwnedTerritories()) {
+            for (Integer territoryId : player.getOwnedTerritories()) {
                 //printing units
+                Territory territory = gameBoard.getTerritories().get(territoryId);
                 if (territory.getUnitsMap().isEmpty()) {
-                    System.out.println("No Units");
+                    System.out.print("No Units ");
                 } else {
                     for (Map.Entry<UnitType, Integer> mapUnit : territory.getUnitsMap().entrySet()) {
                         System.out.print(mapUnit.getValue() + " " + mapUnit.getKey() + " ");

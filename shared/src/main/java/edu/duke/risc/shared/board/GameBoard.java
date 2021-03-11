@@ -4,9 +4,9 @@ import edu.duke.risc.shared.Configurations;
 import edu.duke.risc.shared.users.Player;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -15,9 +15,9 @@ import java.util.Set;
  */
 public class GameBoard implements Serializable {
 
-    private List<Territory> territories;
+    private Map<Integer, Territory> territories;
 
-    private Set<Player> players;
+    private Map<Integer, Player> players;
 
     private GameStage gameStage;
 
@@ -28,8 +28,8 @@ public class GameBoard implements Serializable {
     public GameBoard() {
         territoryFactory = new BasicTerritoryFactory();
         territories = territoryFactory.makeTerritories();
-        players = new HashSet<>();
-        gameStage = GameStage.GAME_START;
+        players = new HashMap<>();
+        gameStage = GameStage.WAITING_USERS;
         displayer = new TextDisplayer();
     }
 
@@ -43,12 +43,15 @@ public class GameBoard implements Serializable {
      * @param player new player
      * @return territories that should be assigned to this player
      */
-    public List<Territory> addPlayer(Player player) {
+    public Set<Integer> addPlayer(Player player) {
         int numberPlayers = this.players.size();
         int territoryPerPlayer = this.territoryFactory.territoryNum() / Configurations.MAX_PLAYERS;
-        this.players.add(player);
-        return new ArrayList<>(
-                this.territories.subList(numberPlayers * territoryPerPlayer, (numberPlayers + 1) * territoryPerPlayer));
+        Set<Integer> result = new HashSet<>();
+        for (int i = numberPlayers * territoryPerPlayer; i < (numberPlayers + 1) * territoryPerPlayer; i++) {
+            result.add(i);
+        }
+        this.players.put(player.getUserId(), player);
+        return result;
     }
 
     @Override
@@ -59,8 +62,27 @@ public class GameBoard implements Serializable {
                 '}';
     }
 
-    public Set<Player> getPlayers() {
+    public Map<Integer, Player> getPlayers() {
         return players;
     }
 
+    public GameStage getGameStage() {
+        return gameStage;
+    }
+
+    public void forwardPlacementPhase() {
+        this.gameStage = GameStage.PLACEMENT;
+    }
+
+    public Map<Integer, Territory> getTerritories() {
+        return territories;
+    }
+
+    public TerritoryFactory getTerritoryFactory() {
+        return territoryFactory;
+    }
+
+    public Displayable getDisplayer() {
+        return displayer;
+    }
 }

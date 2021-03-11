@@ -86,7 +86,12 @@ public class Territory implements Serializable {
         return unitsMap;
     }
 
+
     public Set<Territory> getAdjacentTerritories() {
         return adjacentTerritories;
+    }
+
+    public int getTerritoryId() {
+        return territoryId;
     }
 }
