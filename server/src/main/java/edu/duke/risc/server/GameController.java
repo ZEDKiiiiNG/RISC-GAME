@@ -5,9 +5,11 @@ import edu.duke.risc.shared.PayloadObject;
 import edu.duke.risc.shared.PlayerHandler;
 import edu.duke.risc.shared.SocketCommunicator;
 import edu.duke.risc.shared.ThreadBarrier;
+import edu.duke.risc.shared.actions.Action;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UserColor;
+import edu.duke.risc.shared.exceptions.InvalidActionException;
 import edu.duke.risc.shared.users.GameUser;
 import edu.duke.risc.shared.users.Master;
 import edu.duke.risc.shared.users.Player;
@@ -57,11 +59,80 @@ public class GameController {
 
     public void startGame() throws IOException {
         this.waitPlayers();
-
+        this.placementPhase();
     }
 
+    /**
+     * Do the placement phase
+     *
+     * @throws IOException
+     */
+    private void placementPhase() throws IOException {
+        int numberOfRequestRequired = this.board.getPlayers().size();
+        List<Action> cacheActions = new ArrayList<>();
+        while (numberOfRequestRequired > 0) {
+            PayloadObject request = this.barrier.consumeRequest();
+            //validate placement request
+            if (request.getMessageType() != PayloadType.REQUEST
+                    || request.getReceiver() != this.root.getId()
+                    || !request.getContents().containsKey(Configurations.REQUEST_PLACEMENT_ACTIONS)) {
+                sendBackErrorMessage(request, "Invalid request type");
+                continue;
+            }
+            List<Action> actions = (List<Action>) request.getContents().get(Configurations.REQUEST_PLACEMENT_ACTIONS);
+            String validateResult = validateActions(actions, this.board);
+            if (validateResult != null) {
+                //error occurs, send response back to the client.
+                sendBackErrorMessage(request, validateResult);
+            } else {
+                //validate success, response the client with success message and continues the next request
+                cacheActions.addAll(actions);
+                numberOfRequestRequired -= 1;
+            }
+        }
+        //with all requests received, process them simultaneously
+        for (Action action : cacheActions) {
+            try {
+                action.apply(this.board);
+            } catch (InvalidActionException e) {
+                //simply ignore this
+                System.out.println(e.getMessage());
+            }
+        }
+        broadcastUpdatedMaps();
+    }
+
+    private void sendBackErrorMessage(PayloadObject request, String validateResult) {
+        Map<String, Object> response = new HashMap<>(5);
+        response.put(Configurations.ERR_MSG, validateResult);
+        PayloadObject err = new PayloadObject(this.root.getId(), request.getSender(),
+                PayloadType.ERROR, response);
+        this.sendPackageToPlayer(request.getSender(), err);
+    }
+
+    /***
+     * validateActions
+     * @param actions
+     * @param board
+     * @return
+     */
+    private String validateActions(List<Action> actions, GameBoard board) {
+        for (Action action : actions) {
+            String errMsg;
+            if ((errMsg = action.isValid(this.board)) != null) {
+                return errMsg;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Waiting for players phase
+     *
+     * @throws IOException
+     */
     private void waitPlayers() throws IOException {
-        while (playerConnections.size() < Configurations.MAX_PLAYERS) {
+        while (this.board.getPlayers().size() < Configurations.MAX_PLAYERS) {
             int playerIndex = playerConnections.size();
             System.out.println("Waiting for " + (Configurations.MAX_PLAYERS - playerIndex)
                     + " players to join the game.");
@@ -78,6 +149,10 @@ public class GameController {
         System.out.println("All player are ready");
         this.board.forwardPlacementPhase();
         //share game map with every player
+        broadcastUpdatedMaps();
+    }
+
+    private void broadcastUpdatedMaps() throws IOException {
         for (Map.Entry<Player, SocketCommunicator> entry : playerConnections.entrySet()) {
             Player player = entry.getKey();
             Map<String, Object> content = new HashMap<>(10);
@@ -86,6 +161,10 @@ public class GameController {
             PayloadObject payloadObject = new PayloadObject(root.getId(), player.getId(), PayloadType.UPDATE, content);
             entry.getValue().writeMessage(payloadObject);
         }
+    }
+
+    private void sendPackageToPlayer(int playerId, PayloadObject payloadObject) {
+
     }
 
     private void addColors() {

@@ -78,6 +78,26 @@ public class GameBoard implements Serializable {
         return territories;
     }
 
+    public void setTerritories(Map<Integer, Territory> territories) {
+        this.territories = territories;
+    }
+
+    public void setPlayers(Map<Integer, Player> players) {
+        this.players = players;
+    }
+
+    public void setGameStage(GameStage gameStage) {
+        this.gameStage = gameStage;
+    }
+
+    public void setTerritoryFactory(TerritoryFactory territoryFactory) {
+        this.territoryFactory = territoryFactory;
+    }
+
+    public void setDisplayer(Displayable displayer) {
+        this.displayer = displayer;
+    }
+
     public TerritoryFactory getTerritoryFactory() {
         return territoryFactory;
     }

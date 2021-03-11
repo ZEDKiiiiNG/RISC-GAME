@@ -1,12 +1,14 @@
 package edu.duke.risc.shared.commons;
 
+import java.io.Serializable;
+
 /**
  * Colors of the users
  *
  * @author yichen.hua
  * @date 2021/3/9 20:03
  */
-public enum UserColor {
+public enum UserColor implements Serializable {
     /**
      * Stands for blue user
      */

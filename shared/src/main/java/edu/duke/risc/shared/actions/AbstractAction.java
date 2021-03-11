@@ -1,7 +1,6 @@
 package edu.duke.risc.shared.actions;
 
 import edu.duke.risc.shared.commons.ActionType;
-import edu.duke.risc.shared.users.Player;
 
 /**
  * @author eason
@@ -9,16 +8,19 @@ import edu.duke.risc.shared.users.Player;
  */
 public abstract class AbstractAction implements Action {
 
-    protected Player player;
+    protected Integer playerId;
 
     protected ActionType actionType;
 
     public AbstractAction() {
     }
 
-    public AbstractAction(Player player, ActionType actionType) {
-        this.player = player;
+    public AbstractAction(Integer playerId, ActionType actionType) {
+        this.playerId = playerId;
         this.actionType = actionType;
     }
 
+    public Integer getPlayer() {
+        return playerId;
+    }
 }

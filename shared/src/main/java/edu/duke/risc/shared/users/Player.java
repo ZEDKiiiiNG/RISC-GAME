@@ -52,7 +52,6 @@ public class Player implements GameUser, Serializable {
         //init units map
         this.initUnitsMap = new HashMap<>();
         initUnitsMap.put(UnitType.SOLDIER, Configurations.INIT_SOLDIER_NUM);
-
         this.userId = userId;
         this.color = color;
         this.totalUnitsMap = new HashMap<>();

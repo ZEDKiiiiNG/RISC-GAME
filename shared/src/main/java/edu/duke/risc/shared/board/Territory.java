@@ -58,6 +58,7 @@ public class Territory implements Serializable {
         return "Territory{" +
                 "territoryId=" + territoryId +
                 ", territoryName='" + territoryName + '\'' +
+                " units map size=" + unitsMap.size() +
                 '}';
     }
 
@@ -78,6 +79,22 @@ public class Territory implements Serializable {
         return territoryId == territory.territoryId;
     }
 
+    public void setTerritoryId(int territoryId) {
+        this.territoryId = territoryId;
+    }
+
+    public void setTerritoryName(String territoryName) {
+        this.territoryName = territoryName;
+    }
+
+    public void setUnitsMap(Map<UnitType, Integer> unitsMap) {
+        this.unitsMap = unitsMap;
+    }
+
+    public void setAdjacentTerritories(Set<Territory> adjacentTerritories) {
+        this.adjacentTerritories = adjacentTerritories;
+    }
+
     public String getTerritoryName() {
         return territoryName;
     }
@@ -85,7 +102,6 @@ public class Territory implements Serializable {
     public Map<UnitType, Integer> getUnitsMap() {
         return unitsMap;
     }
-
 
     public Set<Territory> getAdjacentTerritories() {
         return adjacentTerritories;

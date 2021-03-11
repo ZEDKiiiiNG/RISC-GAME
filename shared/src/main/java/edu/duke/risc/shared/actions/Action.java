@@ -15,7 +15,7 @@ public interface Action extends Serializable {
      * check whether the action is valid.
      *
      * @param board player who conduct this action
-     * @return whether the action is valid.
+     * @return null if the action is valid, error message if invalid
      */
     public String isValid(GameBoard board);
 

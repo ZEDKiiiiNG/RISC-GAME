@@ -13,6 +13,8 @@ public enum PayloadType {
 
     UPDATE,
 
+    REQUEST,
+
     ERROR,
 
     SUCCESS,

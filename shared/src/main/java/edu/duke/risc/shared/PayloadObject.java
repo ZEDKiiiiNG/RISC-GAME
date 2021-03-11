@@ -22,6 +22,10 @@ public class PayloadObject implements Serializable {
     public PayloadObject() {
     }
 
+    public PayloadObject(Integer sender, Integer receiver, PayloadType messageType) {
+        this(sender, receiver, messageType, null);
+    }
+
     public PayloadObject(Integer sender, Integer receiver, PayloadType messageType, Map<String, Object> contents) {
         this.sender = sender;
         this.receiver = receiver;

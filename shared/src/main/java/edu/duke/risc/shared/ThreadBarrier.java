@@ -1,9 +1,5 @@
 package edu.duke.risc.shared;
 
-import edu.duke.risc.shared.PayloadObject;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,17 +22,17 @@ public class ThreadBarrier {
         barrierLock = new Object();
     }
 
-    public void waitAllCommits() throws InterruptedException {
-        barrierLock.wait();
+    public PayloadObject consumeRequest() {
+        try {
+            return cache.take();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public void objectReceived(PayloadObject payloadObject) {
         cache.add(payloadObject);
-        //todo delete this
-        threadCounter.decrementAndGet();
-        if (threadCounter.get() == 0) {
-            barrierLock.notifyAll();
-        }
     }
 
 }

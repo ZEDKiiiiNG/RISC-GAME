@@ -9,9 +9,11 @@ import edu.duke.risc.shared.actions.PlacementAction;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.board.GameStage;
 import edu.duke.risc.shared.board.Territory;
+import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
 import edu.duke.risc.shared.exceptions.InvalidPayloadContent;
+import edu.duke.risc.shared.exceptions.ServerRejectException;
 import edu.duke.risc.shared.exceptions.UnmatchedReceiverException;
 import edu.duke.risc.shared.users.Player;
 
@@ -20,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -53,6 +56,7 @@ public class ClientController {
     private void startGame() throws IOException {
         tryConnectAndWait();
         assignUnits();
+        this.gameBoard.displayBoard();
     }
 
     private void tryConnectAndWait() {
@@ -62,10 +66,9 @@ public class ClientController {
             communicator = new SocketCommunicator(socket);
             System.out.println(ClientConfigurations.CONNECT_SUCCESS_MSG);
             //waiting for other users
-            PayloadObject response = waitAndRead();
-            this.unpackAndUpdate(response);
+            this.waitAndReadServerUpdate();
             System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         } catch (UnmatchedReceiverException | InvalidPayloadContent e) {
             System.out.println(e.getMessage());
@@ -73,42 +76,58 @@ public class ClientController {
     }
 
     private void assignUnits() throws IOException {
-        List<Action> actions = new ArrayList<>();
-        this.gameBoard.displayBoard();
-        assert this.gameBoard.getGameStage() == GameStage.PLACEMENT;
-        Player player = this.gameBoard.getPlayers().get(playerId);
-        System.out.println("You are the " + player.getColor() + " player: ");
-        System.out.println("Placement phase: where would you like to place your units ?");
-        for (Integer territoryId : player.getOwnedTerritories()) {
-            Territory territory = gameBoard.getTerritories().get(territoryId);
-            for (Map.Entry<UnitType, Integer> unitMap : player.getInitUnitsMap().entrySet()) {
-                while (true) {
-                    System.out.println("You have " + player.getUnitsInfo());
-                    System.out.println("How many " + unitMap.getKey() + " would you like to put on "
-                            + territory.getTerritoryName() + " ? ");
-                    String input = this.consoleReader.readLine();
-                    int number;
-                    try {
-                        number = Integer.parseInt(input);
-                    } catch (NumberFormatException e) {
-                        System.out.println("Invalid input, should only be numbers");
-                        continue;
+        while (true) {
+            List<Action> actions = new ArrayList<>();
+            this.gameBoard.displayBoard();
+            assert this.gameBoard.getGameStage() == GameStage.PLACEMENT;
+            Player player = this.gameBoard.getPlayers().get(playerId);
+            System.out.println("You are the " + player.getColor() + " player: ");
+            System.out.println("Placement phase: where would you like to place your units ?");
+            for (Integer territoryId : player.getOwnedTerritories()) {
+                Territory territory = gameBoard.getTerritories().get(territoryId);
+                for (Map.Entry<UnitType, Integer> unitMap : player.getInitUnitsMap().entrySet()) {
+                    while (true) {
+                        System.out.println("You have " + player.getUnitsInfo());
+                        System.out.println("How many " + unitMap.getKey() + " would you like to put on "
+                                + territory.getTerritoryName() + " ? ");
+                        String input = this.consoleReader.readLine();
+                        int number;
+                        try {
+                            number = Integer.parseInt(input);
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid input, should only be numbers");
+                            continue;
+                        }
+                        Action action = new PlacementAction(territoryId, unitMap.getKey(), number, playerId);
+                        try {
+                            action.apply(this.gameBoard);
+                        } catch (InvalidActionException e) {
+                            System.out.println(e.getMessage());
+                            continue;
+                        }
+                        actions.add(action);
+                        break;
                     }
-                    Action action = new PlacementAction(territoryId, unitMap.getKey(), number, player);
-                    try {
-                        action.apply(this.gameBoard);
-                    } catch (InvalidActionException e) {
-                        System.out.println(e.getMessage());
-                        continue;
-                    }
-                    actions.add(action);
-                    break;
                 }
             }
+            //sending to the server
+            //constructing payload objects
+            Map<String, Object> content = new HashMap<>(3);
+            content.put(Configurations.REQUEST_PLACEMENT_ACTIONS, actions);
+            PayloadObject request = new PayloadObject(this.playerId,
+                    Configurations.MASTER_ID, PayloadType.REQUEST, content);
+            try {
+                this.sendPayloadAndWaitResponse(request);
+            } catch (InvalidPayloadContent | ServerRejectException exception) {
+                //if server returns failed, re-do the actions again
+                exception.printStackTrace();
+                continue;
+            }
+            System.out.println("Successfully finished placement phase");
+            break;
         }
-        //sending to the server
-
     }
+
 
     private PayloadObject waitAndRead() throws IOException, ClassNotFoundException {
         while (true) {
@@ -119,7 +138,18 @@ public class ClientController {
         }
     }
 
-    private void unpackAndUpdate(PayloadObject response) throws UnmatchedReceiverException, InvalidPayloadContent {
+    /**
+     * @throws UnmatchedReceiverException
+     * @throws InvalidPayloadContent
+     */
+    private void waitAndReadServerUpdate() throws UnmatchedReceiverException, InvalidPayloadContent {
+        PayloadObject response = null;
+        try {
+            response = waitAndRead();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return;
+        }
         //check desired receiver
         if (playerId == Configurations.DEFAULT_PLAYER_ID) {
             playerId = response.getReceiver();
@@ -140,8 +170,41 @@ public class ClientController {
                     throw new InvalidPayloadContent("do not contain gameBoard object");
                 }
                 break;
+
             default:
                 throw new IllegalArgumentException("Invalid message type");
+        }
+    }
+
+    /**
+     * Send the payload to the server and receives
+     */
+    private void sendPayloadAndWaitResponse(PayloadObject request)
+            throws InvalidPayloadContent, ServerRejectException {
+        try {
+            this.communicator.writeMessage(request);
+            PayloadObject response = this.waitAndRead();
+            switch (response.getMessageType()) {
+                case SUCCESS:
+                    System.out.println(response.getContents().get(Configurations.SUCCESS_MSG));
+                    return;
+                case ERROR:
+                    throw new ServerRejectException("Action requests are rejected by server"
+                            + response.getContents().get(Configurations.ERR_MSG));
+                case UPDATE:
+                    Map<String, Object> contents = response.getContents();
+                    if (contents.containsKey(GAME_BOARD_STRING) && contents.containsKey(PLAYER_STRING)) {
+                        this.gameBoard = (GameBoard) contents.get(GAME_BOARD_STRING);
+                        this.playerId = (Integer) contents.get(PLAYER_STRING);
+                    } else {
+                        throw new InvalidPayloadContent("do not contain gameBoard object");
+                    }
+                    break;
+                default:
+                    throw new InvalidPayloadContent("Invalid payload content");
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
     }
 
