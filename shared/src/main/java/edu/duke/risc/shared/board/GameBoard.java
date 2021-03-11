@@ -1,9 +1,12 @@
 package edu.duke.risc.shared.board;
 
+import edu.duke.risc.shared.Configurations;
 import edu.duke.risc.shared.users.Player;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -12,7 +15,7 @@ import java.util.Set;
  */
 public class GameBoard implements Serializable {
 
-    private Set<Territory> territories;
+    private List<Territory> territories;
 
     private Set<Player> players;
 
@@ -30,12 +33,34 @@ public class GameBoard implements Serializable {
         displayer = new TextDisplayer();
     }
 
+    public void displayBoard() {
+        displayer.display(this);
+    }
+
+    /**
+     * Add player to this board, returns territories that should be assigned to this player
+     *
+     * @param player new player
+     * @return territories that should be assigned to this player
+     */
+    public List<Territory> addPlayer(Player player) {
+        int numberPlayers = this.players.size();
+        int territoryPerPlayer = this.territoryFactory.territoryNum() / Configurations.MAX_PLAYERS;
+        this.players.add(player);
+        return new ArrayList<>(
+                this.territories.subList(numberPlayers * territoryPerPlayer, (numberPlayers + 1) * territoryPerPlayer));
+    }
+
     @Override
     public String toString() {
         return "GameBoard{" +
-                "territories=" + territories +
                 ", players=" + players +
                 ", gameStage=" + gameStage +
                 '}';
     }
+
+    public Set<Player> getPlayers() {
+        return players;
+    }
+
 }

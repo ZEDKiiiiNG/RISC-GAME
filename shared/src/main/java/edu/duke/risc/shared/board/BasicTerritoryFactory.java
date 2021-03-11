@@ -1,7 +1,7 @@
 package edu.duke.risc.shared.board;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author eason
@@ -9,18 +9,20 @@ import java.util.Set;
  */
 public class BasicTerritoryFactory implements TerritoryFactory {
 
+    private final int TOTAL_TERRITORIES = 9;
+
     @Override
-    public Set<Territory> makeTerritories() {
-        Set<Territory> result = new HashSet<>();
+    public List<Territory> makeTerritories() {
+        List<Territory> result = new ArrayList<>();
         Territory narnia = new Territory(1, "Narnia");
         Territory midkemia = new Territory(2, "Midkemia");
         Territory oz = new Territory(3, "Oz");
         Territory gondor = new Territory(4, "Gondor");
-        Territory elantris = new Territory(1, "Elantris");
-        Territory scadrial = new Territory(1, "Scadrial");
-        Territory mordor = new Territory(1, "Mordor");
-        Territory roshar = new Territory(1, "Roshar");
-        Territory hogwarts = new Territory(1, "Hogwarts");
+        Territory elantris = new Territory(5, "Elantris");
+        Territory scadrial = new Territory(6, "Scadrial");
+        Territory mordor = new Territory(7, "Mordor");
+        Territory roshar = new Territory(8, "Roshar");
+        Territory hogwarts = new Territory(9, "Hogwarts");
 
         narnia.addNeighbor(midkemia, elantris);
         midkemia.addNeighbor(narnia, elantris, scadrial, oz);
@@ -33,7 +35,20 @@ public class BasicTerritoryFactory implements TerritoryFactory {
         hogwarts.addNeighbor(roshar, scadrial, mordor);
 
         result.add(narnia);
+        result.add(midkemia);
+        result.add(oz);
+        result.add(gondor);
+        result.add(elantris);
+        result.add(scadrial);
+        result.add(mordor);
+        result.add(roshar);
+        result.add(hogwarts);
         return result;
+    }
+
+    @Override
+    public int territoryNum() {
+        return TOTAL_TERRITORIES;
     }
 
 }

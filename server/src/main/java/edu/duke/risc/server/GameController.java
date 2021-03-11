@@ -6,6 +6,7 @@ import edu.duke.risc.shared.PlayerHandler;
 import edu.duke.risc.shared.SocketCommunicator;
 import edu.duke.risc.shared.ThreadBarrier;
 import edu.duke.risc.shared.board.GameBoard;
+import edu.duke.risc.shared.board.Territory;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UserColor;
 import edu.duke.risc.shared.users.GameUser;
@@ -67,7 +68,8 @@ public class GameController {
             Socket clientSocket = serverSocket.accept();
             SocketCommunicator communicator = new SocketCommunicator(clientSocket);
             Player player = new Player(playerConnections.size(), this.colors.get(playerIndex));
-            //TODO assign territories
+            //assign territories
+            this.assignTerritories(player, this.board);
             playerConnections.put(player, communicator);
             System.out.println("Successfully connect with player " + player);
             PlayerHandler handler = new PlayerHandler(communicator, barrier);
@@ -89,6 +91,17 @@ public class GameController {
         colors.add(UserColor.BLUE);
         colors.add(UserColor.GREEN);
         colors.add(UserColor.RED);
+    }
+
+    /**
+     * Assign territories to player.
+     *
+     * @param player
+     * @param gameBoard
+     */
+    private void assignTerritories(Player player, GameBoard gameBoard) {
+        List<Territory> assignedTerritories = gameBoard.addPlayer(player);
+        player.setOwnedTerritories(assignedTerritories);
     }
 
 }

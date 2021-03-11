@@ -5,9 +5,9 @@ import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.commons.UserColor;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * Player stands for players of the game.
@@ -30,7 +30,7 @@ public class Player implements GameUser, Serializable {
     /**
      * Owned territories.
      */
-    private Set<Territory> ownedTerritories;
+    private List<Territory> ownedTerritories;
 
     /**
      * Assigned Color
@@ -86,7 +86,7 @@ public class Player implements GameUser, Serializable {
         return unitsMap;
     }
 
-    public Set<Territory> getOwnedTerritories() {
+    public List<Territory> getOwnedTerritories() {
         return ownedTerritories;
     }
 
@@ -96,5 +96,9 @@ public class Player implements GameUser, Serializable {
 
     public PlayerStatus getStatus() {
         return status;
+    }
+
+    public void setOwnedTerritories(List<Territory> ownedTerritories) {
+        this.ownedTerritories = ownedTerritories;
     }
 }

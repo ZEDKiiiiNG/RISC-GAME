@@ -13,20 +13,27 @@ import java.util.Set;
 public class TextDisplayer implements Displayable {
 
     @Override
-    public void display(Set<Player> players) {
+    public void display(GameBoard gameBoard) {
+        Set<Player> players = gameBoard.getPlayers();
         for (Player player : players) {
-            System.out.println(player.getColor() + "player:");
+            System.out.println(player.getColor() + " player:");
+            System.out.println("-----------------------");
             for (Territory territory : player.getOwnedTerritories()) {
-                for (Map.Entry<UnitType, Integer> mapunit : territory.getUnitsMap().entrySet()) {
-                    System.out.print(mapunit.getValue() + " " + mapunit.getKey()+ " ");
+                //printing units
+                if (territory.getUnitsMap().isEmpty()) {
+                    System.out.println("No Units");
+                } else {
+                    for (Map.Entry<UnitType, Integer> mapUnit : territory.getUnitsMap().entrySet()) {
+                        System.out.print(mapUnit.getValue() + " " + mapUnit.getKey() + " ");
+                    }
                 }
                 System.out.print("in " + territory.getTerritoryName() + " (next to: ");
-                for(Territory adjacant : territory.getAdjacentTerritories()){
-                    System.out.print(adjacant.getTerritoryName()+ ", ");
+                for (Territory adjacent : territory.getAdjacentTerritories()) {
+                    System.out.print(adjacent.getTerritoryName() + ", ");
                 }
                 System.out.println(")");
             }
-
+            System.out.println();
         }
     }
 

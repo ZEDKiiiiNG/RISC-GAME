@@ -1,7 +1,7 @@
 package edu.duke.risc.shared.board;
 
 import java.io.Serializable;
-import java.util.Set;
+import java.util.List;
 
 /**
  * @author eason
@@ -14,6 +14,13 @@ public interface TerritoryFactory extends Serializable {
      *
      * @return set of territories
      */
-    public Set<Territory> makeTerritories();
+    public List<Territory> makeTerritories();
+
+    /**
+     * get number of territories this factory make
+     *
+     * @return number of territories this factory make
+     */
+    public int territoryNum();
 
 }

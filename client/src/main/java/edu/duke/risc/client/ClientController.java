@@ -31,10 +31,16 @@ public class ClientController {
 
     public ClientController() {
         this.startGame();
+        try {
+            Thread.sleep(1000000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private void startGame() {
         tryConnectAndWait();
+        assignUnits();
     }
 
     private void tryConnectAndWait() {
@@ -46,8 +52,7 @@ public class ClientController {
             //waiting for other users
             PayloadObject response = waitAndRead();
             this.unpackAndUpdate(response);
-            System.out.println(this.player);
-            System.out.println(this.gameBoard);
+            System.out.println("You are current the player: " + this.player);
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         } catch (UnmatchedReceiverException | InvalidPayloadContent e) {
@@ -55,10 +60,14 @@ public class ClientController {
         }
     }
 
+    private void assignUnits() {
+        this.gameBoard.displayBoard();
+    }
+
     private PayloadObject waitAndRead() throws IOException, ClassNotFoundException {
         while (true) {
             PayloadObject readObject = null;
-            if ((readObject = communicator.receiveMessage()) != null){
+            if ((readObject = communicator.receiveMessage()) != null) {
                 return readObject;
             }
         }
@@ -78,7 +87,7 @@ public class ClientController {
                 break;
             case UPDATE:
                 if (contents.containsKey(GAME_BOARD_STRING)
-                        || contents.containsKey(PLAYER_STRING)) {
+                        && contents.containsKey(PLAYER_STRING)) {
                     this.gameBoard = (GameBoard) contents.get(GAME_BOARD_STRING);
                     this.player = (Player) contents.get(PLAYER_STRING);
                 } else {
