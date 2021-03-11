@@ -66,11 +66,11 @@ public class ClientController {
             communicator = new SocketCommunicator(socket);
             System.out.println(ClientConfigurations.CONNECT_SUCCESS_MSG);
             //waiting for other users
-            this.waitAndReadServerUpdate();
+            this.waitAndReadServerResponse();
             System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (UnmatchedReceiverException | InvalidPayloadContent e) {
+        } catch (UnmatchedReceiverException | InvalidPayloadContent | ServerRejectException e) {
             System.out.println(e.getMessage());
         }
     }
@@ -117,8 +117,9 @@ public class ClientController {
             PayloadObject request = new PayloadObject(this.playerId,
                     Configurations.MASTER_ID, PayloadType.REQUEST, content);
             try {
-                this.sendPayloadAndWaitResponse(request);
-            } catch (InvalidPayloadContent | ServerRejectException exception) {
+                this.sendMessage(request);
+                this.waitAndReadServerResponse();
+            } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
                 //if server returns failed, re-do the actions again
                 exception.printStackTrace();
                 continue;
@@ -128,21 +129,12 @@ public class ClientController {
         }
     }
 
-
-    private PayloadObject waitAndRead() throws IOException, ClassNotFoundException {
-        while (true) {
-            PayloadObject readObject = null;
-            if ((readObject = communicator.receiveMessage()) != null) {
-                return readObject;
-            }
-        }
+    private void sendMessage(PayloadObject payloadObject) throws IOException {
+        this.communicator.writeMessage(payloadObject);
     }
 
-    /**
-     * @throws UnmatchedReceiverException
-     * @throws InvalidPayloadContent
-     */
-    private void waitAndReadServerUpdate() throws UnmatchedReceiverException, InvalidPayloadContent {
+
+    private void waitAndReadServerResponse() throws UnmatchedReceiverException, InvalidPayloadContent, ServerRejectException {
         PayloadObject response = null;
         try {
             response = waitAndRead();
@@ -153,7 +145,7 @@ public class ClientController {
         //check desired receiver
         if (playerId == Configurations.DEFAULT_PLAYER_ID) {
             playerId = response.getReceiver();
-        } else if (response.getReceiver().equals(playerId)) {
+        } else if (!response.getReceiver().equals(playerId)) {
             throw new UnmatchedReceiverException("the " + playerId + "is not matched with " + response.getReceiver());
         }
         //unpack message
@@ -161,6 +153,12 @@ public class ClientController {
         switch (response.getMessageType()) {
             case INFO:
                 break;
+            case SUCCESS:
+                System.out.println(response.getContents().get(Configurations.SUCCESS_MSG));
+                return;
+            case ERROR:
+                throw new ServerRejectException("Action requests are rejected by server"
+                        + response.getContents().get(Configurations.ERR_MSG));
             case UPDATE:
                 if (contents.containsKey(GAME_BOARD_STRING)
                         && contents.containsKey(PLAYER_STRING)) {
@@ -176,35 +174,12 @@ public class ClientController {
         }
     }
 
-    /**
-     * Send the payload to the server and receives
-     */
-    private void sendPayloadAndWaitResponse(PayloadObject request)
-            throws InvalidPayloadContent, ServerRejectException {
-        try {
-            this.communicator.writeMessage(request);
-            PayloadObject response = this.waitAndRead();
-            switch (response.getMessageType()) {
-                case SUCCESS:
-                    System.out.println(response.getContents().get(Configurations.SUCCESS_MSG));
-                    return;
-                case ERROR:
-                    throw new ServerRejectException("Action requests are rejected by server"
-                            + response.getContents().get(Configurations.ERR_MSG));
-                case UPDATE:
-                    Map<String, Object> contents = response.getContents();
-                    if (contents.containsKey(GAME_BOARD_STRING) && contents.containsKey(PLAYER_STRING)) {
-                        this.gameBoard = (GameBoard) contents.get(GAME_BOARD_STRING);
-                        this.playerId = (Integer) contents.get(PLAYER_STRING);
-                    } else {
-                        throw new InvalidPayloadContent("do not contain gameBoard object");
-                    }
-                    break;
-                default:
-                    throw new InvalidPayloadContent("Invalid payload content");
+    private PayloadObject waitAndRead() throws IOException, ClassNotFoundException {
+        while (true) {
+            PayloadObject readObject = null;
+            if ((readObject = communicator.receiveMessage()) != null) {
+                return readObject;
             }
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
         }
     }
 

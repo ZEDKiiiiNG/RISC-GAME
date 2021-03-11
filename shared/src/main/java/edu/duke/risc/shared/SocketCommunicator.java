@@ -1,8 +1,10 @@
 package edu.duke.risc.shared;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 
 /**
@@ -13,15 +15,15 @@ public class SocketCommunicator implements Communicable {
 
     private Socket socket;
 
-    private ObjectOutputStream writer;
+    private OutputStream writer;
 
-    private ObjectInputStream reader;
+    private InputStream reader;
 
     public SocketCommunicator(Socket socket) {
         this.socket = socket;
         try {
-            writer = new ObjectOutputStream(this.socket.getOutputStream());
-            reader = new ObjectInputStream(this.socket.getInputStream());
+            writer = this.socket.getOutputStream();
+            reader = this.socket.getInputStream();
             System.out.println("Successfully connect to socket");
         } catch (IOException e) {
             e.printStackTrace();
@@ -30,13 +32,16 @@ public class SocketCommunicator implements Communicable {
 
     @Override
     public boolean writeMessage(PayloadObject message) throws IOException {
-        writer.writeObject(message);
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(this.writer);
+        objectOutputStream.writeObject(message);
         return true;
     }
 
     @Override
     public PayloadObject receiveMessage() throws IOException, ClassNotFoundException {
-        return (PayloadObject) reader.readObject();
+        ObjectInputStream objectInputStream = new ObjectInputStream(this.reader);
+        PayloadObject payloadObject = (PayloadObject) objectInputStream.readObject();
+        return payloadObject;
     }
 
 }
