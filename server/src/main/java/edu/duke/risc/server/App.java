@@ -3,12 +3,20 @@
  */
 package edu.duke.risc.server;
 
+import java.io.IOException;
+
+/**
+ * @author Yichen
+ */
 public class App {
+
     public String getGreeting() {
         return "Hello world from server.";
     }
 
-    public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
+    public static void main(String[] args) throws IOException {
+        GameController gameController = new GameController();
+        gameController.startGame();
     }
+
 }
