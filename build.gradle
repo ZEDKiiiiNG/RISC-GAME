@@ -98,3 +98,19 @@ tasks.register("run-client") {
     group = 'Run Client/Server'
     description = 'Run the Client'
 }
+
+task resolveDependencies {
+    doLast {
+        project.rootProject.allprojects.each { subProject ->
+            subProject.buildscript.configurations.each { configuration->
+                if(configuration.canBeResolved) {
+                    configuration.resolve()
+                }
+            }
+            subProject.configurations.each { configuration ->
+                if(configuration.canBeResolved) {configuration.resolve()
+                }
+            }
+        }
+    }
+}
