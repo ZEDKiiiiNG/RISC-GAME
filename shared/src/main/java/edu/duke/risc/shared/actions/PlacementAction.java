@@ -13,17 +13,8 @@ import edu.duke.risc.shared.users.Player;
  */
 public class PlacementAction extends AbstractAction {
 
-    private Integer territoryId;
-
-    private UnitType unitType;
-
-    private Integer number;
-
     public PlacementAction(Integer territoryId, UnitType unitType, Integer number, Integer player) {
-        super(player, ActionType.PLACEMENT);
-        this.territoryId = territoryId;
-        this.unitType = unitType;
-        this.number = number;
+        super(player, ActionType.PLACEMENT, territoryId, unitType, number);
     }
 
     @Override
@@ -48,7 +39,7 @@ public class PlacementAction extends AbstractAction {
         Player player = board.getPlayers().get(super.playerId);
         player.getTotalUnitsMap().put(unitType, number);
         player.getInitUnitsMap().put(unitType, player.getInitUnitsMap().get(unitType) - number);
-        Territory territory = board.getTerritories().get(territoryId);
+        Territory territory = board.getTerritories().get(destinationId);
         territory.getUnitsMap().put(unitType, number);
     }
 
