@@ -7,11 +7,25 @@
 plugins {
     id 'com.bmuschko.clover' version '2.2.3'
 }
+clover{
+    enabled = true
+    report {
+        json = true
+        html = true
+    }
+    compiler{
+        additionalArgs = "-g:lines,source,vars"
+    }
+}
 subprojects {
     apply plugin: "java"
     apply plugin: "com.bmuschko.clover"
     repositories {
         jcenter()
+    }
+    java {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     //for test shared test codes
@@ -35,8 +49,13 @@ subprojects {
         clover 'org.openclover:clover:4.3.1'
         testCompile "org.mockito:mockito-core:2.+"
     }
-    clover {
-        compiler {
+    clover{
+        enabled = true
+        report {
+            json = true
+            html = true
+        }
+        compiler{
             additionalArgs = "-g:lines,source,vars"
         }
     }
@@ -78,4 +97,20 @@ tasks.register("run-client") {
     dependsOn project('client').getTasksByName('run', false)
     group = 'Run Client/Server'
     description = 'Run the Client'
+}
+
+task resolveDependencies {
+    doLast {
+        project.rootProject.allprojects.each { subProject ->
+            subProject.buildscript.configurations.each { configuration->
+                if(configuration.canBeResolved) {
+                    configuration.resolve()
+                }
+            }
+            subProject.configurations.each { configuration ->
+                if(configuration.canBeResolved) {configuration.resolve()
+                }
+            }
+        }
+    }
 }
