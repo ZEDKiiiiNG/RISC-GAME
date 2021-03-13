@@ -6,6 +6,7 @@ import edu.duke.risc.shared.commons.UserColor;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -33,6 +34,8 @@ public class Player implements GameUser, Serializable {
      */
     private Map<UnitType, Integer> initUnitsMap;
 
+    private Set<Integer> initAssignedTerritories;
+
     /**
      * Owned territories.
      */
@@ -50,6 +53,8 @@ public class Player implements GameUser, Serializable {
 
     public Player(int userId, UserColor color) {
         //init units map
+        this.ownedTerritories = new HashSet<>();
+        this.initAssignedTerritories = new HashSet<>();
         this.initUnitsMap = new HashMap<>();
         initUnitsMap.put(UnitType.SOLDIER, Configurations.INIT_SOLDIER_NUM);
         this.userId = userId;
@@ -183,5 +188,13 @@ public class Player implements GameUser, Serializable {
 
     public Map<UnitType, Integer> getInitUnitsMap() {
         return initUnitsMap;
+    }
+
+    public Set<Integer> getInitAssignedTerritories() {
+        return initAssignedTerritories;
+    }
+
+    public void setInitAssignedTerritories(Set<Integer> initAssignedTerritories) {
+        this.initAssignedTerritories = initAssignedTerritories;
     }
 }

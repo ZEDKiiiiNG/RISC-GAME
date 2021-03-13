@@ -61,10 +61,10 @@ public class GameBoard implements Serializable {
     /**
      * @return
      */
-    public String getPlayerOwnedTerritoryInfo(Integer playerId) {
+    public String getPlayerAssignedTerritoryInfo(Integer playerId) {
         StringBuilder builder = new StringBuilder();
         Player player = this.players.get(playerId);
-        for (Integer territoryId : player.getOwnedTerritories()) {
+        for (Integer territoryId : player.getInitAssignedTerritories()) {
             Territory territory = this.territories.get(territoryId);
             builder.append(territory.getTerritoryName() + " (" + territory.getTerritoryId() + ") ");
         }

@@ -42,6 +42,7 @@ public class PlacementAction extends AbstractAction {
         player.updateInitUnitMap(unitType, -number);
         Territory territory = board.getTerritories().get(destinationId);
         territory.updateUnitsMap(unitType, number);
+        player.addOwnedTerritory(destinationId);
     }
 
     @Override

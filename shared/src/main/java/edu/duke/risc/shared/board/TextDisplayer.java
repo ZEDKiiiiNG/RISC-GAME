@@ -1,6 +1,5 @@
 package edu.duke.risc.shared.board;
 
-import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.users.Player;
 
 import java.util.Map;
@@ -18,24 +17,27 @@ public class TextDisplayer implements Displayable {
             Player player = entry.getValue();
             System.out.println(player.getColor() + " player:");
             System.out.println("-----------------------");
-            for (Integer territoryId : player.getOwnedTerritories()) {
-                //printing units
-                Territory territory = gameBoard.getTerritories().get(territoryId);
-                if (territory.getUnitsMap().isEmpty()) {
-                    System.out.print("No Units ");
-                } else {
-                    for (Map.Entry<UnitType, Integer> mapUnit : territory.getUnitsMap().entrySet()) {
-                        System.out.print(mapUnit.getValue() + " " + mapUnit.getKey() + " ");
-                    }
+            if (player.getOwnedTerritories().size() == 0) {
+                System.out.println("Not owned any territory");
+            } else {
+                for (Integer territoryId : player.getOwnedTerritories()) {
+                    //printing units
+                    Territory territory = gameBoard.getTerritories().get(territoryId);
+                    System.out.println(territory);
                 }
-                System.out.print("in " + territory.getTerritoryName() + " (next to: ");
-                for (Territory adjacent : territory.getAdjacentTerritories()) {
-                    System.out.print(adjacent.getTerritoryName() + ", ");
-                }
-                System.out.println(")");
             }
             System.out.println();
         }
+        //display un-owned territories
+        System.out.println("Territories that are not owned yet");
+        System.out.println("-----------------------");
+        for (Map.Entry<Integer, Territory> entry : gameBoard.getTerritories().entrySet()) {
+            if (entry.getValue().isEmptyTerritory()) {
+                System.out.println(entry.getValue());
+            }
+        }
+
+
     }
 
 }

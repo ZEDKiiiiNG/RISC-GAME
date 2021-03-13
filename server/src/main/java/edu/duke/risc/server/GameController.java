@@ -245,7 +245,7 @@ public class GameController {
      */
     private void assignTerritories(Player player, GameBoard gameBoard) {
         Set<Integer> assignedTerritories = gameBoard.addPlayer(player);
-        player.setOwnedTerritories(assignedTerritories);
+        player.setInitAssignedTerritories(assignedTerritories);
     }
 
 }

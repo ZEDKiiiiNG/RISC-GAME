@@ -56,11 +56,20 @@ public class Territory implements Serializable {
 
     @Override
     public String toString() {
-        return "Territory{" +
-                "territoryId=" + territoryId +
-                ", territoryName='" + territoryName + '\'' +
-                " units map size=" + unitsMap.size() +
-                '}';
+        StringBuilder builder = new StringBuilder();
+        if (this.isEmptyTerritory()) {
+            builder.append("No Units ");
+        } else {
+            for (Map.Entry<UnitType, Integer> mapUnit : this.unitsMap.entrySet()) {
+                builder.append(mapUnit.getValue()).append(" ").append(mapUnit.getKey()).append(" ");
+            }
+        }
+        builder.append("in ").append(this.territoryName).append(" (next to: ");
+        for (Territory adjacent :this.adjacentTerritories) {
+            builder.append(adjacent.getTerritoryName()).append(", ");
+        }
+        builder.append(")");
+        return builder.toString();
     }
 
     @Override

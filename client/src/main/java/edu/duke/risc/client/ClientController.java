@@ -8,7 +8,6 @@ import edu.duke.risc.shared.actions.Action;
 import edu.duke.risc.shared.actions.PlacementAction;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.board.GameStage;
-import edu.duke.risc.shared.board.Territory;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
@@ -91,7 +90,7 @@ public class ClientController {
                 System.out.println("You are the " + player.getColor() + " player: ");
 
                 //asking target territory
-                System.out.println("You are assigned " + gameBoard.getPlayerOwnedTerritoryInfo(playerId));
+                System.out.println("You are assigned " + gameBoard.getPlayerAssignedTerritoryInfo(playerId));
                 System.out.println("You still have " + player.getUnitsInfo(player.getInitUnitsMap()) + " available");
                 System.out.println("Please enter your placement will in the format of " +
                         "<target territory>,<unit type>,<unit number> for example 1,S,5");
@@ -116,6 +115,7 @@ public class ClientController {
                     Configurations.MASTER_ID, PayloadType.REQUEST, content);
             try {
                 this.sendMessage(request);
+                System.out.println("Actions sent, please wait other players finish placing");
                 this.waitAndReadServerResponse();
             } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
                 //if server returns failed, re-do the actions again
@@ -195,9 +195,9 @@ public class ClientController {
 
             //check valid territory id
             Player player = board.findPlayer(playerId);
-            Set<Integer> ownedTerritories = player.getOwnedTerritories();
-            if (!ownedTerritories.contains(territoryId)){
-                throw new InvalidInputException("You do not own territory with id = " + territoryId);
+            Set<Integer> initAssignedTerritories = player.getInitAssignedTerritories();
+            if (!initAssignedTerritories.contains(territoryId)){
+                throw new InvalidInputException("You are not assigned territory with id = " + territoryId);
             }
 
             //check valid unit type mapping
