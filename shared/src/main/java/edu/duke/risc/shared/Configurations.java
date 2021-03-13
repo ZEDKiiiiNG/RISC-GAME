@@ -20,5 +20,7 @@ public class Configurations {
     public static final int MASTER_ID = 0;
 
     public static final String REQUEST_PLACEMENT_ACTIONS = "REQUEST_PLACEMENT_ACTIONS";
+    public static final String REQUEST_MOVE_ACTIONS = "REQUEST_MOVE_ACTIONS";
+    public static final String REQUEST_ATTACK_ACTIONS = "REQUEST_ATTACK_ACTIONS";
 
 }

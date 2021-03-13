@@ -30,6 +30,7 @@ public class PlacementAction extends AbstractAction {
         return null;
     }
 
+
     @Override
     public void apply(GameBoard board) throws InvalidActionException {
         String error;
