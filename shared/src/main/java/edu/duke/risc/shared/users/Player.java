@@ -114,6 +114,22 @@ public class Player implements GameUser, Serializable {
         return totalUnitsMap;
     }
 
+    /**
+     * no throw here, like Territory
+     */
+    public void updateTotalUnitsMap(UnitType unit_type, Integer safe_num) {
+        if (totalUnitsMap.get(unit_type) + safe_num == 0) {
+            totalUnitsMap.remove(unit_type, -safe_num);
+            return;
+        }
+        if (totalUnitsMap.containsKey(unit_type)) {
+            Integer temp = totalUnitsMap.get(unit_type);
+            totalUnitsMap.replace(unit_type, temp, temp + safe_num);
+        } else {
+            totalUnitsMap.put(unit_type, safe_num);
+        }
+    }
+
     public Set<Integer> getOwnedTerritories() {
         return ownedTerritories;
     }

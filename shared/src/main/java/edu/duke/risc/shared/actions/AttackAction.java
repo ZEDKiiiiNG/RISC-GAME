@@ -1,36 +1,106 @@
 package edu.duke.risc.shared.actions;
 
 import edu.duke.risc.shared.board.GameBoard;
+import edu.duke.risc.shared.board.Territory;
 import edu.duke.risc.shared.commons.ActionType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
+import edu.duke.risc.shared.users.Player;
 
 /**
- * @author eason
- * @date 2021/3/12 10:03
+ *
  */
 public class AttackAction extends AbstractAction {
 
-    private Integer sourceId;
+    /**
+     * Source territory id
+     */
+    private Integer sourceTerritoryId;
 
-    public AttackAction(Integer sourceId) {
-        this.sourceId = sourceId;
-    }
+    private UnitType unitType;
 
-    public AttackAction(Integer playerId, ActionType actionType, Integer destinationId,
-                        UnitType unitType, Integer number, Integer sourceId) {
-        super(playerId, actionType, destinationId, unitType, number);
-        this.sourceId = sourceId;
+    private Integer number;
+    private Integer attackedPlayer;
+
+    public AttackAction(Integer sourceTerritoryId, Integer destinationId, UnitType unitType, Integer number, Integer player, Integer attackedPlayer) {
+        super(player, ActionType.ATTACK, destinationId, unitType, number);
+        this.sourceTerritoryId = sourceTerritoryId;
+        this.unitType = unitType;
+        this.number = number;
+        this.attackedPlayer = attackedPlayer;
     }
 
     @Override
     public String isValid(GameBoard board) {
+        if (!board.getPlayers().containsKey(super.playerId)) {
+            return "Does not contain user: " + playerId;
+        }
+        if (!board.getPlayers().containsKey(attackedPlayer)) {
+            return "Does not contain user: " + attackedPlayer;
+        }
+        Player player = board.getPlayers().get(super.playerId);
+        Player att_player = board.getPlayers().get(attackedPlayer);
+        if (!player.getInitUnitsMap().containsKey(unitType)) {
+            return playerId + "Does not contain unit type.";
+        }
+        if (!att_player.getInitUnitsMap().containsKey(unitType)) {
+            return att_player + "Does not contain unit type.";
+        }
+        Territory territory = board.getTerritories().get(sourceTerritoryId);
+        if (!territory.getUnitsMap().containsKey(unitType)) {
+            return "The source territory does not contain the unit type.";
+        }
+        if (territory.getUnitsMap().get(unitType) <= number) {
+            return "The source territory does not contain enough unit type.";
+        }
+        if (!player.getOwnedTerritories().contains(sourceTerritoryId)) {
+            return "The player does not contain source territory.";
+        }
+        if (!att_player.getOwnedTerritories().contains(destinationId)) {
+            return "The attacked player does not contain destination territory.";
+        }
+        Territory des_territory = board.getTerritories().get(destinationId);
+        if (!territory.getAdjacentTerritories().contains(des_territory)) {
+            return "The source territory is not adjacent to destination territory.";
+        }
         return null;
     }
 
     @Override
     public void apply(GameBoard board) throws InvalidActionException {
+        String error;
+        if ((error = isValid(board)) != null) {
+            throw new InvalidActionException(error);
+        }
+        Player player = board.getPlayers().get(super.playerId);
+        Player att_player = board.getPlayers().get(attackedPlayer);
+        Territory source_territory = board.getTerritories().get(sourceTerritoryId);
+        source_territory.updateUnitsMap(unitType, -number);
+        Territory des_territory = board.getTerritories().get(destinationId);
+        Integer attacker = number;
+        while (des_territory.getUnitsMap().get(unitType) != 0 && attacker != 0) {
+            Integer random = randomWin();
+            if (random == 0) {
+                attacker--;
+            } else {
+                des_territory.updateUnitsMap(unitType, -1);
+                att_player.updateTotalUnitsMap(unitType, -1);
+            }
+        }
+        if (attacker == 0) {
+            player.updateTotalUnitsMap(unitType, -number);
+        } else {
+            des_territory.getUnitsMap().put(unitType, attacker);
+            player.updateTotalUnitsMap(unitType, attacker - number);
+        }
+    }
 
+    public Integer randomWin() {
+        if (Math.random() > 0.5) {
+            return 0;
+        } else {
+            return 1;
+        }
     }
 
 }
