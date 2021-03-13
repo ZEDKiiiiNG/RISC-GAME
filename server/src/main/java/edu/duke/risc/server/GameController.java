@@ -7,8 +7,8 @@ import edu.duke.risc.shared.SocketCommunicator;
 import edu.duke.risc.shared.ThreadBarrier;
 import edu.duke.risc.shared.actions.Action;
 import edu.duke.risc.shared.board.GameBoard;
+import edu.duke.risc.shared.board.GameStage;
 import edu.duke.risc.shared.commons.PayloadType;
-import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.commons.UserColor;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
 import edu.duke.risc.shared.users.GameUser;
@@ -62,7 +62,7 @@ public class GameController {
     public void startGame() throws IOException {
         this.waitPlayers();
         this.placementPhase();
-        this.move_attack_Phase();
+        this.moveAttackPhase();
     }
 
     /**
@@ -111,10 +111,12 @@ public class GameController {
      *
      * @throws IOException
      */
-    private void move_attack_Phase() throws IOException {
+    private void moveAttackPhase() throws IOException {
+        System.out.println("Entering move attack phase....");
+        this.board.setGameStage(GameStage.GAME_START);
         int numberOfRequestRequired = this.board.getPlayers().size();
-        List<Action> move_cacheActions = new ArrayList<>();
-        List<Action> attack_cacheActions = new ArrayList<>();
+        List<Action> moveCacheActions = new ArrayList<>();
+        List<Action> attackCacheActions = new ArrayList<>();
         while (numberOfRequestRequired > 0) {
             PayloadObject request = this.barrier.consumeRequest();
             //validate move_attack_request
@@ -140,14 +142,14 @@ public class GameController {
                 continue;
             } else {
                 //validate success, response the client with success message and continues the next request
-                move_cacheActions.addAll(moveActions);
-                attack_cacheActions.addAll(attackActions);
+                moveCacheActions.addAll(moveActions);
+                attackCacheActions.addAll(attackActions);
                 numberOfRequestRequired -= 1;
             }
         }
         //with all requests received, process them simultaneously
         //first move then attack
-        for (Action action : move_cacheActions) {
+        for (Action action : moveCacheActions) {
             try {
                 action.apply(this.board);
             } catch (InvalidActionException e) {
@@ -155,7 +157,7 @@ public class GameController {
                 System.out.println(e.getMessage());
             }
         }
-        for (Action action : attack_cacheActions) {
+        for (Action action : attackCacheActions) {
             try {
                 action.apply(this.board);
             } catch (InvalidActionException e) {
@@ -166,7 +168,7 @@ public class GameController {
         broadcastUpdatedMaps();
     }
 
-    private void sendBackErrorMessage(PayloadObject request, String validateResult) {
+    private void sendBackErrorMessage(PayloadObject request, String validateResult) throws IOException {
         Map<String, Object> response = new HashMap<>(5);
         response.put(Configurations.ERR_MSG, validateResult);
         PayloadObject err = new PayloadObject(this.root.getId(), request.getSender(),
@@ -227,8 +229,10 @@ public class GameController {
         }
     }
 
-    private void sendPackageToPlayer(int playerId, PayloadObject payloadObject) {
-
+    private void sendPackageToPlayer(int playerId, PayloadObject payloadObject) throws IOException {
+        Player player = this.board.findPlayer(playerId);
+        SocketCommunicator communicator = this.playerConnections.get(player);
+        communicator.writeMessage(payloadObject);
     }
 
     private void addColors() {

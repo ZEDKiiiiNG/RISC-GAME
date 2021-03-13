@@ -13,6 +13,8 @@ public class TextDisplayer implements Displayable {
     @Override
     public void display(GameBoard gameBoard) {
         Map<Integer, Player> players = gameBoard.getPlayers();
+        System.out.println();
+        System.out.println("--------------");
         for (Map.Entry<Integer, Player> entry : players.entrySet()) {
             Player player = entry.getValue();
             System.out.println(player.getColor() + " player:");
@@ -26,6 +28,7 @@ public class TextDisplayer implements Displayable {
                     System.out.println(territory);
                 }
             }
+            System.out.println("--------------");
             System.out.println();
         }
         //display un-owned territories

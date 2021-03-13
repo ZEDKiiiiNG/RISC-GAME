@@ -80,8 +80,6 @@ public class ClientController {
 
     private void assignUnits() throws IOException {
         while (true) {
-            assert this.gameBoard.getGameStage() == GameStage.PLACEMENT;
-
             List<Action> actions = new ArrayList<>();
             Player player = this.gameBoard.getPlayers().get(playerId);
 
@@ -134,11 +132,11 @@ public class ClientController {
 
     private void moveAndAttack() throws IOException {
         while (true) {
-            assert this.gameBoard.getGameStage() == GameStage.GAME_START;
             Player player = this.gameBoard.getPlayers().get(playerId);
 
             boolean isFinished = false;
-            List<Action> actions = new ArrayList<>();
+            List<Action> moveActions = new ArrayList<>();
+            List<Action> attackActions = new ArrayList<>();
             while (!isFinished) {
                 this.gameBoard.displayBoard();
                 System.out.println("You are the " + player.getColor() + " player, what would you like to do?");
@@ -157,7 +155,7 @@ public class ClientController {
                         try {
                             action = this.readActionAndProceed(moveInput, this.gameBoard, playerId);
                             action.apply(this.gameBoard);
-                            actions.add(action);
+                            moveActions.add(action);
                         } catch (InvalidInputException | InvalidActionException e) {
                             System.out.println(e.getMessage());
                         }
@@ -172,13 +170,13 @@ public class ClientController {
                         System.out.println("Invalid input, please input again");
                         break;
                 }
-
             }
 
             //sending to the server
             //constructing payload objects
             Map<String, Object> content = new HashMap<>(3);
-            content.put(Configurations.REQUEST_PLACEMENT_ACTIONS, actions);
+            content.put(Configurations.REQUEST_MOVE_ACTIONS, moveActions);
+            content.put(Configurations.REQUEST_ATTACK_ACTIONS, attackActions);
             PayloadObject request = new PayloadObject(this.playerId,
                     Configurations.MASTER_ID, PayloadType.REQUEST, content);
             try {
@@ -190,8 +188,6 @@ public class ClientController {
                 exception.printStackTrace();
                 continue;
             }
-            System.out.println("Successfully finished placement phase");
-            break;
         }
     }
 
