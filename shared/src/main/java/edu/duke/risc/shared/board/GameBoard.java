@@ -153,6 +153,27 @@ public class GameBoard implements Serializable {
         return false;
     }
 
+    /**
+     * Get the player information
+     * @param playerId
+     * @return
+     */
+    public String getPlayerInfo(int playerId) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("-------------").append(System.lineSeparator());
+        Player player = this.findPlayer(playerId);
+
+        //print total units
+        builder.append("You have in total: ").append(System.lineSeparator());
+        for (Map.Entry<UnitType, Integer> unitTypeIntegerEntry : player.getTotalUnitsMap().entrySet()) {
+            builder.append(unitTypeIntegerEntry.getKey()).append(" : ")
+                    .append(unitTypeIntegerEntry.getValue())
+                    .append(System.lineSeparator());
+        }
+
+        return builder.toString();
+    }
+
     public UnitType getUnitType(String search) {
         return this.unitTypeMapper.get(search);
     }

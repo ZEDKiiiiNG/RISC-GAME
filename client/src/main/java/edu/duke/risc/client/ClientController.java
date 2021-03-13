@@ -141,6 +141,7 @@ public class ClientController {
             List<Action> attackActions = new ArrayList<>();
             while (!isFinished) {
                 this.gameBoard.displayBoard();
+                System.out.println(this.gameBoard.getPlayerInfo(this.playerId));
                 System.out.println("You are the " + player.getColor() + " player, what would you like to do?");
                 System.out.println("(M)ove");
                 System.out.println("(A)ttack");
