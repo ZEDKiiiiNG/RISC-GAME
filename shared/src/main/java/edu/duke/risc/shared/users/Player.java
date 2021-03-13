@@ -6,6 +6,7 @@ import edu.duke.risc.shared.commons.UserColor;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -33,6 +34,8 @@ public class Player implements GameUser, Serializable {
      */
     private Map<UnitType, Integer> initUnitsMap;
 
+    private Set<Integer> initAssignedTerritories;
+
     /**
      * Owned territories.
      */
@@ -50,6 +53,8 @@ public class Player implements GameUser, Serializable {
 
     public Player(int userId, UserColor color) {
         //init units map
+        this.ownedTerritories = new HashSet<>();
+        this.initAssignedTerritories = new HashSet<>();
         this.initUnitsMap = new HashMap<>();
         initUnitsMap.put(UnitType.SOLDIER, Configurations.INIT_SOLDIER_NUM);
         this.userId = userId;
@@ -62,9 +67,9 @@ public class Player implements GameUser, Serializable {
      *
      * @return units info in string
      */
-    public String getUnitsInfo() {
+    public String getUnitsInfo(Map<UnitType, Integer> unitMap) {
         StringBuilder builder = new StringBuilder();
-        for (Map.Entry<UnitType, Integer> entry : this.initUnitsMap.entrySet()) {
+        for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
             builder.append(entry.getKey()).append(" : ").append(entry.getValue());
         }
         return builder.toString();
@@ -115,19 +120,58 @@ public class Player implements GameUser, Serializable {
     }
 
     /**
+     * updateInitUnitMap
+     *
+     * @param unitType
+     * @param diff
+     */
+    public void updateInitUnitMap(UnitType unitType, Integer diff) {
+        this.updateUnitsMap(this.initUnitsMap, unitType, diff);
+    }
+
+    /**
+     * updateTotalUnitMap
+     *
+     * @param unitType
+     * @param diff
+     */
+    public void updateTotalUnitMap(UnitType unitType, Integer diff) {
+        this.updateUnitsMap(this.totalUnitsMap, unitType, diff);
+    }
+
+    public boolean ownsTerritory(Integer territoryId) {
+        return this.ownedTerritories.contains(territoryId);
+    }
+
+    /**
      * no throw here, like Territory
      */
-    public void updateTotalUnitsMap(UnitType unit_type, Integer safe_num) {
-        if (totalUnitsMap.get(unit_type) + safe_num == 0) {
-            totalUnitsMap.remove(unit_type, -safe_num);
-            return;
-        }
-        if (totalUnitsMap.containsKey(unit_type)) {
-            Integer temp = totalUnitsMap.get(unit_type);
-            totalUnitsMap.replace(unit_type, temp, temp + safe_num);
+    private void updateUnitsMap(Map<UnitType, Integer> unitsMap, UnitType unitType, Integer diff) {
+        assert unitsMap != null;
+        if (unitsMap.containsKey(unitType)) {
+            int originVal = unitsMap.get(unitType);
+            if (diff >= 0) {
+                unitsMap.put(unitType, diff + originVal);
+            } else {
+                if (originVal + diff <= 0) {
+                    unitsMap.remove(unitType);
+                } else {
+                    unitsMap.put(unitType, diff + originVal);
+                }
+            }
         } else {
-            totalUnitsMap.put(unit_type, safe_num);
+            if (diff > 0) {
+                unitsMap.put(unitType, diff);
+            }
         }
+    }
+
+    public void removeOwnedTerritory(Integer territoryId) {
+        this.ownedTerritories.remove(territoryId);
+    }
+
+    public void addOwnedTerritory(Integer territoryId) {
+        this.ownedTerritories.add(territoryId);
     }
 
     public Set<Integer> getOwnedTerritories() {
@@ -148,5 +192,13 @@ public class Player implements GameUser, Serializable {
 
     public Map<UnitType, Integer> getInitUnitsMap() {
         return initUnitsMap;
+    }
+
+    public Set<Integer> getInitAssignedTerritories() {
+        return initAssignedTerritories;
+    }
+
+    public void setInitAssignedTerritories(Set<Integer> initAssignedTerritories) {
+        this.initAssignedTerritories = initAssignedTerritories;
     }
 }

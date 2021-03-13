@@ -8,10 +8,10 @@ import edu.duke.risc.shared.actions.Action;
 import edu.duke.risc.shared.actions.PlacementAction;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.board.GameStage;
-import edu.duke.risc.shared.board.Territory;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
+import edu.duke.risc.shared.exceptions.InvalidInputException;
 import edu.duke.risc.shared.exceptions.InvalidPayloadContent;
 import edu.duke.risc.shared.exceptions.ServerRejectException;
 import edu.duke.risc.shared.exceptions.UnmatchedReceiverException;
@@ -22,9 +22,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static edu.duke.risc.shared.Configurations.GAME_BOARD_STRING;
 import static edu.duke.risc.shared.Configurations.PLAYER_STRING;
@@ -77,39 +79,34 @@ public class ClientController {
 
     private void assignUnits() throws IOException {
         while (true) {
-            List<Action> actions = new ArrayList<>();
-            this.gameBoard.displayBoard();
             assert this.gameBoard.getGameStage() == GameStage.PLACEMENT;
+
+            List<Action> actions = new ArrayList<>();
             Player player = this.gameBoard.getPlayers().get(playerId);
-            System.out.println("You are the " + player.getColor() + " player: ");
-            System.out.println("Placement phase: where would you like to place your units ?");
-            for (Integer territoryId : player.getOwnedTerritories()) {
-                Territory territory = gameBoard.getTerritories().get(territoryId);
-                for (Map.Entry<UnitType, Integer> unitMap : player.getInitUnitsMap().entrySet()) {
-                    while (true) {
-                        System.out.println("You have " + player.getUnitsInfo());
-                        System.out.println("How many " + unitMap.getKey() + " would you like to put on "
-                                + territory.getTerritoryName() + " ? ");
-                        String input = this.consoleReader.readLine();
-                        int number;
-                        try {
-                            number = Integer.parseInt(input);
-                        } catch (NumberFormatException e) {
-                            System.out.println("Invalid input, should only be numbers");
-                            continue;
-                        }
-                        Action action = new PlacementAction(territoryId, unitMap.getKey(), number, playerId);
-                        try {
-                            action.apply(this.gameBoard);
-                        } catch (InvalidActionException e) {
-                            System.out.println(e.getMessage());
-                            continue;
-                        }
-                        actions.add(action);
-                        break;
-                    }
+
+            while (!player.getInitUnitsMap().isEmpty()) {
+                this.gameBoard.displayBoard();
+                //print basic information
+                System.out.println("You are the " + player.getColor() + " player: ");
+
+                //asking target territory
+                System.out.println("You are assigned " + gameBoard.getPlayerAssignedTerritoryInfo(playerId));
+                System.out.println("You still have " + player.getUnitsInfo(player.getInitUnitsMap()) + " available");
+                System.out.println("Please enter your placement will in the format of " +
+                        "<target territory>,<unit type>,<unit number> for example 1,S,5");
+
+                String input = this.consoleReader.readLine();
+                Action action = null;
+                try {
+                    action = this.validateInputAndGenerateAction(input, this.gameBoard, playerId);
+                    action.apply(this.gameBoard);
+                    actions.add(action);
+                } catch (InvalidInputException | InvalidActionException e) {
+                    System.out.println(e.getMessage());
+                    continue;
                 }
             }
+
             //sending to the server
             //constructing payload objects
             Map<String, Object> content = new HashMap<>(3);
@@ -118,6 +115,7 @@ public class ClientController {
                     Configurations.MASTER_ID, PayloadType.REQUEST, content);
             try {
                 this.sendMessage(request);
+                System.out.println("Actions sent, please wait other players finish placing");
                 this.waitAndReadServerResponse();
             } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
                 //if server returns failed, re-do the actions again
@@ -181,6 +179,33 @@ public class ClientController {
                 return readObject;
             }
         }
+    }
+
+    private Action validateInputAndGenerateAction(String input, GameBoard board, Integer playerId)
+            throws InvalidInputException {
+        List<String> inputs = new ArrayList<>(Arrays.asList(input.split(",")));
+        if (inputs.size() != 3) {
+            throw new InvalidInputException("Invalid input size");
+        }
+        Action action;
+        try {
+            int territoryId = Integer.parseInt(inputs.get(0));
+            String unitTypeString = inputs.get(1);
+            int unitNum = Integer.parseInt(inputs.get(2));
+
+            //check valid unit type mapping
+            Map<String, UnitType> unitTypeMapper = gameBoard.getUnitTypeMapper();
+            if (!unitTypeMapper.containsKey(unitTypeString)){
+                throw new InvalidInputException("Invalid unit type string " + unitTypeString);
+            }
+            UnitType unitType = unitTypeMapper.get(unitTypeString);
+
+            action = new PlacementAction(territoryId, unitType, unitNum, playerId);
+
+        } catch (NumberFormatException e) {
+            throw new InvalidInputException("Cannot parse string to valid int");
+        }
+        return action;
     }
 
 }

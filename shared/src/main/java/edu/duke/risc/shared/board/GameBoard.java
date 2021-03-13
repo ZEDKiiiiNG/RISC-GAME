@@ -1,6 +1,7 @@
 package edu.duke.risc.shared.board;
 
 import edu.duke.risc.shared.Configurations;
+import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.users.Player;
 
 import java.io.Serializable;
@@ -8,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 /**
  * @author eason
@@ -23,6 +25,8 @@ public class GameBoard implements Serializable {
 
     private TerritoryFactory territoryFactory;
 
+    private final Map<String, UnitType> unitTypeMapper = new HashMap<>();
+
     private Displayable displayer;
 
     public GameBoard() {
@@ -31,6 +35,7 @@ public class GameBoard implements Serializable {
         players = new HashMap<>();
         gameStage = GameStage.WAITING_USERS;
         displayer = new TextDisplayer();
+        this.initUnitTypeMapping();
     }
 
     public void displayBoard() {
@@ -54,12 +59,77 @@ public class GameBoard implements Serializable {
         return result;
     }
 
+    /**
+     * @return
+     */
+    public String getPlayerAssignedTerritoryInfo(Integer playerId) {
+        StringBuilder builder = new StringBuilder();
+        Player player = this.players.get(playerId);
+        for (Integer territoryId : player.getInitAssignedTerritories()) {
+            Territory territory = this.territories.get(territoryId);
+            builder.append(territory.getTerritoryName() + " (" + territory.getTerritoryId() + ") ");
+        }
+        return builder.toString();
+    }
+
+    public Territory findTerritory(Integer territoryId) {
+        return this.territories.get(territoryId);
+    }
+
+    public Player findPlayer(Integer playerId) {
+        return this.players.get(playerId);
+    }
+
     @Override
     public String toString() {
         return "GameBoard{" +
                 ", players=" + players +
                 ", gameStage=" + gameStage +
                 '}';
+    }
+
+    private void initUnitTypeMapping() {
+        this.unitTypeMapper.put("s", UnitType.SOLDIER);
+        this.unitTypeMapper.put("S", UnitType.SOLDIER);
+    }
+
+    /**
+     * Whether we can reach from source to the destination.
+     * For places that are owned by the current player or empty place, we accept.
+     *
+     * @param sourceId sourceId
+     * @param destId   destId
+     * @param playerId playerId
+     * @return Whether we can reach from source to the destination.
+     */
+    public boolean isReachable(int sourceId, int destId, int playerId) {
+        Stack<Territory> stack = new Stack<>();
+        Set<Territory> visited = new HashSet<>();
+        Territory source = this.territories.get(sourceId);
+        Territory dest = this.territories.get(destId);
+        Player player = this.findPlayer(playerId);
+
+        visited.add(source);
+        stack.push(source);
+        while (!stack.isEmpty()) {
+            Territory current = stack.pop();
+            if (dest.equals(source)) {
+                return true;
+            }
+            for (Territory neighbor : current.getAdjacentTerritories()) {
+                //area not visited and ( or territory is empty -- not owned by anyone)
+                if (!visited.contains(neighbor)
+                        && (player.ownsTerritory(neighbor.getTerritoryId()) || neighbor.isEmptyTerritory())) {
+                    visited.add(neighbor);
+                    stack.push(neighbor);
+                }
+            }
+        }
+        return false;
+    }
+
+    public UnitType getUnitType(String search) {
+        return this.unitTypeMapper.get(search);
     }
 
     public Map<Integer, Player> getPlayers() {
@@ -104,5 +174,9 @@ public class GameBoard implements Serializable {
 
     public Displayable getDisplayer() {
         return displayer;
+    }
+
+    public Map<String, UnitType> getUnitTypeMapper() {
+        return unitTypeMapper;
     }
 }

@@ -43,33 +43,6 @@ public class MoveAction extends AbstractAction {
         return ans;
     }
 
-    public Set<Territory> getAccessedTerritory(Territory t) {
-        Set<Territory> ans = new HashSet<>();
-        Queue<Territory> temp = new ArrayDeque<Territory>();
-        for (Territory t1 : t.getAdjacentTerritories()) {
-            ans.add(t1);
-            temp.add(t1);
-        }
-        while (!temp.isEmpty()) {
-            Territory t2 = temp.remove();
-            for (Territory t3 : t2.getAdjacentTerritories()) {
-                if (!ans.contains(t3)) {
-                    ans.add(t3);
-                    temp.add(t3);
-                }
-            }
-        }
-        return ans;
-    }
-
-    public boolean hasPath(Territory source, Territory des) {
-        Set<Territory> accessTerritory = getAccessedTerritory(source);
-        if (accessTerritory.contains(des)) {
-            return true;
-        }
-        return false;
-    }
-
     @Override
     public String isValid(GameBoard board) {
         if (!board.getPlayers().containsKey(super.playerId)) {
@@ -83,14 +56,14 @@ public class MoveAction extends AbstractAction {
         if (!territory.getUnitsMap().containsKey(unitType)) {
             return "The source territory does not contain the unit type.";
         }
+        if (!board.isReachable(sourceTerritoryId, destinationId, playerId)) {
+            return "The destination territory is not reachable";
+        }
         if (territory.getUnitsMap().get(unitType) < number) {
             return "The source territory does not contain enough unit type.";
         }
         if (!player.getOwnedTerritories().contains(sourceTerritoryId) || !player.getOwnedTerritories().contains(destinationId)) {
             return "The player does not contain source territory or destination territory.";
-        }
-        if (!hasPath(board.getTerritories().get(sourceTerritoryId), board.getTerritories().get(destinationId))) {
-            return "The source territory has no path to destination territory.";
         }
         return null;
     }
@@ -102,11 +75,30 @@ public class MoveAction extends AbstractAction {
             throw new InvalidActionException(error);
         }
         Player player = board.getPlayers().get(super.playerId);
-        Territory source_territory = board.getTerritories().get(sourceTerritoryId);
-        Territory des_territory = board.getTerritories().get(destinationId);
-        source_territory.updateUnitsMap(unitType, number);
-        des_territory.updateUnitsMap(unitType, number);
-
+        //update source territory units, if number reduced to 0, this territory should not be
+        //owned by player anymore -- remove from owned territory
+        Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
+        sourceTerritory.updateUnitsMap(unitType, -number);
+        if (sourceTerritory.isEmptyTerritory()) {
+            player.removeOwnedTerritory(sourceTerritoryId);
+        }
+        //update destination territory
+        Territory desTerritory = board.getTerritories().get(destinationId);
+        if (desTerritory.isEmptyTerritory()) {
+            player.addOwnedTerritory(destinationId);
+        }
+        desTerritory.updateUnitsMap(unitType, number);
 
     }
+
+    @Override
+    public void applyBefore(GameBoard board) throws InvalidActionException {
+
+    }
+
+    @Override
+    public void applyAfter(GameBoard board) throws InvalidActionException {
+
+    }
+
 }

@@ -3,6 +3,8 @@ package edu.duke.risc.shared.actions;
 import edu.duke.risc.shared.commons.ActionType;
 import edu.duke.risc.shared.commons.UnitType;
 
+import java.util.Map;
+
 /**
  * @author eason
  * @date 2021/3/11 14:07
@@ -13,6 +15,7 @@ public abstract class AbstractAction implements Action {
 
     protected ActionType actionType;
     protected Integer destinationId;
+
     protected UnitType unitType;
     protected Integer number;
 

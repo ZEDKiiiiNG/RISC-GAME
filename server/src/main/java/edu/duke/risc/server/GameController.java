@@ -8,6 +8,7 @@ import edu.duke.risc.shared.ThreadBarrier;
 import edu.duke.risc.shared.actions.Action;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.commons.PayloadType;
+import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.commons.UserColor;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
 import edu.duke.risc.shared.users.GameUser;
@@ -49,6 +50,7 @@ public class GameController {
         root = new Master();
         board = new GameBoard();
         playerConnections = new HashMap<>();
+
         this.addColors();
         try {
             serverSocket = new ServerSocket(Configurations.DEFAULT_SERVER_PORT);
@@ -80,11 +82,12 @@ public class GameController {
                 sendBackErrorMessage(request, "Invalid request type");
                 continue;
             }
-            List<Action> moveActions = (List<Action>) request.getContents().get(Configurations.REQUEST_PLACEMENT_ACTIONS);
+            List<Action> actions = (List<Action>) request.getContents().get(Configurations.REQUEST_PLACEMENT_ACTIONS);
             String validateResult = validateActions(actions, this.board);
             if (validateResult != null) {
                 //error occurs, send response back to the client.
                 sendBackErrorMessage(request, validateResult);
+                continue;
             } else {
                 //validate success, response the client with success message and continues the next request
                 cacheActions.addAll(actions);
@@ -102,6 +105,7 @@ public class GameController {
         }
         broadcastUpdatedMaps();
     }
+
     /**
      * Do the move and attack phase
      *
@@ -121,18 +125,23 @@ public class GameController {
                 sendBackErrorMessage(request, "Invalid request type");
                 continue;
             }
-            List<Action> move_actions = (List<Action>) request.getContents().get(Configurations.REQUEST_MOVE_ACTIONS);
-            List<Action> attack_actions = (List<Action>) request.getContents().get(Configurations.REQUEST_ATTACK_ACTIONS);
-            String move_validateResult = validateActions(move_actions, this.board);
-            String attack_validateResult = validateActions(attack_actions, this.board);
-            if (move_validateResult != null || attack_validateResult != null) {
+            List<Action> moveActions = (List<Action>) request.getContents().get(Configurations.REQUEST_MOVE_ACTIONS);
+            List<Action> attackActions = (List<Action>) request.getContents().get(Configurations.REQUEST_ATTACK_ACTIONS);
+            String moveValidateResult = validateActions(moveActions, this.board);
+            if (moveValidateResult != null) {
                 //error occurs, send response back to the client.
-                String validateResult = move_validateResult == null? attack_validateResult : move_validateResult;
-                sendBackErrorMessage(request, validateResult);
+                sendBackErrorMessage(request, moveValidateResult);
+                continue;
+            }
+            String attackValidateResult = validateActions(attackActions, this.board);
+            if (attackValidateResult != null) {
+                //error occurs, send response back to the client.
+                sendBackErrorMessage(request, attackValidateResult);
+                continue;
             } else {
                 //validate success, response the client with success message and continues the next request
-                move_cacheActions.addAll(move_actions);
-                attack_cacheActions.addAll(attack_actions);
+                move_cacheActions.addAll(moveActions);
+                attack_cacheActions.addAll(attackActions);
                 numberOfRequestRequired -= 1;
             }
         }
@@ -236,7 +245,7 @@ public class GameController {
      */
     private void assignTerritories(Player player, GameBoard gameBoard) {
         Set<Integer> assignedTerritories = gameBoard.addPlayer(player);
-        player.setOwnedTerritories(assignedTerritories);
+        player.setInitAssignedTerritories(assignedTerritories);
     }
 
 }

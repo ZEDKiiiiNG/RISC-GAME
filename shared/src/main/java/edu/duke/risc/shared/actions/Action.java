@@ -23,7 +23,22 @@ public interface Action extends Serializable {
      * Conduct the current action on board
      *
      * @param board the main game board
+     * @throws InvalidActionException the action is defined as invalid
      */
     public void apply(GameBoard board) throws InvalidActionException;
+
+    /**
+     * Conduct the current action on board -- from the source
+     *
+     * @throws InvalidActionException the action is defined as invalid
+     */
+    public void applyBefore(GameBoard board) throws InvalidActionException;
+
+    /**
+     * Conduct the current action on board -- to the destination
+     *
+     * @throws InvalidActionException the action is defined as invalid
+     */
+    public void applyAfter(GameBoard board) throws InvalidActionException;
 
 }

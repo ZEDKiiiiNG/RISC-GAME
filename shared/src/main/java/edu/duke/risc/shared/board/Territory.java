@@ -1,6 +1,7 @@
 package edu.duke.risc.shared.board;
 
 import edu.duke.risc.shared.commons.UnitType;
+import edu.duke.risc.shared.users.Player;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -55,11 +56,21 @@ public class Territory implements Serializable {
 
     @Override
     public String toString() {
-        return "Territory{" +
-                "territoryId=" + territoryId +
-                ", territoryName='" + territoryName + '\'' +
-                " units map size=" + unitsMap.size() +
-                '}';
+        StringBuilder builder = new StringBuilder();
+        if (this.isEmptyTerritory()) {
+            builder.append("No Units ");
+        } else {
+            for (Map.Entry<UnitType, Integer> mapUnit : this.unitsMap.entrySet()) {
+                builder.append(mapUnit.getValue()).append(" ").append(mapUnit.getKey()).append(" ");
+            }
+        }
+        builder.append("in ").append(this.territoryName)
+                .append("(").append(this.territoryId).append(")").append(" (next to: ");
+        for (Territory adjacent :this.adjacentTerritories) {
+            builder.append(adjacent.getTerritoryName()).append(", ");
+        }
+        builder.append(")");
+        return builder.toString();
     }
 
     @Override
@@ -91,18 +102,40 @@ public class Territory implements Serializable {
         this.unitsMap = unitsMap;
     }
 
-    public void updateUnitsMap(UnitType unit_type, Integer safe_num) {
-        if (unitsMap.get(unit_type) + safe_num == 0) {
-            unitsMap.remove(unit_type, -safe_num);
-            return;
-        }
-        if (unitsMap.containsKey(unit_type)) {
-            Integer temp = unitsMap.get(unit_type);
-            unitsMap.replace(unit_type, temp, temp + safe_num);
+    /**
+     * Update units map in this territory. If no more units like this, remove from map
+     *
+     * @param unitType
+     * @param diff
+     */
+    public void updateUnitsMap(UnitType unitType, Integer diff) {
+        assert unitsMap != null;
+        if (unitsMap.containsKey(unitType)) {
+            int originVal = unitsMap.get(unitType);
+            if (diff >= 0) {
+                unitsMap.put(unitType, diff + originVal);
+            } else {
+                if (originVal + diff <= 0){
+                    unitsMap.remove(unitType);
+                }else{
+                    unitsMap.put(unitType, diff + originVal);
+                }
+            }
         } else {
-            unitsMap.put(unit_type, safe_num);
+            if (diff > 0) {
+                unitsMap.put(unitType, diff);
+            }
         }
+    }
 
+    /**
+     * A empty territory is the territory without units.
+     * A empty territory should not be owned by anyone.
+     *
+     * @return
+     */
+    public boolean isEmptyTerritory() {
+        return this.unitsMap.isEmpty();
     }
 
     public void setAdjacentTerritories(Set<Territory> adjacentTerritories) {
