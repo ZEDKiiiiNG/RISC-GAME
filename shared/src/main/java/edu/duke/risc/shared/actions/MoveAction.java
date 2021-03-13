@@ -7,9 +7,7 @@ import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
 import edu.duke.risc.shared.users.Player;
 
-import java.util.ArrayDeque;
 import java.util.HashSet;
-import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -73,8 +71,9 @@ public class MoveAction extends AbstractAction {
     }
 
     @Override
-    public void apply(GameBoard board) throws InvalidActionException {
+    public String apply(GameBoard board) throws InvalidActionException {
         String error;
+        StringBuilder builder = new StringBuilder();
         if ((error = isValid(board)) != null) {
             throw new InvalidActionException(error);
         }
@@ -92,6 +91,21 @@ public class MoveAction extends AbstractAction {
             player.addOwnedTerritory(destinationId);
         }
         desTerritory.updateUnitsMap(unitType, number);
+        builder.append("SUCCESS: " + this.toString());
+        return builder.toString();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("MOVE ACTION { ")
+                .append(" conducted by player ").append(playerId)
+                .append(", from ").append(sourceTerritoryId)
+                .append(", to ").append(destinationId)
+                .append(", unit type ").append(unitType)
+                .append(", number of units ").append(number)
+                .append(" }").append(System.lineSeparator());
+        return builder.toString();
     }
 
     @Override

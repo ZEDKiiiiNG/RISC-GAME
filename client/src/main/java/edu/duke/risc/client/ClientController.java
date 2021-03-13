@@ -28,8 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static edu.duke.risc.shared.Configurations.GAME_BOARD_STRING;
-import static edu.duke.risc.shared.Configurations.PLAYER_STRING;
+import static edu.duke.risc.shared.Configurations.*;
 
 /**
  * @author eason
@@ -42,6 +41,8 @@ public class ClientController {
     private Communicable communicator;
 
     private BufferedReader consoleReader;
+
+    private String loggerInfo;
 
     private Integer playerId = Configurations.DEFAULT_PLAYER_ID;
 
@@ -116,6 +117,7 @@ public class ClientController {
                 this.sendMessage(request);
                 System.out.println("Actions sent, please wait other players finish placing");
                 this.waitAndReadServerResponse();
+                System.out.println(this.loggerInfo);
             } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
                 //if server returns failed, re-do the actions again
                 exception.printStackTrace();
@@ -161,6 +163,7 @@ public class ClientController {
                         }
                         break;
                     case "A":
+
                         break;
                     case "D":
                         System.out.println("You have finished your actions, submitting...");
@@ -183,6 +186,7 @@ public class ClientController {
                 this.sendMessage(request);
                 System.out.println("Actions sent, please wait other players finish placing");
                 this.waitAndReadServerResponse();
+                System.out.println(this.loggerInfo);
             } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
                 //if server returns failed, re-do the actions again
                 exception.printStackTrace();
@@ -222,6 +226,7 @@ public class ClientController {
                         && contents.containsKey(PLAYER_STRING)) {
                     this.gameBoard = (GameBoard) contents.get(GAME_BOARD_STRING);
                     this.playerId = (Integer) contents.get(PLAYER_STRING);
+                    this.loggerInfo = (String) contents.get(LOGGER_STRING);
                 } else {
                     throw new InvalidPayloadContent("do not contain gameBoard object");
                 }

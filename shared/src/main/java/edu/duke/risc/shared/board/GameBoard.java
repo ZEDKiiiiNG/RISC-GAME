@@ -94,6 +94,31 @@ public class GameBoard implements Serializable {
     }
 
     /**
+     * Grow the territory by 1.
+     *
+     * @return action log
+     */
+    public String territoryGrow() {
+        StringBuilder builder = new StringBuilder();
+        for (Player player : players.values()) {
+            for (Integer territoryId : player.getOwnedTerritories()) {
+                Territory territory = this.findTerritory(territoryId);
+                for (Map.Entry<UnitType, Integer> unitTypeIntegerEntry : territory.getUnitsMap().entrySet()) {
+                    //update in the territory
+                    UnitType unitType = unitTypeIntegerEntry.getKey();
+                    int value = unitTypeIntegerEntry.getValue();
+                    territory.getUnitsMap().put(unitType, value + 1);
+                    //update total units in the player
+                    int origin = player.getTotalUnitsMap().get(unitType);
+                    player.getTotalUnitsMap().put(unitType, origin + 1);
+                }
+            }
+        }
+        builder.append("Increment territories by 1");
+        return builder.toString();
+    }
+
+    /**
      * Whether we can reach from source to the destination.
      * For places that are owned by the current player or empty place, we accept.
      *

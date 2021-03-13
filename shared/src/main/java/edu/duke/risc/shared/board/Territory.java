@@ -1,7 +1,6 @@
 package edu.duke.risc.shared.board;
 
 import edu.duke.risc.shared.commons.UnitType;
-import edu.duke.risc.shared.users.Player;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -66,7 +65,7 @@ public class Territory implements Serializable {
         }
         builder.append("in ").append(this.territoryName)
                 .append("(").append(this.territoryId).append(")").append(" (next to: ");
-        for (Territory adjacent :this.adjacentTerritories) {
+        for (Territory adjacent : this.adjacentTerritories) {
             builder.append(adjacent.getTerritoryName()).append(", ");
         }
         builder.append(")");
@@ -115,9 +114,9 @@ public class Territory implements Serializable {
             if (diff >= 0) {
                 unitsMap.put(unitType, diff + originVal);
             } else {
-                if (originVal + diff <= 0){
+                if (originVal + diff <= 0) {
                     unitsMap.remove(unitType);
-                }else{
+                } else {
                     unitsMap.put(unitType, diff + originVal);
                 }
             }

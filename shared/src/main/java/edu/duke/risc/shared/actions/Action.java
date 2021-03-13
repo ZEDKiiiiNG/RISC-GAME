@@ -22,10 +22,11 @@ public interface Action extends Serializable {
     /**
      * Conduct the current action on board
      *
+     * @return action log
      * @param board the main game board
      * @throws InvalidActionException the action is defined as invalid
      */
-    public void apply(GameBoard board) throws InvalidActionException;
+    public String apply(GameBoard board) throws InvalidActionException;
 
     /**
      * Conduct the current action on board -- from the source

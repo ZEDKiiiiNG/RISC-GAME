@@ -24,8 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static edu.duke.risc.shared.Configurations.GAME_BOARD_STRING;
-import static edu.duke.risc.shared.Configurations.PLAYER_STRING;
+import static edu.duke.risc.shared.Configurations.*;
 
 /**
  * @author eason
@@ -103,7 +102,7 @@ public class GameController {
                 System.out.println(e.getMessage());
             }
         }
-        broadcastUpdatedMaps();
+        broadcastUpdatedMaps("");
     }
 
     /**
@@ -117,6 +116,7 @@ public class GameController {
         int numberOfRequestRequired = this.board.getPlayers().size();
         List<Action> moveCacheActions = new ArrayList<>();
         List<Action> attackCacheActions = new ArrayList<>();
+        StringBuilder logger = new StringBuilder();
         while (numberOfRequestRequired > 0) {
             PayloadObject request = this.barrier.consumeRequest();
             //validate move_attack_request
@@ -151,21 +151,25 @@ public class GameController {
         //first move then attack
         for (Action action : moveCacheActions) {
             try {
-                action.apply(this.board);
+                String result = action.apply(this.board);
+                logger.append(result);
             } catch (InvalidActionException e) {
                 //simply ignore this
-                System.out.println(e.getMessage());
+                logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
             }
         }
         for (Action action : attackCacheActions) {
             try {
-                action.apply(this.board);
+                String result = action.apply(this.board);
+                logger.append(result);
             } catch (InvalidActionException e) {
                 //simply ignore this
-                System.out.println(e.getMessage());
+                logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
             }
         }
-        broadcastUpdatedMaps();
+        String growResult = this.board.territoryGrow();
+        logger.append(growResult);
+        broadcastUpdatedMaps(logger.toString());
     }
 
     private void sendBackErrorMessage(PayloadObject request, String validateResult) throws IOException {
@@ -215,14 +219,15 @@ public class GameController {
         System.out.println("All player are ready");
         this.board.forwardPlacementPhase();
         //share game map with every player
-        broadcastUpdatedMaps();
+        broadcastUpdatedMaps("");
     }
 
-    private void broadcastUpdatedMaps() throws IOException {
+    private void broadcastUpdatedMaps(String lastLog) throws IOException {
         for (Map.Entry<Player, SocketCommunicator> entry : playerConnections.entrySet()) {
             Player player = entry.getKey();
             Map<String, Object> content = new HashMap<>(10);
             content.put(GAME_BOARD_STRING, this.board);
+            content.put(LOGGER_STRING, lastLog);
             content.put(PLAYER_STRING, player.getId());
             PayloadObject payloadObject = new PayloadObject(root.getId(), player.getId(), PayloadType.UPDATE, content);
             entry.getValue().writeMessage(payloadObject);

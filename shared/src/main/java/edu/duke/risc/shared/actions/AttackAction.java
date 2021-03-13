@@ -69,8 +69,9 @@ public class AttackAction extends AbstractAction {
     }
 
     @Override
-    public void apply(GameBoard board) throws InvalidActionException {
+    public String apply(GameBoard board) throws InvalidActionException {
         String error;
+        StringBuilder builder = new StringBuilder();
         if ((error = isValid(board)) != null) {
             throw new InvalidActionException(error);
         }
@@ -95,6 +96,7 @@ public class AttackAction extends AbstractAction {
             desTerritory.getUnitsMap().put(unitType, attacker);
             player.updateTotalUnitMap(unitType, attacker - number);
         }
+        return builder.toString();
     }
 
     @Override

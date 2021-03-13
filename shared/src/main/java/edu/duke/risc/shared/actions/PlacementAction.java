@@ -42,8 +42,9 @@ public class PlacementAction extends AbstractAction {
 
 
     @Override
-    public void apply(GameBoard board) throws InvalidActionException {
+    public String apply(GameBoard board) throws InvalidActionException {
         String error;
+        StringBuilder builder = new StringBuilder();
         if ((error = isValid(board)) != null) {
             throw new InvalidActionException(error);
         }
@@ -53,6 +54,8 @@ public class PlacementAction extends AbstractAction {
         Territory territory = board.getTerritories().get(destinationId);
         territory.updateUnitsMap(unitType, number);
         player.addOwnedTerritory(destinationId);
+
+        return builder.toString();
     }
 
     @Override
