@@ -13,7 +13,7 @@ public enum UnitType implements Serializable {
     /**
      * soldier
      */
-    SOLDIER("Soldiers");
+    SOLDIER("(S)oldiers");
 
     private final String name;
 

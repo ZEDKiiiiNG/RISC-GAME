@@ -22,8 +22,10 @@ public class AttackAction extends AbstractAction {
     private Integer number;
     private Integer attackedPlayer;
 
-    public AttackAction(Integer sourceTerritoryId, Integer destinationId, UnitType unitType, Integer number, Integer player, Integer attackedPlayer) {
+    public AttackAction(Integer sourceTerritoryId, Integer destinationId, UnitType unitType,
+                        Integer number, Integer player, Integer attackedPlayer) {
         super(player, ActionType.ATTACK, destinationId, unitType, number);
+        //todo search attacked player on the board
         this.sourceTerritoryId = sourceTerritoryId;
         this.unitType = unitType;
         this.number = number;
@@ -39,12 +41,12 @@ public class AttackAction extends AbstractAction {
             return "Does not contain user: " + attackedPlayer;
         }
         Player player = board.getPlayers().get(super.playerId);
-        Player att_player = board.getPlayers().get(attackedPlayer);
+        Player attackedPlayer = board.getPlayers().get(this.attackedPlayer);
         if (!player.getInitUnitsMap().containsKey(unitType)) {
             return playerId + "Does not contain unit type.";
         }
-        if (!att_player.getInitUnitsMap().containsKey(unitType)) {
-            return att_player + "Does not contain unit type.";
+        if (!attackedPlayer.getInitUnitsMap().containsKey(unitType)) {
+            return attackedPlayer + "Does not contain unit type.";
         }
         Territory territory = board.getTerritories().get(sourceTerritoryId);
         if (!territory.getUnitsMap().containsKey(unitType)) {
@@ -56,11 +58,11 @@ public class AttackAction extends AbstractAction {
         if (!player.getOwnedTerritories().contains(sourceTerritoryId)) {
             return "The player does not contain source territory.";
         }
-        if (!att_player.getOwnedTerritories().contains(destinationId)) {
+        if (!attackedPlayer.getOwnedTerritories().contains(destinationId)) {
             return "The attacked player does not contain destination territory.";
         }
-        Territory des_territory = board.getTerritories().get(destinationId);
-        if (!territory.getAdjacentTerritories().contains(des_territory)) {
+        Territory desTerritory = board.getTerritories().get(destinationId);
+        if (!territory.getAdjacentTerritories().contains(desTerritory)) {
             return "The source territory is not adjacent to destination territory.";
         }
         return null;
@@ -73,26 +75,36 @@ public class AttackAction extends AbstractAction {
             throw new InvalidActionException(error);
         }
         Player player = board.getPlayers().get(super.playerId);
-        Player att_player = board.getPlayers().get(attackedPlayer);
-        Territory source_territory = board.getTerritories().get(sourceTerritoryId);
-        source_territory.updateUnitsMap(unitType, -number);
-        Territory des_territory = board.getTerritories().get(destinationId);
+        Player attackedPlayer = board.getPlayers().get(this.attackedPlayer);
+        Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
+        sourceTerritory.updateUnitsMap(unitType, -number);
+        Territory desTerritory = board.getTerritories().get(destinationId);
         Integer attacker = number;
-        while (des_territory.getUnitsMap().get(unitType) != 0 && attacker != 0) {
+        while (desTerritory.getUnitsMap().get(unitType) != 0 && attacker != 0) {
             Integer random = randomWin();
             if (random == 0) {
                 attacker--;
             } else {
-                des_territory.updateUnitsMap(unitType, -1);
-                att_player.updateTotalUnitsMap(unitType, -1);
+                desTerritory.updateUnitsMap(unitType, -1);
+                attackedPlayer.updateTotalUnitMap(unitType, -1);
             }
         }
         if (attacker == 0) {
-            player.updateTotalUnitsMap(unitType, -number);
+            player.updateTotalUnitMap(unitType, -number);
         } else {
-            des_territory.getUnitsMap().put(unitType, attacker);
-            player.updateTotalUnitsMap(unitType, attacker - number);
+            desTerritory.getUnitsMap().put(unitType, attacker);
+            player.updateTotalUnitMap(unitType, attacker - number);
         }
+    }
+
+    @Override
+    public void applyBefore(GameBoard board) throws InvalidActionException {
+
+    }
+
+    @Override
+    public void applyAfter(GameBoard board) throws InvalidActionException {
+
     }
 
     public Integer randomWin() {

@@ -12,4 +12,8 @@ public class ServerRejectException extends Exception {
         this.message = message;
     }
 
+    @Override
+    public String getMessage(){
+        return this.message;
+    }
 }

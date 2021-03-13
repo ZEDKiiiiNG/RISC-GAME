@@ -38,10 +38,30 @@ public class PlacementAction extends AbstractAction {
             throw new InvalidActionException(error);
         }
         Player player = board.getPlayers().get(super.playerId);
+        player.updateTotalUnitMap(unitType, number);
+        player.updateInitUnitMap(unitType, -number);
+        Territory territory = board.getTerritories().get(destinationId);
+        territory.updateUnitsMap(unitType, number);
+    }
+
+    @Override
+    public void applyBefore(GameBoard board) throws InvalidActionException {
+        String error;
+        if ((error = isValid(board)) != null) {
+            throw new InvalidActionException(error);
+        }
+        Player player = board.getPlayers().get(super.playerId);
         player.getTotalUnitsMap().put(unitType, number);
         player.getInitUnitsMap().put(unitType, player.getInitUnitsMap().get(unitType) - number);
-        Territory territory = board.getTerritories().get(destinationId);
-        territory.getUnitsMap().put(unitType, number);
+    }
+
+    @Override
+    public void applyAfter(GameBoard board) throws InvalidActionException {
+        String error;
+        if ((error = isValid(board)) != null) {
+            throw new InvalidActionException(error);
+        }
+
     }
 
 }

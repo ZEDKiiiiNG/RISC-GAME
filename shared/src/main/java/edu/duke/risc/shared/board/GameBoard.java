@@ -1,6 +1,7 @@
 package edu.duke.risc.shared.board;
 
 import edu.duke.risc.shared.Configurations;
+import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.users.Player;
 
 import java.io.Serializable;
@@ -23,6 +24,8 @@ public class GameBoard implements Serializable {
 
     private TerritoryFactory territoryFactory;
 
+    private final Map<String, UnitType> unitTypeMapper = new HashMap<>();
+
     private Displayable displayer;
 
     public GameBoard() {
@@ -31,6 +34,7 @@ public class GameBoard implements Serializable {
         players = new HashMap<>();
         gameStage = GameStage.WAITING_USERS;
         displayer = new TextDisplayer();
+        this.initUnitTypeMapping();
     }
 
     public void displayBoard() {
@@ -54,12 +58,42 @@ public class GameBoard implements Serializable {
         return result;
     }
 
+    /**
+     * @return
+     */
+    public String getPlayerOwnedTerritoryInfo(Integer playerId) {
+        StringBuilder builder = new StringBuilder();
+        Player player = this.players.get(playerId);
+        for (Integer territoryId : player.getOwnedTerritories()) {
+            Territory territory = this.territories.get(territoryId);
+            builder.append(territory.getTerritoryName() + " (" + territory.getTerritoryId() + ") ");
+        }
+        return builder.toString();
+    }
+
+    public Territory findTerritory(Integer territoryId) {
+        return this.territories.get(territoryId);
+    }
+
+    public Player findPlayer(Integer playerId) {
+        return this.players.get(playerId);
+    }
+
     @Override
     public String toString() {
         return "GameBoard{" +
                 ", players=" + players +
                 ", gameStage=" + gameStage +
                 '}';
+    }
+
+    private void initUnitTypeMapping() {
+        this.unitTypeMapper.put("s", UnitType.SOLDIER);
+        this.unitTypeMapper.put("S", UnitType.SOLDIER);
+    }
+
+    public UnitType getUnitType(String search) {
+        return this.unitTypeMapper.get(search);
     }
 
     public Map<Integer, Player> getPlayers() {
@@ -104,5 +138,9 @@ public class GameBoard implements Serializable {
 
     public Displayable getDisplayer() {
         return displayer;
+    }
+
+    public Map<String, UnitType> getUnitTypeMapper() {
+        return unitTypeMapper;
     }
 }

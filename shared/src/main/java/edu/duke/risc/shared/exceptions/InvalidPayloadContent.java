@@ -11,5 +11,8 @@ public class InvalidPayloadContent extends Exception{
     public InvalidPayloadContent(String message) {
         this.message = message;
     }
-
+    @Override
+    public String getMessage(){
+        return this.message;
+    }
 }
