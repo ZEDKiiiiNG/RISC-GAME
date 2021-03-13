@@ -64,7 +64,8 @@ public class Territory implements Serializable {
                 builder.append(mapUnit.getValue()).append(" ").append(mapUnit.getKey()).append(" ");
             }
         }
-        builder.append("in ").append(this.territoryName).append(" (next to: ");
+        builder.append("in ").append(this.territoryName)
+                .append("(").append(this.territoryId).append(")").append(" (next to: ");
         for (Territory adjacent :this.adjacentTerritories) {
             builder.append(adjacent.getTerritoryName()).append(", ");
         }
@@ -125,11 +126,6 @@ public class Territory implements Serializable {
                 unitsMap.put(unitType, diff);
             }
         }
-    }
-
-    //TODO
-    public static boolean isReachable(Territory source, Territory destination, Player player) {
-        return false;
     }
 
     /**

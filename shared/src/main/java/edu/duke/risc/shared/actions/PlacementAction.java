@@ -5,7 +5,11 @@ import edu.duke.risc.shared.board.Territory;
 import edu.duke.risc.shared.commons.ActionType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
+import edu.duke.risc.shared.exceptions.InvalidInputException;
 import edu.duke.risc.shared.users.Player;
+
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author eason
@@ -23,6 +27,12 @@ public class PlacementAction extends AbstractAction {
             return "Does not contain user: " + playerId;
         }
         Player player = board.getPlayers().get(super.playerId);
+
+        Set<Integer> initAssignedTerritories = player.getInitAssignedTerritories();
+        if (!initAssignedTerritories.contains(destinationId)){
+            return "You are not assigned territory with id = " + destinationId;
+        }
+
         if (!player.getInitUnitsMap().containsKey(unitType)
                 || player.getInitUnitsMap().get(unitType) < number) {
             return "Does not contain unit type or number of unit type exceed available.";

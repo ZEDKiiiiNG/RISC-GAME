@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 /**
  * @author eason
@@ -90,6 +91,41 @@ public class GameBoard implements Serializable {
     private void initUnitTypeMapping() {
         this.unitTypeMapper.put("s", UnitType.SOLDIER);
         this.unitTypeMapper.put("S", UnitType.SOLDIER);
+    }
+
+    /**
+     * Whether we can reach from source to the destination.
+     * For places that are owned by the current player or empty place, we accept.
+     *
+     * @param sourceId sourceId
+     * @param destId   destId
+     * @param playerId playerId
+     * @return Whether we can reach from source to the destination.
+     */
+    public boolean isReachable(int sourceId, int destId, int playerId) {
+        Stack<Territory> stack = new Stack<>();
+        Set<Territory> visited = new HashSet<>();
+        Territory source = this.territories.get(sourceId);
+        Territory dest = this.territories.get(destId);
+        Player player = this.findPlayer(playerId);
+
+        visited.add(source);
+        stack.push(source);
+        while (!stack.isEmpty()) {
+            Territory current = stack.pop();
+            if (dest.equals(source)) {
+                return true;
+            }
+            for (Territory neighbor : current.getAdjacentTerritories()) {
+                //area not visited and ( or territory is empty -- not owned by anyone)
+                if (!visited.contains(neighbor)
+                        && (player.ownsTerritory(neighbor.getTerritoryId()) || neighbor.isEmptyTerritory())) {
+                    visited.add(neighbor);
+                    stack.push(neighbor);
+                }
+            }
+        }
+        return false;
     }
 
     public UnitType getUnitType(String search) {

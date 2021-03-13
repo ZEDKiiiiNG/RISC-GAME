@@ -139,6 +139,10 @@ public class Player implements GameUser, Serializable {
         this.updateUnitsMap(this.totalUnitsMap, unitType, diff);
     }
 
+    public boolean ownsTerritory(Integer territoryId) {
+        return this.ownedTerritories.contains(territoryId);
+    }
+
     /**
      * no throw here, like Territory
      */
@@ -149,9 +153,9 @@ public class Player implements GameUser, Serializable {
             if (diff >= 0) {
                 unitsMap.put(unitType, diff + originVal);
             } else {
-                if (originVal + diff <= 0){
+                if (originVal + diff <= 0) {
                     unitsMap.remove(unitType);
-                }else{
+                } else {
                     unitsMap.put(unitType, diff + originVal);
                 }
             }

@@ -31,9 +31,13 @@ public class TextDisplayer implements Displayable {
         //display un-owned territories
         System.out.println("Territories that are not owned yet");
         System.out.println("-----------------------");
-        for (Map.Entry<Integer, Territory> entry : gameBoard.getTerritories().entrySet()) {
-            if (entry.getValue().isEmptyTerritory()) {
-                System.out.println(entry.getValue());
+        for (Map.Entry<Integer, Territory> territoryEntry : gameBoard.getTerritories().entrySet()) {
+            if (territoryEntry.getValue().isEmptyTerritory()) {
+                //assert not owned by anyone
+                for (Map.Entry<Integer, Player> playerEntry : gameBoard.getPlayers().entrySet()) {
+                    assert playerEntry.getValue().ownsTerritory(territoryEntry.getKey());
+                }
+                System.out.println(territoryEntry.getValue());
             }
         }
 

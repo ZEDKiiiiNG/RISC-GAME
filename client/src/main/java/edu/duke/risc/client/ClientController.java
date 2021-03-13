@@ -193,13 +193,6 @@ public class ClientController {
             String unitTypeString = inputs.get(1);
             int unitNum = Integer.parseInt(inputs.get(2));
 
-            //check valid territory id
-            Player player = board.findPlayer(playerId);
-            Set<Integer> initAssignedTerritories = player.getInitAssignedTerritories();
-            if (!initAssignedTerritories.contains(territoryId)){
-                throw new InvalidInputException("You are not assigned territory with id = " + territoryId);
-            }
-
             //check valid unit type mapping
             Map<String, UnitType> unitTypeMapper = gameBoard.getUnitTypeMapper();
             if (!unitTypeMapper.containsKey(unitTypeString)){
