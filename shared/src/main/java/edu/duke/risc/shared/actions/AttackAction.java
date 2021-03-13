@@ -7,19 +7,24 @@ import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
 import edu.duke.risc.shared.users.Player;
 
+/**
+ *
+ */
 public class AttackAction extends AbstractAction {
-    private Integer source_territoryId;
-    private Integer des_territoryId;
+
+    /**
+     * Source territory id
+     */
+    private Integer sourceTerritoryId;
 
     private UnitType unitType;
 
     private Integer number;
     private Integer attackedPlayer;
 
-    public AttackAction(Integer source_territoryId, Integer des_territoryId, UnitType unitType, Integer number, Integer player, Integer attackedPlayer) {
-        super(player, ActionType.ATTACK);
-        this.source_territoryId = source_territoryId;
-        this.des_territoryId = des_territoryId;
+    public AttackAction(Integer sourceTerritoryId, Integer destinationId, UnitType unitType, Integer number, Integer player, Integer attackedPlayer) {
+        super(player, ActionType.ATTACK, destinationId, unitType, number);
+        this.sourceTerritoryId = sourceTerritoryId;
         this.unitType = unitType;
         this.number = number;
         this.attackedPlayer = attackedPlayer;
@@ -41,20 +46,20 @@ public class AttackAction extends AbstractAction {
         if (!att_player.getInitUnitsMap().containsKey(unitType)) {
             return att_player + "Does not contain unit type.";
         }
-        Territory territory = board.getTerritories().get(source_territoryId);
+        Territory territory = board.getTerritories().get(sourceTerritoryId);
         if (!territory.getUnitsMap().containsKey(unitType)) {
             return "The source territory does not contain the unit type.";
         }
         if (territory.getUnitsMap().get(unitType) <= number) {
             return "The source territory does not contain enough unit type.";
         }
-        if (!player.getOwnedTerritories().contains(source_territoryId)) {
+        if (!player.getOwnedTerritories().contains(sourceTerritoryId)) {
             return "The player does not contain source territory.";
         }
-        if (!att_player.getOwnedTerritories().contains(des_territoryId)) {
+        if (!att_player.getOwnedTerritories().contains(destinationId)) {
             return "The attacked player does not contain destination territory.";
         }
-        Territory des_territory = board.getTerritories().get(des_territoryId);
+        Territory des_territory = board.getTerritories().get(destinationId);
         if (!territory.getAdjacentTerritories().contains(des_territory)) {
             return "The source territory is not adjacent to destination territory.";
         }
@@ -69,9 +74,9 @@ public class AttackAction extends AbstractAction {
         }
         Player player = board.getPlayers().get(super.playerId);
         Player att_player = board.getPlayers().get(attackedPlayer);
-        Territory source_territory = board.getTerritories().get(source_territoryId);
+        Territory source_territory = board.getTerritories().get(sourceTerritoryId);
         source_territory.updateUnitsMap(unitType, -number);
-        Territory des_territory = board.getTerritories().get(des_territoryId);
+        Territory des_territory = board.getTerritories().get(destinationId);
         Integer attacker = number;
         while (des_territory.getUnitsMap().get(unitType) != 0 && attacker != 0) {
             Integer random = randomWin();

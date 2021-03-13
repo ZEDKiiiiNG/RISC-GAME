@@ -12,18 +12,23 @@ import java.util.HashSet;
 import java.util.Queue;
 import java.util.Set;
 
+/**
+ *
+ */
 public class MoveAction extends AbstractAction {
-    private Integer source_territoryId;
-    private Integer des_territoryId;
+
+    /**
+     * Source territory id
+     */
+    private Integer sourceTerritoryId;
 
     private UnitType unitType;
 
     private Integer number;
 
-    public MoveAction(Integer source_territoryId, Integer des_territoryId, UnitType unitType, Integer number, Integer player) {
-        super(player, ActionType.MOVE);
-        this.source_territoryId = source_territoryId;
-        this.des_territoryId = des_territoryId;
+    public MoveAction(Integer sourceTerritoryId, Integer destinationId, UnitType unitType, Integer number, Integer player) {
+        super(player, ActionType.MOVE, destinationId, unitType, number);
+        this.sourceTerritoryId = sourceTerritoryId;
         this.unitType = unitType;
         this.number = number;
     }
@@ -74,17 +79,17 @@ public class MoveAction extends AbstractAction {
         if (!player.getInitUnitsMap().containsKey(unitType)) {
             return "Does not contain unit type.";
         }
-        Territory territory = board.getTerritories().get(source_territoryId);
+        Territory territory = board.getTerritories().get(sourceTerritoryId);
         if (!territory.getUnitsMap().containsKey(unitType)) {
             return "The source territory does not contain the unit type.";
         }
         if (territory.getUnitsMap().get(unitType) < number) {
             return "The source territory does not contain enough unit type.";
         }
-        if (!player.getOwnedTerritories().contains(source_territoryId) || !player.getOwnedTerritories().contains(des_territoryId)) {
+        if (!player.getOwnedTerritories().contains(sourceTerritoryId) || !player.getOwnedTerritories().contains(destinationId)) {
             return "The player does not contain source territory or destination territory.";
         }
-        if (!hasPath(board.getTerritories().get(source_territoryId), board.getTerritories().get(des_territoryId))) {
+        if (!hasPath(board.getTerritories().get(sourceTerritoryId), board.getTerritories().get(destinationId))) {
             return "The source territory has no path to destination territory.";
         }
         return null;
@@ -97,8 +102,8 @@ public class MoveAction extends AbstractAction {
             throw new InvalidActionException(error);
         }
         Player player = board.getPlayers().get(super.playerId);
-        Territory source_territory = board.getTerritories().get(source_territoryId);
-        Territory des_territory = board.getTerritories().get(des_territoryId);
+        Territory source_territory = board.getTerritories().get(sourceTerritoryId);
+        Territory des_territory = board.getTerritories().get(destinationId);
         source_territory.updateUnitsMap(unitType, number);
         des_territory.updateUnitsMap(unitType, number);
 
