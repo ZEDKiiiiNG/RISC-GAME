@@ -13,22 +13,11 @@ import java.util.Set;
 /**
  *
  */
-public class MoveAction extends AbstractAction {
+public class MoveAction extends AbstractSourceAction {
 
-    /**
-     * Source territory id
-     */
-    private Integer sourceTerritoryId;
-
-    private UnitType unitType;
-
-    private Integer number;
 
     public MoveAction(Integer sourceTerritoryId, Integer destinationId, UnitType unitType, Integer number, Integer player) {
-        super(player, ActionType.MOVE, destinationId, unitType, number);
-        this.sourceTerritoryId = sourceTerritoryId;
-        this.unitType = unitType;
-        this.number = number;
+        super(player, ActionType.MOVE, destinationId, unitType, number, sourceTerritoryId);
     }
 
     public Set<Territory> getPlayerTerritory(GameBoard board) {
@@ -43,19 +32,20 @@ public class MoveAction extends AbstractAction {
 
     @Override
     public String isValid(GameBoard board) {
+        if (number <= 0) {
+            return "Invalid or unnecessary number " + number;
+        }
         if (!board.getPlayers().containsKey(super.playerId)) {
             return "Does not contain user: " + playerId;
         }
         Player player = board.getPlayers().get(super.playerId);
         Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
-        Territory destTerritory = board.getTerritories().get(destinationId);
 
-        if (!player.getOwnedTerritories().contains(sourceTerritoryId)) {
+        if (!player.ownsTerritory(sourceTerritoryId)) {
             return "The player does not own the source territory " + board.findTerritory(sourceTerritoryId);
         }
-        if (!player.getOwnedTerritories().contains(destinationId) && !destTerritory.isEmptyTerritory()) {
-            return "The player does not own the non-empty destination territory "
-                    + board.findTerritory(destinationId);
+        if (!player.ownsTerritory(destinationId)) {
+            return "The player does not own the destination territory " + board.findTerritory(destinationId);
         }
         if (!sourceTerritory.getUnitsMap().containsKey(unitType)) {
             return "The source territory does not contain the unit type " + unitType;
@@ -96,6 +86,11 @@ public class MoveAction extends AbstractAction {
     }
 
     @Override
+    public String simulateApply(GameBoard board) throws InvalidActionException {
+        return this.apply(board);
+    }
+
+    @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("MOVE ACTION { ")
@@ -106,16 +101,6 @@ public class MoveAction extends AbstractAction {
                 .append(", number of units ").append(number)
                 .append(" }").append(System.lineSeparator());
         return builder.toString();
-    }
-
-    @Override
-    public void applyBefore(GameBoard board) throws InvalidActionException {
-
-    }
-
-    @Override
-    public void applyAfter(GameBoard board) throws InvalidActionException {
-
     }
 
 }

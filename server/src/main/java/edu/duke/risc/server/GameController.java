@@ -6,6 +6,7 @@ import edu.duke.risc.shared.PlayerHandler;
 import edu.duke.risc.shared.SocketCommunicator;
 import edu.duke.risc.shared.ThreadBarrier;
 import edu.duke.risc.shared.actions.Action;
+import edu.duke.risc.shared.actions.TwoStepsAction;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.board.GameStage;
 import edu.duke.risc.shared.commons.PayloadType;
@@ -23,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static edu.duke.risc.shared.Configurations.*;
 
@@ -128,7 +130,8 @@ public class GameController {
                 continue;
             }
             List<Action> moveActions = (List<Action>) request.getContents().get(Configurations.REQUEST_MOVE_ACTIONS);
-            List<Action> attackActions = (List<Action>) request.getContents().get(Configurations.REQUEST_ATTACK_ACTIONS);
+            List<Action> attackActions =
+                    (List<Action>) request.getContents().get(Configurations.REQUEST_ATTACK_ACTIONS);
             String moveValidateResult = validateActions(moveActions, this.board);
             if (moveValidateResult != null) {
                 //error occurs, send response back to the client.
@@ -148,7 +151,8 @@ public class GameController {
             }
         }
         //with all requests received, process them simultaneously
-        //first move then attack
+
+        //first conduct move actions
         for (Action action : moveCacheActions) {
             try {
                 String result = action.apply(this.board);
@@ -158,17 +162,32 @@ public class GameController {
                 logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
             }
         }
-        for (Action action : attackCacheActions) {
+
+        //then conduct attack actions
+        List<Action> validList = attackCacheActions.stream().filter((action -> action.isValid(board) == null))
+                .collect(Collectors.toList());
+
+        for (Action action : validList) {
             try {
-                String result = action.apply(this.board);
+                action.applyBefore(this.board);
+            } catch (InvalidActionException e) {
+                //simply ignore this
+                logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
+            }
+        }
+        for (Action action : validList) {
+            try {
+                String result = action.applyAfter(this.board);
                 logger.append(result);
             } catch (InvalidActionException e) {
                 //simply ignore this
                 logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
             }
         }
+
         String growResult = this.board.territoryGrow();
         logger.append(growResult);
+        System.out.println(logger.toString());
         broadcastUpdatedMaps(logger.toString());
     }
 
@@ -254,7 +273,7 @@ public class GameController {
      */
     private void assignTerritories(Player player, GameBoard gameBoard) {
         Set<Integer> assignedTerritories = gameBoard.addPlayer(player);
-        player.setInitAssignedTerritories(assignedTerritories);
+        player.setOwnedTerritories(assignedTerritories);
     }
 
 }

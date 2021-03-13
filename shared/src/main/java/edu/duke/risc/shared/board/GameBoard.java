@@ -65,7 +65,7 @@ public class GameBoard implements Serializable {
     public String getPlayerAssignedTerritoryInfo(Integer playerId) {
         StringBuilder builder = new StringBuilder();
         Player player = this.players.get(playerId);
-        for (Integer territoryId : player.getInitAssignedTerritories()) {
+        for (Integer territoryId : player.getOwnedTerritories()) {
             Territory territory = this.territories.get(territoryId);
             builder.append(territory.getTerritoryName() + " (" + territory.getTerritoryId() + ") ");
         }
@@ -119,8 +119,26 @@ public class GameBoard implements Serializable {
     }
 
     /**
+     *
+     * @param playerId
+     * @param sourceTerritoryId
+     * @param unitType
+     * @param number
+     */
+    public void playerMoveFromTerritory(int playerId, int sourceTerritoryId, UnitType unitType, int number) {
+        Territory sourceTerritory = this.getTerritories().get(sourceTerritoryId);
+        sourceTerritory.updateUnitsMap(unitType, -number);
+        //remove from player's owned territory
+        Player player = this.findPlayer(playerId);
+        if (sourceTerritory.isEmptyTerritory() && player.ownsTerritory(sourceTerritoryId)) {
+            player.getOwnedTerritories().remove(sourceTerritoryId);
+        }
+    }
+
+    /**
      * Whether we can reach from source to the destination.
      * For places that are owned by the current player or empty place, we accept.
+     * We are able to reach first adjacent enemy's territory
      *
      * @param sourceId sourceId
      * @param destId   destId
@@ -134,17 +152,19 @@ public class GameBoard implements Serializable {
         Territory dest = this.territories.get(destId);
         Player player = this.findPlayer(playerId);
 
+        if (dest.equals(source)) {
+            return true;
+        }
         visited.add(source);
         stack.push(source);
         while (!stack.isEmpty()) {
             Territory current = stack.pop();
-            if (dest.equals(current)) {
-                return true;
-            }
             for (Territory neighbor : current.getAdjacentTerritories()) {
+                if (dest.equals(neighbor)) {
+                    return true;
+                }
                 //area not visited and ( or territory is empty -- not owned by anyone)
-                if (!visited.contains(neighbor)
-                        && (player.ownsTerritory(neighbor.getTerritoryId()) || neighbor.isEmptyTerritory())) {
+                if (!visited.contains(neighbor) && player.ownsTerritory(neighbor.getTerritoryId())) {
                     visited.add(neighbor);
                     stack.push(neighbor);
                 }
@@ -155,6 +175,7 @@ public class GameBoard implements Serializable {
 
     /**
      * Get the player information
+     *
      * @param playerId
      * @return
      */

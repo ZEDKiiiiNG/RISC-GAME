@@ -5,10 +5,11 @@ import edu.duke.risc.shared.Configurations;
 import edu.duke.risc.shared.PayloadObject;
 import edu.duke.risc.shared.SocketCommunicator;
 import edu.duke.risc.shared.actions.Action;
+import edu.duke.risc.shared.actions.AttackAction;
 import edu.duke.risc.shared.actions.MoveAction;
 import edu.duke.risc.shared.actions.PlacementAction;
+import edu.duke.risc.shared.actions.TwoStepsAction;
 import edu.duke.risc.shared.board.GameBoard;
-import edu.duke.risc.shared.board.GameStage;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
@@ -99,7 +100,7 @@ public class ClientController {
                 Action action = null;
                 try {
                     action = this.validateInputAndGenerateAction(input, this.gameBoard, playerId);
-                    action.apply(this.gameBoard);
+                    action.simulateApply(this.gameBoard);
                     actions.add(action);
                 } catch (InvalidInputException | InvalidActionException e) {
                     System.out.println(e.getMessage());
@@ -135,7 +136,6 @@ public class ClientController {
     private void moveAndAttack() throws IOException {
         while (true) {
             Player player = this.gameBoard.getPlayers().get(playerId);
-
             boolean isFinished = false;
             List<Action> moveActions = new ArrayList<>();
             List<Action> attackActions = new ArrayList<>();
@@ -151,20 +151,10 @@ public class ClientController {
 
                 switch (input) {
                     case "M":
-                        System.out.println("Please enter instruction in the following format: " +
-                                "<sourceTerritoryId>,<destinationId>,<UnitType>,<amount>");
-                        String moveInput = this.consoleReader.readLine();
-                        Action action;
-                        try {
-                            action = this.readActionAndProceed(moveInput, this.gameBoard, playerId);
-                            action.apply(this.gameBoard);
-                            moveActions.add(action);
-                        } catch (InvalidInputException | InvalidActionException e) {
-                            System.out.println(e.getMessage());
-                        }
+                        conductMoveOrAttack(moveActions, 0);
                         break;
                     case "A":
-
+                        conductMoveOrAttack(attackActions, 1);
                         break;
                     case "D":
                         System.out.println("You have finished your actions, submitting...");
@@ -180,6 +170,9 @@ public class ClientController {
             //constructing payload objects
             Map<String, Object> content = new HashMap<>(3);
             content.put(Configurations.REQUEST_MOVE_ACTIONS, moveActions);
+
+            //todo combine all attack actions
+
             content.put(Configurations.REQUEST_ATTACK_ACTIONS, attackActions);
             PayloadObject request = new PayloadObject(this.playerId,
                     Configurations.MASTER_ID, PayloadType.REQUEST, content);
@@ -193,6 +186,25 @@ public class ClientController {
                 exception.printStackTrace();
                 continue;
             }
+        }
+    }
+
+    /**
+     * @param actions
+     * @param actionType  0 for move and 1 for attack
+     * @throws IOException
+     */
+    private void conductMoveOrAttack(List<Action> actions, int actionType) throws IOException {
+        System.out.println("Please enter instruction in the following format: " +
+                "<sourceTerritoryId>,<destinationId>,<UnitType>,<amount>");
+        String moveInput = this.consoleReader.readLine();
+        Action action;
+        try {
+            action = this.readActionAndProceed(moveInput, this.gameBoard, playerId, actionType);
+            action.simulateApply(this.gameBoard);
+            actions.add(action);
+        } catch (InvalidInputException | InvalidActionException e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -292,7 +304,7 @@ public class ClientController {
      * @return
      * @throws InvalidInputException
      */
-    private Action readActionAndProceed(String input, GameBoard board, Integer playerId)
+    private Action readActionAndProceed(String input, GameBoard board, Integer playerId, int actionType)
             throws InvalidInputException {
         List<String> inputs = new ArrayList<>(Arrays.asList(input.split(",")));
         if (inputs.size() != 4) {
@@ -311,8 +323,11 @@ public class ClientController {
                 throw new InvalidInputException("Invalid unit type string " + unitTypeString);
             }
             UnitType unitType = unitTypeMapper.get(unitTypeString);
-            action = new MoveAction(sourceTerritoryId, destTerritoryId, unitType, unitNum, playerId);
-
+            if (actionType == 0) {
+                action = new MoveAction(sourceTerritoryId, destTerritoryId, unitType, unitNum, playerId);
+            } else {
+                action = new AttackAction(sourceTerritoryId, destTerritoryId, unitType, unitNum, playerId);
+            }
         } catch (NumberFormatException e) {
             throw new InvalidInputException("Cannot parse string to valid int");
         }

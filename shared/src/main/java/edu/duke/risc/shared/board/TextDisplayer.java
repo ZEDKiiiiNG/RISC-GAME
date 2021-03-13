@@ -20,7 +20,7 @@ public class TextDisplayer implements Displayable {
             System.out.println(player.getColor() + " player:");
             System.out.println("-----------------------");
             if (player.getOwnedTerritories().size() == 0) {
-                System.out.println("Not owned any territory");
+                System.out.println("Not owned any territory, LOST");
             } else {
                 for (Integer territoryId : player.getOwnedTerritories()) {
                     //printing units
@@ -31,20 +31,6 @@ public class TextDisplayer implements Displayable {
             System.out.println("--------------");
             System.out.println();
         }
-        //display un-owned territories
-        System.out.println("Territories that are not owned yet");
-        System.out.println("-----------------------");
-        for (Map.Entry<Integer, Territory> territoryEntry : gameBoard.getTerritories().entrySet()) {
-            if (territoryEntry.getValue().isEmptyTerritory()) {
-                //assert not owned by anyone
-                for (Map.Entry<Integer, Player> playerEntry : gameBoard.getPlayers().entrySet()) {
-                    assert playerEntry.getValue().ownsTerritory(territoryEntry.getKey());
-                }
-                System.out.println(territoryEntry.getValue());
-            }
-        }
-
-
     }
 
 }
