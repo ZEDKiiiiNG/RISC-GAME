@@ -38,10 +38,10 @@ public class GameBoard implements Serializable {
     }
 
     /**
-     * Add player to this board, returns territories that should be assigned to this player
+     * Add player to this board, returns set of territoryId that should be assigned to this player
      *
      * @param player new player
-     * @return territories that should be assigned to this player
+     * @return Set<territoriesId></territoriesId> that should be assigned to this player
      */
     public Set<Integer> addPlayer(Player player) {
         int numberPlayers = this.players.size();

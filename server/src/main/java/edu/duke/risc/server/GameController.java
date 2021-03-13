@@ -60,6 +60,7 @@ public class GameController {
     public void startGame() throws IOException {
         this.waitPlayers();
         this.placementPhase();
+        this.move_attack_Phase();
     }
 
     /**
@@ -79,7 +80,7 @@ public class GameController {
                 sendBackErrorMessage(request, "Invalid request type");
                 continue;
             }
-            List<Action> actions = (List<Action>) request.getContents().get(Configurations.REQUEST_PLACEMENT_ACTIONS);
+            List<Action> moveActions = (List<Action>) request.getContents().get(Configurations.REQUEST_PLACEMENT_ACTIONS);
             String validateResult = validateActions(actions, this.board);
             if (validateResult != null) {
                 //error occurs, send response back to the client.
@@ -92,6 +93,60 @@ public class GameController {
         }
         //with all requests received, process them simultaneously
         for (Action action : cacheActions) {
+            try {
+                action.apply(this.board);
+            } catch (InvalidActionException e) {
+                //simply ignore this
+                System.out.println(e.getMessage());
+            }
+        }
+        broadcastUpdatedMaps();
+    }
+    /**
+     * Do the move and attack phase
+     *
+     * @throws IOException
+     */
+    private void move_attack_Phase() throws IOException {
+        int numberOfRequestRequired = this.board.getPlayers().size();
+        List<Action> move_cacheActions = new ArrayList<>();
+        List<Action> attack_cacheActions = new ArrayList<>();
+        while (numberOfRequestRequired > 0) {
+            PayloadObject request = this.barrier.consumeRequest();
+            //validate move_attack_request
+            if (request.getMessageType() != PayloadType.REQUEST
+                    || request.getReceiver() != this.root.getId()
+                    || !request.getContents().containsKey(Configurations.REQUEST_MOVE_ACTIONS)
+                    || !request.getContents().containsKey(Configurations.REQUEST_ATTACK_ACTIONS)) {
+                sendBackErrorMessage(request, "Invalid request type");
+                continue;
+            }
+            List<Action> move_actions = (List<Action>) request.getContents().get(Configurations.REQUEST_MOVE_ACTIONS);
+            List<Action> attack_actions = (List<Action>) request.getContents().get(Configurations.REQUEST_ATTACK_ACTIONS);
+            String move_validateResult = validateActions(move_actions, this.board);
+            String attack_validateResult = validateActions(attack_actions, this.board);
+            if (move_validateResult != null || attack_validateResult != null) {
+                //error occurs, send response back to the client.
+                String validateResult = move_validateResult == null? attack_validateResult : move_validateResult;
+                sendBackErrorMessage(request, validateResult);
+            } else {
+                //validate success, response the client with success message and continues the next request
+                move_cacheActions.addAll(move_actions);
+                attack_cacheActions.addAll(attack_actions);
+                numberOfRequestRequired -= 1;
+            }
+        }
+        //with all requests received, process them simultaneously
+        //first move then attack
+        for (Action action : move_cacheActions) {
+            try {
+                action.apply(this.board);
+            } catch (InvalidActionException e) {
+                //simply ignore this
+                System.out.println(e.getMessage());
+            }
+        }
+        for (Action action : attack_cacheActions) {
             try {
                 action.apply(this.board);
             } catch (InvalidActionException e) {
