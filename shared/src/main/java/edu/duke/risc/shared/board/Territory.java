@@ -91,6 +91,20 @@ public class Territory implements Serializable {
         this.unitsMap = unitsMap;
     }
 
+    public void updateUnitsMap(UnitType unit_type, Integer safe_num) {
+        if (unitsMap.get(unit_type) + safe_num == 0) {
+            unitsMap.remove(unit_type, -safe_num);
+            return;
+        }
+        if (unitsMap.containsKey(unit_type)) {
+            Integer temp = unitsMap.get(unit_type);
+            unitsMap.replace(unit_type, temp, temp + safe_num);
+        } else {
+            unitsMap.put(unit_type, safe_num);
+        }
+
+    }
+
     public void setAdjacentTerritories(Set<Territory> adjacentTerritories) {
         this.adjacentTerritories = adjacentTerritories;
     }
