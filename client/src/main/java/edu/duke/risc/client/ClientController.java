@@ -5,6 +5,7 @@ import edu.duke.risc.shared.Configurations;
 import edu.duke.risc.shared.PayloadObject;
 import edu.duke.risc.shared.SocketCommunicator;
 import edu.duke.risc.shared.actions.Action;
+import edu.duke.risc.shared.actions.MoveAction;
 import edu.duke.risc.shared.actions.PlacementAction;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.board.GameStage;
@@ -26,7 +27,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static edu.duke.risc.shared.Configurations.GAME_BOARD_STRING;
 import static edu.duke.risc.shared.Configurations.PLAYER_STRING;
@@ -48,6 +48,7 @@ public class ClientController {
     public ClientController() throws IOException {
         this.consoleReader = new BufferedReader(new InputStreamReader(System.in));
         this.startGame();
+        this.moveAndAttack();
         try {
             Thread.sleep(1000000);
         } catch (InterruptedException e) {
@@ -131,6 +132,69 @@ public class ClientController {
         this.communicator.writeMessage(payloadObject);
     }
 
+    private void moveAndAttack() throws IOException {
+        while (true) {
+            assert this.gameBoard.getGameStage() == GameStage.GAME_START;
+            Player player = this.gameBoard.getPlayers().get(playerId);
+
+            boolean isFinished = false;
+            List<Action> actions = new ArrayList<>();
+            while (!isFinished) {
+                this.gameBoard.displayBoard();
+                System.out.println("You are the " + player.getColor() + " player, what would you like to do?");
+                System.out.println("(M)ove");
+                System.out.println("(A)ttack");
+                System.out.println("(D)one");
+
+                String input = this.consoleReader.readLine();
+
+                switch (input) {
+                    case "M":
+                        System.out.println("Please enter instruction in the following format: " +
+                                "<sourceTerritoryId>,<destinationId>,<UnitType>,<amount>");
+                        String moveInput = this.consoleReader.readLine();
+                        Action action;
+                        try {
+                            action = this.readActionAndProceed(moveInput, this.gameBoard, playerId);
+                            action.apply(this.gameBoard);
+                            actions.add(action);
+                        } catch (InvalidInputException | InvalidActionException e) {
+                            System.out.println(e.getMessage());
+                        }
+                        break;
+                    case "A":
+                        break;
+                    case "D":
+                        System.out.println("You have finished your actions, submitting...");
+                        isFinished = true;
+                        break;
+                    default:
+                        System.out.println("Invalid input, please input again");
+                        break;
+                }
+
+            }
+
+            //sending to the server
+            //constructing payload objects
+            Map<String, Object> content = new HashMap<>(3);
+            content.put(Configurations.REQUEST_PLACEMENT_ACTIONS, actions);
+            PayloadObject request = new PayloadObject(this.playerId,
+                    Configurations.MASTER_ID, PayloadType.REQUEST, content);
+            try {
+                this.sendMessage(request);
+                System.out.println("Actions sent, please wait other players finish placing");
+                this.waitAndReadServerResponse();
+            } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
+                //if server returns failed, re-do the actions again
+                exception.printStackTrace();
+                continue;
+            }
+            System.out.println("Successfully finished placement phase");
+            break;
+        }
+    }
+
 
     private void waitAndReadServerResponse() throws UnmatchedReceiverException, InvalidPayloadContent, ServerRejectException {
         PayloadObject response = null;
@@ -181,6 +245,15 @@ public class ClientController {
         }
     }
 
+    /**
+     * Validate placement action and generate action object.
+     *
+     * @param input
+     * @param board
+     * @param playerId
+     * @return
+     * @throws InvalidInputException
+     */
     private Action validateInputAndGenerateAction(String input, GameBoard board, Integer playerId)
             throws InvalidInputException {
         List<String> inputs = new ArrayList<>(Arrays.asList(input.split(",")));
@@ -194,13 +267,49 @@ public class ClientController {
             int unitNum = Integer.parseInt(inputs.get(2));
 
             //check valid unit type mapping
-            Map<String, UnitType> unitTypeMapper = gameBoard.getUnitTypeMapper();
-            if (!unitTypeMapper.containsKey(unitTypeString)){
+            Map<String, UnitType> unitTypeMapper = board.getUnitTypeMapper();
+            if (!unitTypeMapper.containsKey(unitTypeString)) {
                 throw new InvalidInputException("Invalid unit type string " + unitTypeString);
             }
             UnitType unitType = unitTypeMapper.get(unitTypeString);
 
             action = new PlacementAction(territoryId, unitType, unitNum, playerId);
+
+        } catch (NumberFormatException e) {
+            throw new InvalidInputException("Cannot parse string to valid int");
+        }
+        return action;
+    }
+
+    /**
+     * input in the format "sourceTerritoryId,destinationId,UnitType,amount"
+     *
+     * @param input
+     * @param board
+     * @param playerId
+     * @return
+     * @throws InvalidInputException
+     */
+    private Action readActionAndProceed(String input, GameBoard board, Integer playerId)
+            throws InvalidInputException {
+        List<String> inputs = new ArrayList<>(Arrays.asList(input.split(",")));
+        if (inputs.size() != 4) {
+            throw new InvalidInputException("Invalid input size");
+        }
+        Action action;
+        try {
+            int sourceTerritoryId = Integer.parseInt(inputs.get(0));
+            int destTerritoryId = Integer.parseInt(inputs.get(1));
+            String unitTypeString = inputs.get(2);
+            int unitNum = Integer.parseInt(inputs.get(3));
+
+            //check valid unit type mapping
+            Map<String, UnitType> unitTypeMapper = board.getUnitTypeMapper();
+            if (!unitTypeMapper.containsKey(unitTypeString)) {
+                throw new InvalidInputException("Invalid unit type string " + unitTypeString);
+            }
+            UnitType unitType = unitTypeMapper.get(unitTypeString);
+            action = new MoveAction(sourceTerritoryId, destTerritoryId, unitType, unitNum, playerId);
 
         } catch (NumberFormatException e) {
             throw new InvalidInputException("Cannot parse string to valid int");

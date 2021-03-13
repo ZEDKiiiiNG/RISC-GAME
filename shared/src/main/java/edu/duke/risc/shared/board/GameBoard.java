@@ -113,7 +113,7 @@ public class GameBoard implements Serializable {
         stack.push(source);
         while (!stack.isEmpty()) {
             Territory current = stack.pop();
-            if (dest.equals(source)) {
+            if (dest.equals(current)) {
                 return true;
             }
             for (Territory neighbor : current.getAdjacentTerritories()) {

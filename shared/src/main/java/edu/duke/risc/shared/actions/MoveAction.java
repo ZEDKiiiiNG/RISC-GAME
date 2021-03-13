@@ -49,21 +49,25 @@ public class MoveAction extends AbstractAction {
             return "Does not contain user: " + playerId;
         }
         Player player = board.getPlayers().get(super.playerId);
-        if (!player.getInitUnitsMap().containsKey(unitType)) {
-            return "Does not contain unit type.";
+        Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
+        Territory destTerritory = board.getTerritories().get(destinationId);
+
+        if (!player.getOwnedTerritories().contains(sourceTerritoryId)) {
+            return "The player does not own the source territory " + board.findTerritory(sourceTerritoryId);
         }
-        Territory territory = board.getTerritories().get(sourceTerritoryId);
-        if (!territory.getUnitsMap().containsKey(unitType)) {
-            return "The source territory does not contain the unit type.";
+        if (!player.getOwnedTerritories().contains(destinationId) && !destTerritory.isEmptyTerritory()) {
+            return "The player does not own the non-empty destination territory "
+                    + board.findTerritory(destinationId);
+        }
+        if (!sourceTerritory.getUnitsMap().containsKey(unitType)) {
+            return "The source territory does not contain the unit type " + unitType;
+        }
+        if (sourceTerritory.getUnitsMap().get(unitType) < number) {
+            return "The source territory does not have enough unit number: "
+                    + sourceTerritory.getUnitsMap().get(unitType) + " < " + number;
         }
         if (!board.isReachable(sourceTerritoryId, destinationId, playerId)) {
             return "The destination territory is not reachable";
-        }
-        if (territory.getUnitsMap().get(unitType) < number) {
-            return "The source territory does not contain enough unit type.";
-        }
-        if (!player.getOwnedTerritories().contains(sourceTerritoryId) || !player.getOwnedTerritories().contains(destinationId)) {
-            return "The player does not contain source territory or destination territory.";
         }
         return null;
     }
@@ -88,7 +92,6 @@ public class MoveAction extends AbstractAction {
             player.addOwnedTerritory(destinationId);
         }
         desTerritory.updateUnitsMap(unitType, number);
-
     }
 
     @Override
