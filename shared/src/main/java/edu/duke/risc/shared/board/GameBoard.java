@@ -30,7 +30,7 @@ public class GameBoard implements Serializable {
     private Displayable displayer;
 
     public GameBoard() {
-        territoryFactory = new BasicTerritoryFactory();
+        territoryFactory = new SmallTerritoryFactory();
         territories = territoryFactory.makeTerritories();
         players = new HashMap<>();
         gameStage = GameStage.WAITING_USERS;
@@ -65,7 +65,7 @@ public class GameBoard implements Serializable {
     public String getPlayerAssignedTerritoryInfo(Integer playerId) {
         StringBuilder builder = new StringBuilder();
         Player player = this.players.get(playerId);
-        for (Integer territoryId : player.getInitAssignedTerritories()) {
+        for (Integer territoryId : player.getOwnedTerritories()) {
             Territory territory = this.territories.get(territoryId);
             builder.append(territory.getTerritoryName() + " (" + territory.getTerritoryId() + ") ");
         }
@@ -94,8 +94,48 @@ public class GameBoard implements Serializable {
     }
 
     /**
+     * Grow the territory by 1.
+     *
+     * @return action log
+     */
+    public String territoryGrow() {
+        StringBuilder builder = new StringBuilder();
+        for (Player player : players.values()) {
+            for (Integer territoryId : player.getOwnedTerritories()) {
+                Territory territory = this.findTerritory(territoryId);
+                UnitType unitType = UnitType.SOLDIER;
+                territory.updateUnitsMap(unitType, 1);
+                player.updateTotalUnitMap(unitType, 1);
+            }
+        }
+        builder.append("Increment territories by 1");
+        return builder.toString();
+    }
+
+    /**
+     * @param playerId
+     * @param sourceTerritoryId
+     * @param unitType
+     * @param number
+     */
+    public void playerMoveFromTerritory(int playerId, int sourceTerritoryId, UnitType unitType, int number) {
+        Territory sourceTerritory = this.getTerritories().get(sourceTerritoryId);
+        sourceTerritory.updateUnitsMap(unitType, -number);
+    }
+
+    /**
+     * Get the total size of territories
+     *
+     * @return total size of territories
+     */
+    public int getTerritoriesSize() {
+        return this.territories.size();
+    }
+
+    /**
      * Whether we can reach from source to the destination.
      * For places that are owned by the current player or empty place, we accept.
+     * We are able to reach first adjacent enemy's territory
      *
      * @param sourceId sourceId
      * @param destId   destId
@@ -103,23 +143,24 @@ public class GameBoard implements Serializable {
      * @return Whether we can reach from source to the destination.
      */
     public boolean isReachable(int sourceId, int destId, int playerId) {
-        Stack<Territory> stack = new Stack<>();
-        Set<Territory> visited = new HashSet<>();
-        Territory source = this.territories.get(sourceId);
-        Territory dest = this.territories.get(destId);
+        Stack<Integer> stack = new Stack<>();
+        Set<Integer> visited = new HashSet<>();
         Player player = this.findPlayer(playerId);
 
-        visited.add(source);
-        stack.push(source);
+        if (destId == sourceId) {
+            return true;
+        }
+        visited.add(sourceId);
+        stack.push(sourceId);
         while (!stack.isEmpty()) {
-            Territory current = stack.pop();
-            if (dest.equals(source)) {
-                return true;
-            }
-            for (Territory neighbor : current.getAdjacentTerritories()) {
+            Integer current = stack.pop();
+            Territory currentTerritory = this.findTerritory(current);
+            for (Integer neighbor : currentTerritory.getAdjacentTerritories()) {
+                if (destId == neighbor) {
+                    return true;
+                }
                 //area not visited and ( or territory is empty -- not owned by anyone)
-                if (!visited.contains(neighbor)
-                        && (player.ownsTerritory(neighbor.getTerritoryId()) || neighbor.isEmptyTerritory())) {
+                if (!visited.contains(neighbor) && player.ownsTerritory(neighbor)) {
                     visited.add(neighbor);
                     stack.push(neighbor);
                 }
@@ -128,16 +169,66 @@ public class GameBoard implements Serializable {
         return false;
     }
 
-    public UnitType getUnitType(String search) {
-        return this.unitTypeMapper.get(search);
+    public int getShouldWaitPlayers() {
+        int count = 0;
+        for (Map.Entry<Integer, Player> playerEntry : this.players.entrySet()) {
+            if (!playerEntry.getValue().isLost()) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Get the player information
+     *
+     * @param playerId
+     * @return
+     */
+    public String getPlayerInfo(int playerId) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("-------------").append(System.lineSeparator());
+        Player player = this.findPlayer(playerId);
+
+        //print total units
+        builder.append("You have in total: ").append(System.lineSeparator());
+        for (Map.Entry<UnitType, Integer> unitTypeIntegerEntry : player.getTotalUnitsMap().entrySet()) {
+            builder.append(unitTypeIntegerEntry.getKey()).append(" : ")
+                    .append(unitTypeIntegerEntry.getValue())
+                    .append(System.lineSeparator());
+        }
+
+        return builder.toString();
+    }
+
+    /**
+     * Get the winner
+     *
+     * @return winner object, null if not winner
+     */
+    public Player getWinner() {
+        for (Player player : players.values()) {
+            if (player.isWin()) {
+                return player;
+            }
+        }
+        return null;
+    }
+
+    public void setGameStart() {
+        this.gameStage = GameStage.GAME_START;
+    }
+
+    public void setGameOver() {
+        this.gameStage = GameStage.GAME_OVER;
+    }
+
+    public boolean isGameOver() {
+        return this.gameStage == GameStage.GAME_OVER;
     }
 
     public Map<Integer, Player> getPlayers() {
         return players;
-    }
-
-    public GameStage getGameStage() {
-        return gameStage;
     }
 
     public void forwardPlacementPhase() {
@@ -146,34 +237,6 @@ public class GameBoard implements Serializable {
 
     public Map<Integer, Territory> getTerritories() {
         return territories;
-    }
-
-    public void setTerritories(Map<Integer, Territory> territories) {
-        this.territories = territories;
-    }
-
-    public void setPlayers(Map<Integer, Player> players) {
-        this.players = players;
-    }
-
-    public void setGameStage(GameStage gameStage) {
-        this.gameStage = gameStage;
-    }
-
-    public void setTerritoryFactory(TerritoryFactory territoryFactory) {
-        this.territoryFactory = territoryFactory;
-    }
-
-    public void setDisplayer(Displayable displayer) {
-        this.displayer = displayer;
-    }
-
-    public TerritoryFactory getTerritoryFactory() {
-        return territoryFactory;
-    }
-
-    public Displayable getDisplayer() {
-        return displayer;
     }
 
     public Map<String, UnitType> getUnitTypeMapper() {

@@ -28,8 +28,7 @@ public class PlacementAction extends AbstractAction {
         }
         Player player = board.getPlayers().get(super.playerId);
 
-        Set<Integer> initAssignedTerritories = player.getInitAssignedTerritories();
-        if (!initAssignedTerritories.contains(destinationId)){
+        if (!player.ownsTerritory(destinationId)){
             return "You are not assigned territory with id = " + destinationId;
         }
 
@@ -42,8 +41,9 @@ public class PlacementAction extends AbstractAction {
 
 
     @Override
-    public void apply(GameBoard board) throws InvalidActionException {
+    public String apply(GameBoard board) throws InvalidActionException {
         String error;
+        StringBuilder builder = new StringBuilder();
         if ((error = isValid(board)) != null) {
             throw new InvalidActionException(error);
         }
@@ -53,26 +53,13 @@ public class PlacementAction extends AbstractAction {
         Territory territory = board.getTerritories().get(destinationId);
         territory.updateUnitsMap(unitType, number);
         player.addOwnedTerritory(destinationId);
+
+        return builder.toString();
     }
 
     @Override
-    public void applyBefore(GameBoard board) throws InvalidActionException {
-        String error;
-        if ((error = isValid(board)) != null) {
-            throw new InvalidActionException(error);
-        }
-        Player player = board.getPlayers().get(super.playerId);
-        player.getTotalUnitsMap().put(unitType, number);
-        player.getInitUnitsMap().put(unitType, player.getInitUnitsMap().get(unitType) - number);
-    }
-
-    @Override
-    public void applyAfter(GameBoard board) throws InvalidActionException {
-        String error;
-        if ((error = isValid(board)) != null) {
-            throw new InvalidActionException(error);
-        }
-
+    public String simulateApply(GameBoard board) throws InvalidActionException {
+        return this.apply(board);
     }
 
 }

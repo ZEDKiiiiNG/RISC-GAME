@@ -34,8 +34,6 @@ public class Player implements GameUser, Serializable {
      */
     private Map<UnitType, Integer> initUnitsMap;
 
-    private Set<Integer> initAssignedTerritories;
-
     /**
      * Owned territories.
      */
@@ -54,8 +52,8 @@ public class Player implements GameUser, Serializable {
     public Player(int userId, UserColor color) {
         //init units map
         this.ownedTerritories = new HashSet<>();
-        this.initAssignedTerritories = new HashSet<>();
         this.initUnitsMap = new HashMap<>();
+        this.status = PlayerStatus.IN_GAME;
         initUnitsMap.put(UnitType.SOLDIER, Configurations.INIT_SOLDIER_NUM);
         this.userId = userId;
         this.color = color;
@@ -194,11 +192,23 @@ public class Player implements GameUser, Serializable {
         return initUnitsMap;
     }
 
-    public Set<Integer> getInitAssignedTerritories() {
-        return initAssignedTerritories;
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
 
-    public void setInitAssignedTerritories(Set<Integer> initAssignedTerritories) {
-        this.initAssignedTerritories = initAssignedTerritories;
+    public void markLost() {
+        this.status = PlayerStatus.LOST;
+    }
+
+    public boolean isLost() {
+        return this.status == PlayerStatus.LOST;
+    }
+
+    public void markWin() {
+        this.status = PlayerStatus.WIN;
+    }
+
+    public boolean isWin() {
+        return this.status == PlayerStatus.WIN;
     }
 }

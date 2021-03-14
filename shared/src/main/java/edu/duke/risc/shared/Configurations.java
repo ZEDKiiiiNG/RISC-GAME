@@ -7,11 +7,13 @@ package edu.duke.risc.shared;
 public class Configurations {
 
     public static final int MAX_PLAYERS = 3;
+    public static final int MAP_SIZE = 3;
 
     public static final int DEFAULT_SERVER_PORT = 8085;
 
     public static final String GAME_BOARD_STRING = "GAME_BOARD_STRING";
     public static final String PLAYER_STRING = "PLAYER_STRING";
+    public static final String LOGGER_STRING = "LOGGER_STRING";
     public static final String ERR_MSG = "ERR_MSG";
     public static final String SUCCESS_MSG = "SUCCESS_MSG";
 

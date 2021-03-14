@@ -10,103 +10,146 @@ import edu.duke.risc.shared.users.Player;
 /**
  *
  */
-public class AttackAction extends AbstractAction {
+public class AttackAction extends AbstractSourceAction implements TwoStepsAction {
 
     /**
-     * Source territory id
+     * -1 if the target place is not occupied
      */
-    private Integer sourceTerritoryId;
-
-    private UnitType unitType;
-
-    private Integer number;
-    private Integer attackedPlayer;
+    private Integer attackedPlayerId;
 
     public AttackAction(Integer sourceTerritoryId, Integer destinationId, UnitType unitType,
-                        Integer number, Integer player, Integer attackedPlayer) {
-        super(player, ActionType.ATTACK, destinationId, unitType, number);
-        //todo search attacked player on the board
-        this.sourceTerritoryId = sourceTerritoryId;
-        this.unitType = unitType;
-        this.number = number;
-        this.attackedPlayer = attackedPlayer;
+                        Integer number, Integer player) {
+        super(player, ActionType.ATTACK, destinationId, unitType, number, sourceTerritoryId);
+    }
+
+    /**
+     * Find the player who owns the destination territory
+     *
+     * @return player or -1 if not owned
+     */
+    private int findPlayerOwnsTerritory(GameBoard board) {
+        for (Player player : board.getPlayers().values()) {
+            if (player.ownsTerritory(destinationId)) {
+                return player.getId();
+            }
+        }
+        return -1;
     }
 
     @Override
     public String isValid(GameBoard board) {
+        if (number <= 0) {
+            return "Invalid or unnecessary number " + number;
+        }
         if (!board.getPlayers().containsKey(super.playerId)) {
             return "Does not contain user: " + playerId;
         }
-        if (!board.getPlayers().containsKey(attackedPlayer)) {
-            return "Does not contain user: " + attackedPlayer;
-        }
         Player player = board.getPlayers().get(super.playerId);
-        Player attackedPlayer = board.getPlayers().get(this.attackedPlayer);
-        if (!player.getInitUnitsMap().containsKey(unitType)) {
-            return playerId + "Does not contain unit type.";
+        if (!player.ownsTerritory(sourceTerritoryId)) {
+            return "You do not own territory " + sourceTerritoryId;
         }
-        if (!attackedPlayer.getInitUnitsMap().containsKey(unitType)) {
-            return attackedPlayer + "Does not contain unit type.";
+        if (player.ownsTerritory(destinationId)) {
+            return "You cannot attack owned " + sourceTerritoryId + ", please try move";
         }
-        Territory territory = board.getTerritories().get(sourceTerritoryId);
-        if (!territory.getUnitsMap().containsKey(unitType)) {
+        Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
+        Territory destTerritory = board.getTerritories().get(destinationId);
+        if (!sourceTerritory.getUnitsMap().containsKey(unitType)) {
             return "The source territory does not contain the unit type.";
         }
-        if (territory.getUnitsMap().get(unitType) <= number) {
+        if (sourceTerritory.getUnitsMap().get(unitType) < number) {
             return "The source territory does not contain enough unit type.";
         }
-        if (!player.getOwnedTerritories().contains(sourceTerritoryId)) {
-            return "The player does not contain source territory.";
-        }
-        if (!attackedPlayer.getOwnedTerritories().contains(destinationId)) {
-            return "The attacked player does not contain destination territory.";
-        }
-        Territory desTerritory = board.getTerritories().get(destinationId);
-        if (!territory.getAdjacentTerritories().contains(desTerritory)) {
-            return "The source territory is not adjacent to destination territory.";
+        if (!board.isReachable(sourceTerritoryId, destinationId, playerId)) {
+            return "Not reachable from source " + sourceTerritory + " to destination" + destTerritory;
         }
         return null;
     }
 
     @Override
-    public void apply(GameBoard board) throws InvalidActionException {
+    public String apply(GameBoard board) throws InvalidActionException {
+        return "";
+    }
+
+    @Override
+    public String simulateApply(GameBoard board) throws InvalidActionException {
         String error;
         if ((error = isValid(board)) != null) {
             throw new InvalidActionException(error);
         }
-        Player player = board.getPlayers().get(super.playerId);
-        Player attackedPlayer = board.getPlayers().get(this.attackedPlayer);
         Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
+        Territory destTerritory = board.getTerritories().get(destinationId);
         sourceTerritory.updateUnitsMap(unitType, -number);
-        Territory desTerritory = board.getTerritories().get(destinationId);
+        destTerritory.updateVirtualUnitsMap(unitType, number);
+        return "";
+    }
+
+    @Override
+    public String applyBefore(GameBoard board) throws InvalidActionException {
+        String error;
+        if ((error = isValid(board)) != null) {
+            throw new InvalidActionException(error);
+        }
+        board.playerMoveFromTerritory(playerId, sourceTerritoryId, unitType, number);
+        return "";
+    }
+
+    @Override
+    public String applyAfter(GameBoard board) throws InvalidActionException {
+        StringBuilder builder = new StringBuilder();
+
+        Player player = board.getPlayers().get(super.playerId);
+
+        this.attackedPlayerId = findPlayerOwnsTerritory(board);
+        Player attackedPlayer = board.getPlayers().get(this.attackedPlayerId);
+        Territory sourceTerritory = board.findTerritory(sourceTerritoryId);
+        Territory desTerritory = board.findTerritory(destinationId);
         Integer attacker = number;
-        while (desTerritory.getUnitsMap().get(unitType) != 0 && attacker != 0) {
+
+        int attackerLost = 0, defenderLost = 0;
+        while (!desTerritory.isEmptyTerritory()
+                && desTerritory.getUnitsMap().get(unitType) > 0 && attacker != 0) {
             Integer random = randomWin();
             if (random == 0) {
-                attacker--;
+                //attacked(defender) win, attacker lost
+                attacker -= 1;
+                attackerLost += 1;
             } else {
+                //attacker win, attacked(defender) lost
                 desTerritory.updateUnitsMap(unitType, -1);
                 attackedPlayer.updateTotalUnitMap(unitType, -1);
+                defenderLost += 1;
             }
         }
+
+        builder.append("ATTACK { Attacker: ").append(player.getColor()).append(" PLAYER")
+                .append(" with ").append(number).append(" ").append(unitType)
+                .append(" Defender: PLAYER ").append(attackedPlayer.getColor()).append(" PLAYER")
+                .append(" from place ").append(sourceTerritory.getBasicInfo()).append(" to place ")
+                .append(desTerritory.getBasicInfo()).append(" }")
+                .append(" with results: attacker lost ").append(attackerLost)
+                .append(" defender lost ").append(defenderLost).append(" : ");
+
         if (attacker == 0) {
+            //attacker lost
             player.updateTotalUnitMap(unitType, -number);
+            builder.append(" Attacker lost.");
         } else {
+            //attacked win, take the place
             desTerritory.getUnitsMap().put(unitType, attacker);
             player.updateTotalUnitMap(unitType, attacker - number);
+
+            player.getOwnedTerritories().add(destinationId);
+            attackedPlayer.getOwnedTerritories().remove(destinationId);
+            builder.append("defender lost territory ").append(board.findTerritory(destinationId).getTerritoryName());
         }
+        builder.append(System.lineSeparator());
+        return builder.toString();
     }
 
-    @Override
-    public void applyBefore(GameBoard board) throws InvalidActionException {
-
-    }
-
-    @Override
-    public void applyAfter(GameBoard board) throws InvalidActionException {
-
-    }
-
+    /***
+     * roll a dice
+     * @return 0 for defender win, 1 for attacked win
+     */
     public Integer randomWin() {
         if (Math.random() > 0.5) {
             return 0;

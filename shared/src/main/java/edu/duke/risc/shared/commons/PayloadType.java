@@ -15,6 +15,16 @@ public enum PayloadType {
 
     REQUEST,
 
+    /**
+     * The game is over, client should close resources and quit
+     */
+    GAME_OVER,
+
+    /**
+     * Client request to disconnect from server, server response with the same type
+     */
+    QUIT,
+
     ERROR,
 
     SUCCESS,

@@ -5,9 +5,10 @@ import edu.duke.risc.shared.Configurations;
 import edu.duke.risc.shared.PayloadObject;
 import edu.duke.risc.shared.SocketCommunicator;
 import edu.duke.risc.shared.actions.Action;
+import edu.duke.risc.shared.actions.AttackAction;
+import edu.duke.risc.shared.actions.MoveAction;
 import edu.duke.risc.shared.actions.PlacementAction;
 import edu.duke.risc.shared.board.GameBoard;
-import edu.duke.risc.shared.board.GameStage;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
@@ -26,10 +27,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import static edu.duke.risc.shared.Configurations.GAME_BOARD_STRING;
-import static edu.duke.risc.shared.Configurations.PLAYER_STRING;
+import static edu.duke.risc.shared.Configurations.*;
 
 /**
  * @author eason
@@ -43,22 +42,21 @@ public class ClientController {
 
     private BufferedReader consoleReader;
 
+    private String loggerInfo;
+
     private Integer playerId = Configurations.DEFAULT_PLAYER_ID;
+
+    private ReadExitThread readExitThread;
 
     public ClientController() throws IOException {
         this.consoleReader = new BufferedReader(new InputStreamReader(System.in));
-        this.startGame();
-        try {
-            Thread.sleep(1000000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
-    private void startGame() throws IOException {
+    public void startGame() throws IOException {
         tryConnectAndWait();
         assignUnits();
-        this.gameBoard.displayBoard();
+        moveAndAttack();
+        observerMode();
     }
 
     private void tryConnectAndWait() {
@@ -79,8 +77,6 @@ public class ClientController {
 
     private void assignUnits() throws IOException {
         while (true) {
-            assert this.gameBoard.getGameStage() == GameStage.PLACEMENT;
-
             List<Action> actions = new ArrayList<>();
             Player player = this.gameBoard.getPlayers().get(playerId);
 
@@ -99,7 +95,7 @@ public class ClientController {
                 Action action = null;
                 try {
                     action = this.validateInputAndGenerateAction(input, this.gameBoard, playerId);
-                    action.apply(this.gameBoard);
+                    action.simulateApply(this.gameBoard);
                     actions.add(action);
                 } catch (InvalidInputException | InvalidActionException e) {
                     System.out.println(e.getMessage());
@@ -117,6 +113,8 @@ public class ClientController {
                 this.sendMessage(request);
                 System.out.println("Actions sent, please wait other players finish placing");
                 this.waitAndReadServerResponse();
+                System.out.println(this.loggerInfo);
+                this.gameBoard.displayBoard();
             } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
                 //if server returns failed, re-do the actions again
                 exception.printStackTrace();
@@ -131,6 +129,97 @@ public class ClientController {
         this.communicator.writeMessage(payloadObject);
     }
 
+    private void moveAndAttack() throws IOException {
+        while (true) {
+            if (this.checkUserStatus()) {
+                return;
+            }
+            Player player = this.gameBoard.getPlayers().get(playerId);
+            boolean isFinished = false;
+            List<Action> moveActions = new ArrayList<>();
+            List<Action> attackActions = new ArrayList<>();
+            while (!isFinished) {
+                this.gameBoard.displayBoard();
+                System.out.println(this.gameBoard.getPlayerInfo(this.playerId));
+                System.out.println("You are the " + player.getColor() + " player, what would you like to do?");
+                System.out.println("(M)ove");
+                System.out.println("(A)ttack");
+                System.out.println("(D)one");
+                String input = this.consoleReader.readLine();
+                switch (input) {
+                    case "M":
+                        conductMoveOrAttack(moveActions, 0);
+                        break;
+                    case "A":
+                        conductMoveOrAttack(attackActions, 1);
+                        break;
+                    case "D":
+                        System.out.println("You have finished your actions, submitting...");
+                        isFinished = true;
+                        break;
+                    default:
+                        System.out.println("Invalid input, please input again");
+                        break;
+                }
+            }
+
+            //todo combine all attack actions
+            //sending to the server
+            //constructing payload objects
+            Map<String, Object> content = new HashMap<>(3);
+            content.put(Configurations.REQUEST_MOVE_ACTIONS, moveActions);
+
+            content.put(Configurations.REQUEST_ATTACK_ACTIONS, attackActions);
+            PayloadObject request = new PayloadObject(this.playerId,
+                    Configurations.MASTER_ID, PayloadType.REQUEST, content);
+            try {
+                this.sendMessage(request);
+                System.out.println("Actions sent, please wait other players finish placing");
+                this.waitAndReadServerResponse();
+                System.out.println(this.loggerInfo);
+            } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
+                //if server returns failed, re-do the actions again
+                exception.printStackTrace();
+                continue;
+            }
+        }
+    }
+
+    private void observerMode() {
+        try {
+            System.out.println("You lost the game, entering Observer Mode, you can type exit to quit...");
+            while (true) {
+                this.readExitThread = new ReadExitThread(this.consoleReader, this.communicator, this.playerId);
+                this.readExitThread.setDaemon(true);
+                this.readExitThread.start();
+
+                this.waitAndReadServerResponse();
+                System.out.println(this.loggerInfo);
+                this.gameBoard.displayBoard();
+            }
+        } catch (UnmatchedReceiverException | InvalidPayloadContent | ServerRejectException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * @param actions
+     * @param actionType 0 for move and 1 for attack
+     * @throws IOException
+     */
+    private void conductMoveOrAttack(List<Action> actions, int actionType) throws IOException {
+        System.out.println("Please enter instruction in the following format: " +
+                "<sourceTerritoryId>,<destinationId>,<UnitType>,<amount>");
+        String moveInput = this.consoleReader.readLine();
+        Action action;
+        try {
+            action = this.readActionAndProceed(moveInput, this.gameBoard, playerId, actionType);
+            action.simulateApply(this.gameBoard);
+            actions.add(action);
+        } catch (InvalidInputException | InvalidActionException e) {
+            System.out.println(e.getMessage());
+        }
+    }
 
     private void waitAndReadServerResponse() throws UnmatchedReceiverException, InvalidPayloadContent, ServerRejectException {
         PayloadObject response = null;
@@ -157,16 +246,27 @@ public class ClientController {
             case ERROR:
                 throw new ServerRejectException("Action requests are rejected by server"
                         + response.getContents().get(Configurations.ERR_MSG));
+            case QUIT:
+                System.out.println("Request to disconnect");
+                this.terminateProcess();
             case UPDATE:
                 if (contents.containsKey(GAME_BOARD_STRING)
                         && contents.containsKey(PLAYER_STRING)) {
                     this.gameBoard = (GameBoard) contents.get(GAME_BOARD_STRING);
                     this.playerId = (Integer) contents.get(PLAYER_STRING);
+                    this.loggerInfo = (String) contents.get(LOGGER_STRING);
                 } else {
                     throw new InvalidPayloadContent("do not contain gameBoard object");
                 }
                 break;
-
+            case GAME_OVER:
+                this.gameBoard = (GameBoard) contents.get(GAME_BOARD_STRING);
+                this.playerId = (Integer) contents.get(PLAYER_STRING);
+                this.loggerInfo = (String) contents.get(LOGGER_STRING);
+                System.out.println(loggerInfo);
+                this.printWinnerInfo();
+                this.terminateProcess();
+                break;
             default:
                 throw new IllegalArgumentException("Invalid message type");
         }
@@ -181,6 +281,15 @@ public class ClientController {
         }
     }
 
+    /**
+     * Validate placement action and generate action object.
+     *
+     * @param input
+     * @param board
+     * @param playerId
+     * @return
+     * @throws InvalidInputException
+     */
     private Action validateInputAndGenerateAction(String input, GameBoard board, Integer playerId)
             throws InvalidInputException {
         List<String> inputs = new ArrayList<>(Arrays.asList(input.split(",")));
@@ -194,8 +303,8 @@ public class ClientController {
             int unitNum = Integer.parseInt(inputs.get(2));
 
             //check valid unit type mapping
-            Map<String, UnitType> unitTypeMapper = gameBoard.getUnitTypeMapper();
-            if (!unitTypeMapper.containsKey(unitTypeString)){
+            Map<String, UnitType> unitTypeMapper = board.getUnitTypeMapper();
+            if (!unitTypeMapper.containsKey(unitTypeString)) {
                 throw new InvalidInputException("Invalid unit type string " + unitTypeString);
             }
             UnitType unitType = unitTypeMapper.get(unitTypeString);
@@ -206,6 +315,78 @@ public class ClientController {
             throw new InvalidInputException("Cannot parse string to valid int");
         }
         return action;
+    }
+
+    /**
+     * input in the format "sourceTerritoryId,destinationId,UnitType,amount"
+     *
+     * @param input
+     * @param board
+     * @param playerId
+     * @return
+     * @throws InvalidInputException
+     */
+    private Action readActionAndProceed(String input, GameBoard board, Integer playerId, int actionType)
+            throws InvalidInputException {
+        List<String> inputs = new ArrayList<>(Arrays.asList(input.split(",")));
+        if (inputs.size() != 4) {
+            throw new InvalidInputException("Invalid input size");
+        }
+        Action action;
+        try {
+            int sourceTerritoryId = Integer.parseInt(inputs.get(0));
+            int destTerritoryId = Integer.parseInt(inputs.get(1));
+            String unitTypeString = inputs.get(2);
+            int unitNum = Integer.parseInt(inputs.get(3));
+
+            //check valid unit type mapping
+            Map<String, UnitType> unitTypeMapper = board.getUnitTypeMapper();
+            if (!unitTypeMapper.containsKey(unitTypeString)) {
+                throw new InvalidInputException("Invalid unit type string " + unitTypeString);
+            }
+            UnitType unitType = unitTypeMapper.get(unitTypeString);
+            if (actionType == 0) {
+                action = new MoveAction(sourceTerritoryId, destTerritoryId, unitType, unitNum, playerId);
+            } else {
+                action = new AttackAction(sourceTerritoryId, destTerritoryId, unitType, unitNum, playerId);
+            }
+        } catch (NumberFormatException e) {
+            throw new InvalidInputException("Cannot parse string to valid int");
+        }
+        return action;
+    }
+
+    private boolean checkUserStatus() {
+        return isLost() || isWin();
+    }
+
+    private boolean isWin() {
+        Player player = this.gameBoard.findPlayer(playerId);
+        return player.isWin();
+    }
+
+    private void printWinnerInfo() {
+        //todo fix this bug, not print winner
+        Player winner = this.gameBoard.getWinner();
+        if (winner != null){
+            System.out.println("Winner is " + winner.getColor() + " player");
+        }
+    }
+
+    private boolean isLost() {
+        Player player = this.gameBoard.findPlayer(playerId);
+        return player.isLost();
+    }
+
+    private void terminateProcess() {
+        try {
+            System.out.println("GAME OVER");
+            this.communicator.terminate();
+            this.consoleReader.close();
+            System.exit(0);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

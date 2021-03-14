@@ -1,5 +1,7 @@
 package edu.duke.risc.shared;
 
+import com.google.gson.Gson;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -40,8 +42,18 @@ public class SocketCommunicator implements Communicable {
     @Override
     public PayloadObject receiveMessage() throws IOException, ClassNotFoundException {
         ObjectInputStream objectInputStream = new ObjectInputStream(this.reader);
-        PayloadObject payloadObject = (PayloadObject) objectInputStream.readObject();
-        return payloadObject;
+        return (PayloadObject) objectInputStream.readObject();
+    }
+
+    @Override
+    public void terminate() {
+        try {
+            this.writer.close();
+            this.reader.close();
+            this.socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

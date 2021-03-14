@@ -23,22 +23,40 @@ public interface Action extends Serializable {
      * Conduct the current action on board
      *
      * @param board the main game board
+     * @return action log
      * @throws InvalidActionException the action is defined as invalid
      */
-    public void apply(GameBoard board) throws InvalidActionException;
+    public String apply(GameBoard board) throws InvalidActionException;
+
+    /**
+     * Conduct the current action on board
+     *
+     * @param board the main game board
+     * @return action log
+     * @throws InvalidActionException the action is defined as invalid
+     */
+    public String simulateApply(GameBoard board) throws InvalidActionException;
 
     /**
      * Conduct the current action on board -- from the source
      *
+     * @param board board
+     * @return result
      * @throws InvalidActionException the action is defined as invalid
      */
-    public void applyBefore(GameBoard board) throws InvalidActionException;
+    public default String applyBefore(GameBoard board) throws InvalidActionException {
+        return null;
+    }
 
     /**
      * Conduct the current action on board -- to the destination
      *
+     * @param board board
+     * @return result
      * @throws InvalidActionException the action is defined as invalid
      */
-    public void applyAfter(GameBoard board) throws InvalidActionException;
+    public default String applyAfter(GameBoard board) throws InvalidActionException {
+        return null;
+    }
 
 }

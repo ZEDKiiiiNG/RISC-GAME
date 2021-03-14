@@ -7,30 +7,17 @@ import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
 import edu.duke.risc.shared.users.Player;
 
-import java.util.ArrayDeque;
 import java.util.HashSet;
-import java.util.Queue;
 import java.util.Set;
 
 /**
  *
  */
-public class MoveAction extends AbstractAction {
+public class MoveAction extends AbstractSourceAction {
 
-    /**
-     * Source territory id
-     */
-    private Integer sourceTerritoryId;
-
-    private UnitType unitType;
-
-    private Integer number;
 
     public MoveAction(Integer sourceTerritoryId, Integer destinationId, UnitType unitType, Integer number, Integer player) {
-        super(player, ActionType.MOVE, destinationId, unitType, number);
-        this.sourceTerritoryId = sourceTerritoryId;
-        this.unitType = unitType;
-        this.number = number;
+        super(player, ActionType.MOVE, destinationId, unitType, number, sourceTerritoryId);
     }
 
     public Set<Territory> getPlayerTerritory(GameBoard board) {
@@ -45,32 +32,38 @@ public class MoveAction extends AbstractAction {
 
     @Override
     public String isValid(GameBoard board) {
+        if (number <= 0) {
+            return "Invalid or unnecessary number " + number;
+        }
         if (!board.getPlayers().containsKey(super.playerId)) {
             return "Does not contain user: " + playerId;
         }
         Player player = board.getPlayers().get(super.playerId);
-        if (!player.getInitUnitsMap().containsKey(unitType)) {
-            return "Does not contain unit type.";
+        Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
+
+        if (!player.ownsTerritory(sourceTerritoryId)) {
+            return "The player does not own the source territory " + board.findTerritory(sourceTerritoryId);
         }
-        Territory territory = board.getTerritories().get(sourceTerritoryId);
-        if (!territory.getUnitsMap().containsKey(unitType)) {
-            return "The source territory does not contain the unit type.";
+        if (!player.ownsTerritory(destinationId)) {
+            return "The player does not own the destination territory " + board.findTerritory(destinationId);
+        }
+        if (!sourceTerritory.getUnitsMap().containsKey(unitType)) {
+            return "The source territory does not contain the unit type " + unitType;
+        }
+        if (sourceTerritory.getUnitsMap().get(unitType) < number) {
+            return "The source territory does not have enough unit number: "
+                    + sourceTerritory.getUnitsMap().get(unitType) + " < " + number;
         }
         if (!board.isReachable(sourceTerritoryId, destinationId, playerId)) {
             return "The destination territory is not reachable";
-        }
-        if (territory.getUnitsMap().get(unitType) < number) {
-            return "The source territory does not contain enough unit type.";
-        }
-        if (!player.getOwnedTerritories().contains(sourceTerritoryId) || !player.getOwnedTerritories().contains(destinationId)) {
-            return "The player does not contain source territory or destination territory.";
         }
         return null;
     }
 
     @Override
-    public void apply(GameBoard board) throws InvalidActionException {
+    public String apply(GameBoard board) throws InvalidActionException {
         String error;
+        StringBuilder builder = new StringBuilder();
         if ((error = isValid(board)) != null) {
             throw new InvalidActionException(error);
         }
@@ -79,26 +72,29 @@ public class MoveAction extends AbstractAction {
         //owned by player anymore -- remove from owned territory
         Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
         sourceTerritory.updateUnitsMap(unitType, -number);
-        if (sourceTerritory.isEmptyTerritory()) {
-            player.removeOwnedTerritory(sourceTerritoryId);
-        }
         //update destination territory
         Territory desTerritory = board.getTerritories().get(destinationId);
-        if (desTerritory.isEmptyTerritory()) {
-            player.addOwnedTerritory(destinationId);
-        }
         desTerritory.updateUnitsMap(unitType, number);
-
+        builder.append("SUCCESS: ").append(this.toString());
+        return builder.toString();
     }
 
     @Override
-    public void applyBefore(GameBoard board) throws InvalidActionException {
-
+    public String simulateApply(GameBoard board) throws InvalidActionException {
+        return this.apply(board);
     }
 
     @Override
-    public void applyAfter(GameBoard board) throws InvalidActionException {
-
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("MOVE ACTION { ")
+                .append(" conducted by player ").append(playerId)
+                .append(", from ").append(sourceTerritoryId)
+                .append(", to ").append(destinationId)
+                .append(", unit type ").append(unitType)
+                .append(", number of units ").append(number)
+                .append(" }").append(System.lineSeparator());
+        return builder.toString();
     }
 
 }
