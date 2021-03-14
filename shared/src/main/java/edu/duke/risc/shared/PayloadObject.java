@@ -1,5 +1,6 @@
 package edu.duke.risc.shared;
 
+import com.google.gson.annotations.SerializedName;
 import edu.duke.risc.shared.commons.PayloadType;
 
 import java.io.Serializable;
@@ -11,12 +12,16 @@ import java.util.Map;
  */
 public class PayloadObject implements Serializable {
 
+    @SerializedName("sender")
     private Integer sender;
 
+    @SerializedName("receiver")
     private Integer receiver;
 
+    @SerializedName("messageType")
     private PayloadType messageType;
 
+    @SerializedName("contents")
     private Map<String, Object> contents;
 
     public PayloadObject() {

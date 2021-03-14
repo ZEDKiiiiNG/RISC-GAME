@@ -56,7 +56,7 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
         if (!sourceTerritory.getUnitsMap().containsKey(unitType)) {
             return "The source territory does not contain the unit type.";
         }
-        if (sourceTerritory.getUnitsMap().get(unitType) <= number) {
+        if (sourceTerritory.getUnitsMap().get(unitType) < number) {
             return "The source territory does not contain enough unit type.";
         }
         if (!board.isReachable(sourceTerritoryId, destinationId, playerId)) {
@@ -90,12 +90,14 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
             throw new InvalidActionException(error);
         }
         board.playerMoveFromTerritory(playerId, sourceTerritoryId, unitType, number);
+        this.attackedPlayerId = findPlayerOwnsTerritory(board);
         return "";
     }
 
     @Override
     public String applyAfter(GameBoard board) throws InvalidActionException {
         StringBuilder builder = new StringBuilder();
+
         Player player = board.getPlayers().get(super.playerId);
         Player attackedPlayer = board.getPlayers().get(this.attackedPlayerId);
         Territory desTerritory = board.getTerritories().get(destinationId);
@@ -117,10 +119,12 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
             }
         }
 
+        builder.append(this).append(" with results: attacker lost ").append(attackerLost)
+                .append(" defender lost ").append(defenderLost).append(" : ");
         if (attacker == 0) {
             //attacker lost
             player.updateTotalUnitMap(unitType, -number);
-            builder.append("attacker lost.");
+            builder.append(" Attacker lost.");
         } else {
             //attacked win, take the place
             desTerritory.getUnitsMap().put(unitType, attacker);
@@ -128,22 +132,19 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
 
             player.getOwnedTerritories().add(destinationId);
             attackedPlayer.getOwnedTerritories().remove(destinationId);
-            builder.append("defender lost.");
+            builder.append("defender lost territory ").append(board.findTerritory(destinationId).getTerritoryName());
         }
-
-        builder.append(" attacked loses ").append(attacker)
-                .append(" defender loses ").append(defenderLost);
+        builder.append(System.lineSeparator());
         return builder.toString();
     }
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("ATTACK {")
-                .append(" attacker id: ").append(playerId).append(number).append(" ").append(unitType)
-                .append(" defender id = ").append(attackedPlayerId)
-                .append("}");
-        return builder.toString();
+        return "ATTACK {" +
+                " Attacker: PLAYER " + playerId +
+                " with " + number + " " + unitType +
+                " Defender: PLAYER " + attackedPlayerId +
+                " }";
     }
 
     /***

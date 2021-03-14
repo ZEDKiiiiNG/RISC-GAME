@@ -1,5 +1,7 @@
 package edu.duke.risc.shared;
 
+import com.google.gson.Gson;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;

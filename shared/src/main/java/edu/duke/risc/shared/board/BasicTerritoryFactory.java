@@ -24,15 +24,24 @@ public class BasicTerritoryFactory implements TerritoryFactory {
         Territory roshar = new Territory(7, "Roshar");
         Territory hogwarts = new Territory(8, "Hogwarts");
 
-        narnia.addNeighbor(midkemia, elantris);
-        midkemia.addNeighbor(narnia, elantris, scadrial, oz);
-        oz.addNeighbor(midkemia, scadrial, mordor, gondor);
-        gondor.addNeighbor(oz, mordor);
-        elantris.addNeighbor(narnia, midkemia, scadrial, roshar);
-        scadrial.addNeighbor(elantris, roshar, hogwarts, mordor, oz, midkemia);
-        mordor.addNeighbor(gondor, oz, scadrial, hogwarts);
-        roshar.addNeighbor(elantris, scadrial, hogwarts);
-        hogwarts.addNeighbor(roshar, scadrial, mordor);
+        //midkemia, elantris
+        narnia.addNeighbor(1, 4);
+        //narnia, elantris, scadrial, oz
+        midkemia.addNeighbor(0, 4, 5, 2);
+        //midkemia, scadrial, mordor, gondor
+        oz.addNeighbor(1, 5, 6, 3);
+        //oz, mordor
+        gondor.addNeighbor(2, 6);
+        //narnia, midkemia, scadrial, roshar
+        elantris.addNeighbor(0, 1, 5, 7);
+        //elantris, roshar, hogwarts, mordor, oz,midkemia
+        scadrial.addNeighbor(4, 7, 8, 6, 2, 1);
+        //gondor, oz, scadrial, hogwarts
+        mordor.addNeighbor(3, 2, 5, 8);
+        //elantris, scadrial, hogwarts
+        roshar.addNeighbor(4, 5, 8);
+        //roshar, scadrial, mordor
+        hogwarts.addNeighbor(7, 5, 6);
 
         result.put(narnia.getTerritoryId(), narnia);
         result.put(midkemia.getTerritoryId(), midkemia);

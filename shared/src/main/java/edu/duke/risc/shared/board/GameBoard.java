@@ -119,7 +119,6 @@ public class GameBoard implements Serializable {
     }
 
     /**
-     *
      * @param playerId
      * @param sourceTerritoryId
      * @param unitType
@@ -146,25 +145,24 @@ public class GameBoard implements Serializable {
      * @return Whether we can reach from source to the destination.
      */
     public boolean isReachable(int sourceId, int destId, int playerId) {
-        Stack<Territory> stack = new Stack<>();
-        Set<Territory> visited = new HashSet<>();
-        Territory source = this.territories.get(sourceId);
-        Territory dest = this.territories.get(destId);
+        Stack<Integer> stack = new Stack<>();
+        Set<Integer> visited = new HashSet<>();
         Player player = this.findPlayer(playerId);
 
-        if (dest.equals(source)) {
+        if (destId == sourceId) {
             return true;
         }
-        visited.add(source);
-        stack.push(source);
+        visited.add(sourceId);
+        stack.push(sourceId);
         while (!stack.isEmpty()) {
-            Territory current = stack.pop();
-            for (Territory neighbor : current.getAdjacentTerritories()) {
-                if (dest.equals(neighbor)) {
+            Integer current = stack.pop();
+            Territory currentTerritory = this.findTerritory(current);
+            for (Integer neighbor : currentTerritory.getAdjacentTerritories()) {
+                if (destId == neighbor) {
                     return true;
                 }
                 //area not visited and ( or territory is empty -- not owned by anyone)
-                if (!visited.contains(neighbor) && player.ownsTerritory(neighbor.getTerritoryId())) {
+                if (!visited.contains(neighbor) && player.ownsTerritory(neighbor)) {
                     visited.add(neighbor);
                     stack.push(neighbor);
                 }

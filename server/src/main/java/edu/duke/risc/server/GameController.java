@@ -6,7 +6,6 @@ import edu.duke.risc.shared.PlayerHandler;
 import edu.duke.risc.shared.SocketCommunicator;
 import edu.duke.risc.shared.ThreadBarrier;
 import edu.duke.risc.shared.actions.Action;
-import edu.duke.risc.shared.actions.TwoStepsAction;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.board.GameStage;
 import edu.duke.risc.shared.commons.PayloadType;
@@ -104,6 +103,7 @@ public class GameController {
                 System.out.println(e.getMessage());
             }
         }
+        //todo create logger here
         broadcastUpdatedMaps("");
     }
 
@@ -113,82 +113,84 @@ public class GameController {
      * @throws IOException
      */
     private void moveAttackPhase() throws IOException {
-        System.out.println("Entering move attack phase....");
-        this.board.setGameStage(GameStage.GAME_START);
-        int numberOfRequestRequired = this.board.getPlayers().size();
-        List<Action> moveCacheActions = new ArrayList<>();
-        List<Action> attackCacheActions = new ArrayList<>();
-        StringBuilder logger = new StringBuilder();
-        while (numberOfRequestRequired > 0) {
-            PayloadObject request = this.barrier.consumeRequest();
-            //validate move_attack_request
-            if (request.getMessageType() != PayloadType.REQUEST
-                    || request.getReceiver() != this.root.getId()
-                    || !request.getContents().containsKey(Configurations.REQUEST_MOVE_ACTIONS)
-                    || !request.getContents().containsKey(Configurations.REQUEST_ATTACK_ACTIONS)) {
-                sendBackErrorMessage(request, "Invalid request type");
-                continue;
+        while (true) {
+            this.board.setGameStage(GameStage.GAME_START);
+            int numberOfRequestRequired = this.board.getPlayers().size();
+            List<Action> moveCacheActions = new ArrayList<>();
+            List<Action> attackCacheActions = new ArrayList<>();
+            StringBuilder logger = getLogger();
+            while (numberOfRequestRequired > 0) {
+                PayloadObject request = this.barrier.consumeRequest();
+                //validate move_attack_request
+                if (request.getMessageType() != PayloadType.REQUEST
+                        || request.getReceiver() != this.root.getId()
+                        || !request.getContents().containsKey(Configurations.REQUEST_MOVE_ACTIONS)
+                        || !request.getContents().containsKey(Configurations.REQUEST_ATTACK_ACTIONS)) {
+                    sendBackErrorMessage(request, "Invalid request type");
+                    continue;
+                }
+                List<Action> moveActions = (List<Action>) request.getContents().get(Configurations.REQUEST_MOVE_ACTIONS);
+                List<Action> attackActions =
+                        (List<Action>) request.getContents().get(Configurations.REQUEST_ATTACK_ACTIONS);
+                String moveValidateResult = validateActions(moveActions, this.board);
+                if (moveValidateResult != null) {
+                    //error occurs, send response back to the client.
+                    sendBackErrorMessage(request, moveValidateResult);
+                    continue;
+                }
+                String attackValidateResult = validateActions(attackActions, this.board);
+                if (attackValidateResult != null) {
+                    //error occurs, send response back to the client.
+                    sendBackErrorMessage(request, attackValidateResult);
+                    continue;
+                } else {
+                    //validate success, response the client with success message and continues the next request
+                    moveCacheActions.addAll(moveActions);
+                    attackCacheActions.addAll(attackActions);
+                    numberOfRequestRequired -= 1;
+                }
             }
-            List<Action> moveActions = (List<Action>) request.getContents().get(Configurations.REQUEST_MOVE_ACTIONS);
-            List<Action> attackActions =
-                    (List<Action>) request.getContents().get(Configurations.REQUEST_ATTACK_ACTIONS);
-            String moveValidateResult = validateActions(moveActions, this.board);
-            if (moveValidateResult != null) {
-                //error occurs, send response back to the client.
-                sendBackErrorMessage(request, moveValidateResult);
-                continue;
-            }
-            String attackValidateResult = validateActions(attackActions, this.board);
-            if (attackValidateResult != null) {
-                //error occurs, send response back to the client.
-                sendBackErrorMessage(request, attackValidateResult);
-                continue;
-            } else {
-                //validate success, response the client with success message and continues the next request
-                moveCacheActions.addAll(moveActions);
-                attackCacheActions.addAll(attackActions);
-                numberOfRequestRequired -= 1;
-            }
-        }
-        //with all requests received, process them simultaneously
+            //with all requests received, process them simultaneously
 
-        //first conduct move actions
-        for (Action action : moveCacheActions) {
-            try {
-                String result = action.apply(this.board);
-                logger.append(result);
-            } catch (InvalidActionException e) {
-                //simply ignore this
-                logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
+            //first conduct move actions
+            for (Action action : moveCacheActions) {
+                try {
+                    String result = action.apply(this.board);
+                    logger.append(result);
+                } catch (InvalidActionException e) {
+                    //simply ignore this
+                    logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
+                }
             }
-        }
 
-        //then conduct attack actions
-        List<Action> validList = attackCacheActions.stream().filter((action -> action.isValid(board) == null))
-                .collect(Collectors.toList());
+            //then conduct attack actions
+            List<Action> validList = attackCacheActions.stream().filter((action -> action.isValid(board) == null))
+                    .collect(Collectors.toList());
 
-        for (Action action : validList) {
-            try {
-                action.applyBefore(this.board);
-            } catch (InvalidActionException e) {
-                //simply ignore this
-                logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
+            for (Action action : validList) {
+                try {
+                    action.applyBefore(this.board);
+                } catch (InvalidActionException e) {
+                    //simply ignore this
+                    logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
+                }
             }
-        }
-        for (Action action : validList) {
-            try {
-                String result = action.applyAfter(this.board);
-                logger.append(result);
-            } catch (InvalidActionException e) {
-                //simply ignore this
-                logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
+            for (Action action : validList) {
+                try {
+                    String result = action.applyAfter(this.board);
+                    logger.append(result);
+                } catch (InvalidActionException e) {
+                    //simply ignore this
+                    logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
+                }
             }
-        }
 
-        String growResult = this.board.territoryGrow();
-        logger.append(growResult);
-        System.out.println(logger.toString());
-        broadcastUpdatedMaps(logger.toString());
+            String growResult = this.board.territoryGrow();
+            logger.append(growResult);
+            System.out.println(logger.toString());
+            //todo check whether some player wins the game, update player's status
+            broadcastUpdatedMaps(logger.toString());
+        }
     }
 
     private void sendBackErrorMessage(PayloadObject request, String validateResult) throws IOException {
@@ -274,6 +276,13 @@ public class GameController {
     private void assignTerritories(Player player, GameBoard gameBoard) {
         Set<Integer> assignedTerritories = gameBoard.addPlayer(player);
         player.setOwnedTerritories(assignedTerritories);
+    }
+
+    private StringBuilder getLogger() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("ACTION LOGS").append(System.lineSeparator());
+        builder.append("------------").append(System.lineSeparator());
+        return builder;
     }
 
 }

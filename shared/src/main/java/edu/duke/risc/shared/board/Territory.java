@@ -41,14 +41,14 @@ public class Territory implements Serializable {
     /**
      * Adjacent territories
      */
-    private Set<Territory> adjacentTerritories;
+    private Set<Integer> adjacentTerritories;
 
     public Territory(int territoryId, String territoryName) {
         this(territoryId, territoryName, new HashMap<>(), new HashSet<>(), new HashMap<>());
     }
 
     private Territory(int territoryId, String territoryName, Map<UnitType, Integer> unitsMap,
-                      Set<Territory> adjacentTerritories, Map<UnitType, Integer> virtualUnitsMap) {
+                      Set<Integer> adjacentTerritories, Map<UnitType, Integer> virtualUnitsMap) {
         this.territoryId = territoryId;
         this.territoryName = territoryName;
         this.unitsMap = unitsMap;
@@ -56,7 +56,7 @@ public class Territory implements Serializable {
         this.virtualUnitsMap = virtualUnitsMap;
     }
 
-    public void addNeighbor(Territory... territories) {
+    public void addNeighbor(Integer... territories) {
         this.adjacentTerritories.addAll(Arrays.asList(territories));
     }
 
@@ -73,8 +73,8 @@ public class Territory implements Serializable {
         }
         builder.append("in ").append(this.territoryName)
                 .append("(").append(this.territoryId).append(")").append(" (next to: ");
-        for (Territory adjacent : this.adjacentTerritories) {
-            builder.append(adjacent.getTerritoryName()).append(", ");
+        for (Integer adjacent : this.adjacentTerritories) {
+            builder.append(adjacent).append(", ");
         }
         builder.append(")");
         //virtual units for clients
@@ -158,10 +158,6 @@ public class Territory implements Serializable {
         return this.unitsMap.isEmpty();
     }
 
-    public void setAdjacentTerritories(Set<Territory> adjacentTerritories) {
-        this.adjacentTerritories = adjacentTerritories;
-    }
-
     public String getTerritoryName() {
         return territoryName;
     }
@@ -170,7 +166,7 @@ public class Territory implements Serializable {
         return unitsMap;
     }
 
-    public Set<Territory> getAdjacentTerritories() {
+    public Set<Integer> getAdjacentTerritories() {
         return adjacentTerritories;
     }
 
