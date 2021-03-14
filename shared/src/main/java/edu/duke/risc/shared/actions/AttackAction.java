@@ -90,7 +90,6 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
             throw new InvalidActionException(error);
         }
         board.playerMoveFromTerritory(playerId, sourceTerritoryId, unitType, number);
-        this.attackedPlayerId = findPlayerOwnsTerritory(board);
         return "";
     }
 
@@ -99,8 +98,11 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
         StringBuilder builder = new StringBuilder();
 
         Player player = board.getPlayers().get(super.playerId);
+
+        this.attackedPlayerId = findPlayerOwnsTerritory(board);
         Player attackedPlayer = board.getPlayers().get(this.attackedPlayerId);
-        Territory desTerritory = board.getTerritories().get(destinationId);
+        Territory sourceTerritory = board.findTerritory(sourceTerritoryId);
+        Territory desTerritory = board.findTerritory(destinationId);
         Integer attacker = number;
 
         int attackerLost = 0, defenderLost = 0;
@@ -119,8 +121,14 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
             }
         }
 
-        builder.append(this).append(" with results: attacker lost ").append(attackerLost)
+        builder.append("ATTACK { Attacker: ").append(player.getColor()).append(" PLAYER")
+                .append(" with ").append(number).append(" ").append(unitType)
+                .append(" Defender: PLAYER ").append(attackedPlayer.getColor()).append(" PLAYER")
+                .append(" from place ").append(sourceTerritory.getBasicInfo()).append(" to place ")
+                .append(desTerritory.getBasicInfo()).append(" }")
+                .append(" with results: attacker lost ").append(attackerLost)
                 .append(" defender lost ").append(defenderLost).append(" : ");
+
         if (attacker == 0) {
             //attacker lost
             player.updateTotalUnitMap(unitType, -number);
@@ -136,17 +144,6 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
         }
         builder.append(System.lineSeparator());
         return builder.toString();
-    }
-
-    @Override
-    public String toString() {
-        return "ATTACK {" +
-                " Attacker: PLAYER " + playerId +
-                " with " + number + " " + unitType +
-                " Defender: PLAYER " + attackedPlayerId +
-                " from place" + sourceTerritoryId +
-                " to place" + destinationId +
-                " }";
     }
 
     /***

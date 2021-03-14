@@ -59,9 +59,14 @@ public class GameController {
     }
 
     public void startGame() throws IOException {
+        this.initWorld();
         this.waitPlayers();
         this.placementPhase();
         this.moveAttackPhase();
+    }
+
+    private void initWorld() {
+        //todo prompt to ask user to set max player and world size
     }
 
     /**

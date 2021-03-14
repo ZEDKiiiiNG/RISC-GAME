@@ -30,7 +30,7 @@ public class GameBoard implements Serializable {
     private Displayable displayer;
 
     public GameBoard() {
-        territoryFactory = new BasicTerritoryFactory();
+        territoryFactory = new SmallTerritoryFactory();
         territories = territoryFactory.makeTerritories();
         players = new HashMap<>();
         gameStage = GameStage.WAITING_USERS;
@@ -199,6 +199,20 @@ public class GameBoard implements Serializable {
         }
 
         return builder.toString();
+    }
+
+    /**
+     * Get the winner
+     *
+     * @return winner object, null if not winner
+     */
+    public Player getWinner() {
+        for (Player player : players.values()) {
+            if (player.isWin()) {
+                return player;
+            }
+        }
+        return null;
     }
 
     public void setGameStart() {

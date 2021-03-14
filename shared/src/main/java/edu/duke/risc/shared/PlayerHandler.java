@@ -28,7 +28,7 @@ public class PlayerHandler extends Thread {
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 

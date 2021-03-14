@@ -190,11 +190,12 @@ public class ClientController {
             System.out.println("You lost the game, entering Observer Mode, you can type exit to quit...");
             while (true) {
                 this.readExitThread = new ReadExitThread(this.consoleReader, this.communicator, this.playerId);
+                this.readExitThread.setDaemon(true);
                 this.readExitThread.start();
 
                 this.waitAndReadServerResponse();
                 System.out.println(this.loggerInfo);
-                System.out.println(this.gameBoard);
+                this.gameBoard.displayBoard();
             }
         } catch (UnmatchedReceiverException | InvalidPayloadContent | ServerRejectException e) {
             e.printStackTrace();
@@ -259,6 +260,11 @@ public class ClientController {
                 }
                 break;
             case GAME_OVER:
+                this.gameBoard = (GameBoard) contents.get(GAME_BOARD_STRING);
+                this.playerId = (Integer) contents.get(PLAYER_STRING);
+                this.loggerInfo = (String) contents.get(LOGGER_STRING);
+                System.out.println(loggerInfo);
+                this.printWinnerInfo();
                 this.terminateProcess();
                 break;
             default:
@@ -359,6 +365,14 @@ public class ClientController {
         return player.isWin();
     }
 
+    private void printWinnerInfo() {
+        //todo fix this bug, not print winner
+        Player winner = this.gameBoard.getWinner();
+        if (winner != null){
+            System.out.println("Winner is " + winner.getColor() + " player");
+        }
+    }
+
     private boolean isLost() {
         Player player = this.gameBoard.findPlayer(playerId);
         return player.isLost();
@@ -367,11 +381,10 @@ public class ClientController {
     private void terminateProcess() {
         try {
             System.out.println("GAME OVER");
-            Thread.sleep(5000);
             this.communicator.terminate();
             this.consoleReader.close();
             System.exit(0);
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

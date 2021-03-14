@@ -85,6 +85,10 @@ public class Territory implements Serializable {
         return builder.toString();
     }
 
+    public String getBasicInfo() {
+        return this.territoryName + "(" + this.territoryId + ")";
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(territoryId);

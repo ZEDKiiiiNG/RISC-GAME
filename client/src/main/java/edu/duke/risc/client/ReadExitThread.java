@@ -29,6 +29,7 @@ public class ReadExitThread extends Thread {
     @Override
     public void run() {
         try {
+            System.out.println("Is daemon : " + this.isDaemon());
             while(true){
                 String input = consoleReader.readLine();
                 input = input.toLowerCase();
