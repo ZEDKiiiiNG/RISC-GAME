@@ -8,7 +8,6 @@ import edu.duke.risc.shared.actions.Action;
 import edu.duke.risc.shared.actions.AttackAction;
 import edu.duke.risc.shared.actions.MoveAction;
 import edu.duke.risc.shared.actions.PlacementAction;
-import edu.duke.risc.shared.actions.TwoStepsAction;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UnitType;
@@ -47,21 +46,17 @@ public class ClientController {
 
     private Integer playerId = Configurations.DEFAULT_PLAYER_ID;
 
+    private ReadExitThread readExitThread;
+
     public ClientController() throws IOException {
         this.consoleReader = new BufferedReader(new InputStreamReader(System.in));
-        this.startGame();
-        this.moveAndAttack();
-        try {
-            Thread.sleep(1000000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
-    private void startGame() throws IOException {
+    public void startGame() throws IOException {
         tryConnectAndWait();
         assignUnits();
-        this.gameBoard.displayBoard();
+        moveAndAttack();
+        observerMode();
     }
 
     private void tryConnectAndWait() {
@@ -119,6 +114,7 @@ public class ClientController {
                 System.out.println("Actions sent, please wait other players finish placing");
                 this.waitAndReadServerResponse();
                 System.out.println(this.loggerInfo);
+                this.gameBoard.displayBoard();
             } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
                 //if server returns failed, re-do the actions again
                 exception.printStackTrace();
@@ -135,6 +131,9 @@ public class ClientController {
 
     private void moveAndAttack() throws IOException {
         while (true) {
+            if (this.checkUserStatus()) {
+                return;
+            }
             Player player = this.gameBoard.getPlayers().get(playerId);
             boolean isFinished = false;
             List<Action> moveActions = new ArrayList<>();
@@ -146,9 +145,7 @@ public class ClientController {
                 System.out.println("(M)ove");
                 System.out.println("(A)ttack");
                 System.out.println("(D)one");
-
                 String input = this.consoleReader.readLine();
-
                 switch (input) {
                     case "M":
                         conductMoveOrAttack(moveActions, 0);
@@ -166,12 +163,11 @@ public class ClientController {
                 }
             }
 
+            //todo combine all attack actions
             //sending to the server
             //constructing payload objects
             Map<String, Object> content = new HashMap<>(3);
             content.put(Configurations.REQUEST_MOVE_ACTIONS, moveActions);
-
-            //todo combine all attack actions
 
             content.put(Configurations.REQUEST_ATTACK_ACTIONS, attackActions);
             PayloadObject request = new PayloadObject(this.playerId,
@@ -189,9 +185,25 @@ public class ClientController {
         }
     }
 
+    private void observerMode() {
+        try {
+            System.out.println("You lost the game, entering Observer Mode, you can type exit to quit...");
+            while (true) {
+                this.readExitThread = new ReadExitThread(this.consoleReader, this.communicator, this.playerId);
+                this.readExitThread.start();
+
+                this.waitAndReadServerResponse();
+                System.out.println(this.loggerInfo);
+                System.out.println(this.gameBoard);
+            }
+        } catch (UnmatchedReceiverException | InvalidPayloadContent | ServerRejectException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * @param actions
-     * @param actionType  0 for move and 1 for attack
+     * @param actionType 0 for move and 1 for attack
      * @throws IOException
      */
     private void conductMoveOrAttack(List<Action> actions, int actionType) throws IOException {
@@ -207,7 +219,6 @@ public class ClientController {
             System.out.println(e.getMessage());
         }
     }
-
 
     private void waitAndReadServerResponse() throws UnmatchedReceiverException, InvalidPayloadContent, ServerRejectException {
         PayloadObject response = null;
@@ -234,6 +245,9 @@ public class ClientController {
             case ERROR:
                 throw new ServerRejectException("Action requests are rejected by server"
                         + response.getContents().get(Configurations.ERR_MSG));
+            case QUIT:
+                System.out.println("Request to disconnect");
+                this.terminateProcess();
             case UPDATE:
                 if (contents.containsKey(GAME_BOARD_STRING)
                         && contents.containsKey(PLAYER_STRING)) {
@@ -244,7 +258,9 @@ public class ClientController {
                     throw new InvalidPayloadContent("do not contain gameBoard object");
                 }
                 break;
-
+            case GAME_OVER:
+                this.terminateProcess();
+                break;
             default:
                 throw new IllegalArgumentException("Invalid message type");
         }
@@ -332,6 +348,32 @@ public class ClientController {
             throw new InvalidInputException("Cannot parse string to valid int");
         }
         return action;
+    }
+
+    private boolean checkUserStatus() {
+        return isLost() || isWin();
+    }
+
+    private boolean isWin() {
+        Player player = this.gameBoard.findPlayer(playerId);
+        return player.isWin();
+    }
+
+    private boolean isLost() {
+        Player player = this.gameBoard.findPlayer(playerId);
+        return player.isLost();
+    }
+
+    private void terminateProcess() {
+        try {
+            System.out.println("GAME OVER");
+            Thread.sleep(5000);
+            this.communicator.terminate();
+            this.consoleReader.close();
+            System.exit(0);
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
 }

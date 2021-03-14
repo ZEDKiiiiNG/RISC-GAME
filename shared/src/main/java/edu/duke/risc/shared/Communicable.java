@@ -21,4 +21,10 @@ public interface Communicable {
      */
     public PayloadObject receiveMessage() throws IOException, ClassNotFoundException;
 
+
+    /**
+     * terminate
+     */
+    public void terminate() throws IOException;
+
 }

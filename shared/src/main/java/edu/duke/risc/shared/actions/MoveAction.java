@@ -72,16 +72,10 @@ public class MoveAction extends AbstractSourceAction {
         //owned by player anymore -- remove from owned territory
         Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
         sourceTerritory.updateUnitsMap(unitType, -number);
-        if (sourceTerritory.isEmptyTerritory()) {
-            player.removeOwnedTerritory(sourceTerritoryId);
-        }
         //update destination territory
         Territory desTerritory = board.getTerritories().get(destinationId);
-        if (desTerritory.isEmptyTerritory()) {
-            player.addOwnedTerritory(destinationId);
-        }
         desTerritory.updateUnitsMap(unitType, number);
-        builder.append("SUCCESS: " + this.toString());
+        builder.append("SUCCESS: ").append(this.toString());
         return builder.toString();
     }
 

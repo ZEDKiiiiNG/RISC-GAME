@@ -7,7 +7,6 @@ import edu.duke.risc.shared.SocketCommunicator;
 import edu.duke.risc.shared.ThreadBarrier;
 import edu.duke.risc.shared.actions.Action;
 import edu.duke.risc.shared.board.GameBoard;
-import edu.duke.risc.shared.board.GameStage;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UserColor;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
@@ -68,10 +67,10 @@ public class GameController {
     /**
      * Do the placement phase
      *
-     * @throws IOException
+     * @throws IOException IOException
      */
     private void placementPhase() throws IOException {
-        int numberOfRequestRequired = this.board.getPlayers().size();
+        int numberOfRequestRequired = this.board.getShouldWaitPlayers();
         List<Action> cacheActions = new ArrayList<>();
         while (numberOfRequestRequired > 0) {
             PayloadObject request = this.barrier.consumeRequest();
@@ -104,23 +103,26 @@ public class GameController {
             }
         }
         //todo create logger here
-        broadcastUpdatedMaps("");
+        broadcastUpdatedMaps("", PayloadType.UPDATE);
     }
 
     /**
      * Do the move and attack phase
      *
-     * @throws IOException
+     * @throws IOException IOException
      */
     private void moveAttackPhase() throws IOException {
         while (true) {
-            this.board.setGameStage(GameStage.GAME_START);
-            int numberOfRequestRequired = this.board.getPlayers().size();
+            this.board.setGameStart();
+            int numberOfRequestRequired = this.board.getShouldWaitPlayers();
             List<Action> moveCacheActions = new ArrayList<>();
             List<Action> attackCacheActions = new ArrayList<>();
             StringBuilder logger = getLogger();
             while (numberOfRequestRequired > 0) {
                 PayloadObject request = this.barrier.consumeRequest();
+                if (this.checkQuit(request)) {
+                    continue;
+                }
                 //validate move_attack_request
                 if (request.getMessageType() != PayloadType.REQUEST
                         || request.getReceiver() != this.root.getId()
@@ -132,23 +134,10 @@ public class GameController {
                 List<Action> moveActions = (List<Action>) request.getContents().get(Configurations.REQUEST_MOVE_ACTIONS);
                 List<Action> attackActions =
                         (List<Action>) request.getContents().get(Configurations.REQUEST_ATTACK_ACTIONS);
-                String moveValidateResult = validateActions(moveActions, this.board);
-                if (moveValidateResult != null) {
-                    //error occurs, send response back to the client.
-                    sendBackErrorMessage(request, moveValidateResult);
-                    continue;
-                }
-                String attackValidateResult = validateActions(attackActions, this.board);
-                if (attackValidateResult != null) {
-                    //error occurs, send response back to the client.
-                    sendBackErrorMessage(request, attackValidateResult);
-                    continue;
-                } else {
-                    //validate success, response the client with success message and continues the next request
-                    moveCacheActions.addAll(moveActions);
-                    attackCacheActions.addAll(attackActions);
-                    numberOfRequestRequired -= 1;
-                }
+                //validate success, response the client with success message and continues the next request
+                moveCacheActions.addAll(moveActions);
+                attackCacheActions.addAll(attackActions);
+                numberOfRequestRequired -= 1;
             }
             //with all requests received, process them simultaneously
 
@@ -184,12 +173,17 @@ public class GameController {
                     logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
                 }
             }
-
+            //grow the territories owned by players
             String growResult = this.board.territoryGrow();
+
             logger.append(growResult);
             System.out.println(logger.toString());
-            //todo check whether some player wins the game, update player's status
-            broadcastUpdatedMaps(logger.toString());
+
+            if (this.checkAndUpdatePlayerStatus()) {
+                this.terminateProcess();
+            } else {
+                broadcastUpdatedMaps(logger.toString(), PayloadType.UPDATE);
+            }
         }
     }
 
@@ -203,14 +197,15 @@ public class GameController {
 
     /***
      * validateActions
-     * @param actions
-     * @param board
-     * @return
+     *
+     * @param actions actions
+     * @param board board
+     * @return errMsg if not valid, null for valid
      */
     private String validateActions(List<Action> actions, GameBoard board) {
         for (Action action : actions) {
             String errMsg;
-            if ((errMsg = action.isValid(this.board)) != null) {
+            if ((errMsg = action.isValid(board)) != null) {
                 return errMsg;
             }
         }
@@ -220,7 +215,7 @@ public class GameController {
     /**
      * Waiting for players phase
      *
-     * @throws IOException
+     * @throws IOException IOException
      */
     private void waitPlayers() throws IOException {
         while (this.board.getPlayers().size() < Configurations.MAX_PLAYERS) {
@@ -240,17 +235,17 @@ public class GameController {
         System.out.println("All player are ready");
         this.board.forwardPlacementPhase();
         //share game map with every player
-        broadcastUpdatedMaps("");
+        broadcastUpdatedMaps("", PayloadType.UPDATE);
     }
 
-    private void broadcastUpdatedMaps(String lastLog) throws IOException {
+    private void broadcastUpdatedMaps(String lastLog, PayloadType payloadType) throws IOException {
         for (Map.Entry<Player, SocketCommunicator> entry : playerConnections.entrySet()) {
             Player player = entry.getKey();
             Map<String, Object> content = new HashMap<>(10);
             content.put(GAME_BOARD_STRING, this.board);
             content.put(LOGGER_STRING, lastLog);
             content.put(PLAYER_STRING, player.getId());
-            PayloadObject payloadObject = new PayloadObject(root.getId(), player.getId(), PayloadType.UPDATE, content);
+            PayloadObject payloadObject = new PayloadObject(root.getId(), player.getId(), payloadType, content);
             entry.getValue().writeMessage(payloadObject);
         }
     }
@@ -270,8 +265,8 @@ public class GameController {
     /**
      * Assign territories to player.
      *
-     * @param player
-     * @param gameBoard
+     * @param player    player
+     * @param gameBoard gameBoard
      */
     private void assignTerritories(Player player, GameBoard gameBoard) {
         Set<Integer> assignedTerritories = gameBoard.addPlayer(player);
@@ -283,6 +278,50 @@ public class GameController {
         builder.append("ACTION LOGS").append(System.lineSeparator());
         builder.append("------------").append(System.lineSeparator());
         return builder;
+    }
+
+    /**
+     * If player owns no territory, mark him as LOSE. If one player owns all territories, mark him as WIN.
+     *
+     * @return true if the game should be over, false if not
+     */
+    private boolean checkAndUpdatePlayerStatus() {
+        for (Map.Entry<Integer, Player> playerEntry : this.board.getPlayers().entrySet()) {
+            Player player = playerEntry.getValue();
+            if (player.getOwnedTerritories().size() == 0) {
+                player.markLost();
+            } else if (player.getOwnedTerritories().size() == this.board.getTerritoriesSize()) {
+                player.markWin();
+                this.board.setGameOver();
+                System.out.println(player.getColor() + " Player with ID " + player.getId() + " wins.");
+            }
+        }
+        return this.board.isGameOver();
+    }
+
+    private boolean checkQuit(PayloadObject request) throws IOException {
+        if (request.getMessageType() == PayloadType.QUIT) {
+            PayloadObject response = new PayloadObject(this.root.getId(), request.getSender(), PayloadType.QUIT);
+            Player player = this.board.findPlayer(request.getSender());
+            SocketCommunicator communicator = this.playerConnections.get(player);
+            if (communicator.writeMessage(response)) {
+                communicator.terminate();
+                this.playerConnections.remove(player);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private void terminateProcess() throws IOException {
+        this.broadcastUpdatedMaps("GAME OVER", PayloadType.GAME_OVER);
+        System.out.println("GAME OVER");
+        for (Map.Entry<Player, SocketCommunicator> socketCommunicatorEntry : this.playerConnections.entrySet()) {
+            socketCommunicatorEntry.getValue().terminate();
+        }
+        this.serverSocket.close();
+        System.out.println("Connection resources closed");
+        System.exit(0);
     }
 
 }

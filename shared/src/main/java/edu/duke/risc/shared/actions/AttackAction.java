@@ -144,6 +144,8 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
                 " Attacker: PLAYER " + playerId +
                 " with " + number + " " + unitType +
                 " Defender: PLAYER " + attackedPlayerId +
+                " from place" + sourceTerritoryId +
+                " to place" + destinationId +
                 " }";
     }
 

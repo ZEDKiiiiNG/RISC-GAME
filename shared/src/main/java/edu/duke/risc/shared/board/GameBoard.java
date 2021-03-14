@@ -103,15 +103,9 @@ public class GameBoard implements Serializable {
         for (Player player : players.values()) {
             for (Integer territoryId : player.getOwnedTerritories()) {
                 Territory territory = this.findTerritory(territoryId);
-                for (Map.Entry<UnitType, Integer> unitTypeIntegerEntry : territory.getUnitsMap().entrySet()) {
-                    //update in the territory
-                    UnitType unitType = unitTypeIntegerEntry.getKey();
-                    int value = unitTypeIntegerEntry.getValue();
-                    territory.getUnitsMap().put(unitType, value + 1);
-                    //update total units in the player
-                    int origin = player.getTotalUnitsMap().get(unitType);
-                    player.getTotalUnitsMap().put(unitType, origin + 1);
-                }
+                UnitType unitType = UnitType.SOLDIER;
+                territory.updateUnitsMap(unitType, 1);
+                player.updateTotalUnitMap(unitType, 1);
             }
         }
         builder.append("Increment territories by 1");
@@ -127,11 +121,15 @@ public class GameBoard implements Serializable {
     public void playerMoveFromTerritory(int playerId, int sourceTerritoryId, UnitType unitType, int number) {
         Territory sourceTerritory = this.getTerritories().get(sourceTerritoryId);
         sourceTerritory.updateUnitsMap(unitType, -number);
-        //remove from player's owned territory
-        Player player = this.findPlayer(playerId);
-        if (sourceTerritory.isEmptyTerritory() && player.ownsTerritory(sourceTerritoryId)) {
-            player.getOwnedTerritories().remove(sourceTerritoryId);
-        }
+    }
+
+    /**
+     * Get the total size of territories
+     *
+     * @return total size of territories
+     */
+    public int getTerritoriesSize() {
+        return this.territories.size();
     }
 
     /**
@@ -171,6 +169,16 @@ public class GameBoard implements Serializable {
         return false;
     }
 
+    public int getShouldWaitPlayers() {
+        int count = 0;
+        for (Map.Entry<Integer, Player> playerEntry : this.players.entrySet()) {
+            if (!playerEntry.getValue().isLost()) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
     /**
      * Get the player information
      *
@@ -193,16 +201,20 @@ public class GameBoard implements Serializable {
         return builder.toString();
     }
 
-    public UnitType getUnitType(String search) {
-        return this.unitTypeMapper.get(search);
+    public void setGameStart() {
+        this.gameStage = GameStage.GAME_START;
+    }
+
+    public void setGameOver() {
+        this.gameStage = GameStage.GAME_OVER;
+    }
+
+    public boolean isGameOver() {
+        return this.gameStage == GameStage.GAME_OVER;
     }
 
     public Map<Integer, Player> getPlayers() {
         return players;
-    }
-
-    public GameStage getGameStage() {
-        return gameStage;
     }
 
     public void forwardPlacementPhase() {
@@ -211,34 +223,6 @@ public class GameBoard implements Serializable {
 
     public Map<Integer, Territory> getTerritories() {
         return territories;
-    }
-
-    public void setTerritories(Map<Integer, Territory> territories) {
-        this.territories = territories;
-    }
-
-    public void setPlayers(Map<Integer, Player> players) {
-        this.players = players;
-    }
-
-    public void setGameStage(GameStage gameStage) {
-        this.gameStage = gameStage;
-    }
-
-    public void setTerritoryFactory(TerritoryFactory territoryFactory) {
-        this.territoryFactory = territoryFactory;
-    }
-
-    public void setDisplayer(Displayable displayer) {
-        this.displayer = displayer;
-    }
-
-    public TerritoryFactory getTerritoryFactory() {
-        return territoryFactory;
-    }
-
-    public Displayable getDisplayer() {
-        return displayer;
     }
 
     public Map<String, UnitType> getUnitTypeMapper() {

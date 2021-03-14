@@ -15,5 +15,6 @@ public class App {
 
     public static void main(String[] args) throws IOException {
         ClientController clientController = new ClientController();
+        clientController.startGame();
     }
 }
