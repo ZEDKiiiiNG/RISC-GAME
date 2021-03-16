@@ -18,7 +18,7 @@ public interface GameUser {
     /**
      * get id
      *
-     * @return
+     * @return user id
      */
     public int getId();
 

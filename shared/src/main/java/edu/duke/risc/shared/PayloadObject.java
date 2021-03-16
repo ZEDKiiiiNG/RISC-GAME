@@ -7,6 +7,8 @@ import java.io.Serializable;
 import java.util.Map;
 
 /**
+ * Abstract the payload object, with basic information sender, receiver and contents as a map
+ *
  * @author eason
  * @date 2021/3/10 11:01
  */
@@ -24,13 +26,25 @@ public class PayloadObject implements Serializable {
     @SerializedName("contents")
     private Map<String, Object> contents;
 
-    public PayloadObject() {
-    }
-
+    /**
+     * Constructor for payload object
+     *
+     * @param sender sender id
+     * @param receiver receiver id
+     * @param messageType type of message, for detailed information, look at corresponding enum
+     */
     public PayloadObject(Integer sender, Integer receiver, PayloadType messageType) {
         this(sender, receiver, messageType, null);
     }
 
+    /**
+     * Constructor for payload object
+     *
+     * @param sender sender id
+     * @param receiver receiver id
+     * @param messageType type of message, for detailed information, look at corresponding enum
+     * @param contents contents as a map
+     */
     public PayloadObject(Integer sender, Integer receiver, PayloadType messageType, Map<String, Object> contents) {
         this.sender = sender;
         this.receiver = receiver;
@@ -48,35 +62,34 @@ public class PayloadObject implements Serializable {
                 '}';
     }
 
+    /**
+     * getSender
+     * @return sender id
+     */
     public Integer getSender() {
         return sender;
     }
 
-    public void setSender(Integer sender) {
-        this.sender = sender;
-    }
-
+    /**
+     * getReceiver
+     * @return receiver id
+     */
     public Integer getReceiver() {
         return receiver;
     }
 
-    public void setReceiver(Integer receiver) {
-        this.receiver = receiver;
-    }
-
-    public void setMessageType(PayloadType messageType) {
-        this.messageType = messageType;
-    }
-
-    public void setContents(Map<String, Object> contents) {
-        this.contents = contents;
-    }
-
-
+    /**
+     * getMessageType
+     * @return getMessageType
+     */
     public PayloadType getMessageType() {
         return messageType;
     }
 
+    /**
+     * getContents
+     * @return contents
+     */
     public Map<String, Object> getContents() {
         return contents;
     }

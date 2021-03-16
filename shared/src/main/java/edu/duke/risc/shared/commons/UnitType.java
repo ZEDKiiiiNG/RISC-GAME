@@ -17,6 +17,9 @@ public enum UnitType implements Serializable {
      */
     SOLDIER("(S)oldiers");
 
+    /**
+     * String representation of the unit type
+     */
     private final String name;
 
     UnitType(String name) {

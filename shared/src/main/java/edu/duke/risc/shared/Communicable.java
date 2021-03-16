@@ -9,21 +9,26 @@ import java.io.IOException;
 public interface Communicable {
 
     /**
-     * writeMessage
-     * @param message
-     * @return
+     * Write messages into the socket channel
+     * @param message message
+     * @return whether this action is successful or not
+     * @throws IOException IOException
      */
     public boolean writeMessage(PayloadObject message) throws IOException;
 
     /**
-     * receiveMessage
-     * @return
+     * Receive message from socket channel
+     *
+     * @return PayloadObject
+     * @throws IOException IOException
+     * @throws ClassNotFoundException ClassNotFoundException
      */
     public PayloadObject receiveMessage() throws IOException, ClassNotFoundException;
 
 
     /**
-     * terminate
+     * Terminate socket connection
+     * @throws IOException IOException
      */
     public void terminate() throws IOException;
 

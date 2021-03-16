@@ -8,7 +8,9 @@ import edu.duke.risc.shared.exceptions.InvalidActionException;
 import edu.duke.risc.shared.users.Player;
 
 /**
+ * Attack Action
  *
+ * @author eason
  */
 public class AttackAction extends AbstractSourceAction implements TwoStepsAction {
 
@@ -17,6 +19,14 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
      */
     private Integer attackedPlayerId;
 
+    /**
+     * Constructor
+     * @param sourceTerritoryId sourceTerritoryId
+     * @param destinationId destinationId
+     * @param unitType unitType
+     * @param number number
+     * @param player player
+     */
     public AttackAction(Integer sourceTerritoryId, Integer destinationId, UnitType unitType,
                         Integer number, Integer player) {
         super(player, ActionType.ATTACK, destinationId, unitType, number, sourceTerritoryId);
@@ -141,7 +151,7 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
                 player.updateTotalUnitMap(unitType, attackerNumber - number);
 
                 player.getOwnedTerritories().add(destinationId);
-                attackedPlayer.getOwnedTerritories().remove(destinationId);
+                attackedPlayer.removeOwnedTerritory(destinationId);
                 builder.append("defender lost territory ").append(board.findTerritory(destinationId).getTerritoryName());
             }
         } else {

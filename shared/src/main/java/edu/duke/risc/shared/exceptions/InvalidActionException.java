@@ -1,6 +1,8 @@
 package edu.duke.risc.shared.exceptions;
 
 /**
+ * When the action is invalid
+ *
  * @author eason
  * @date 2021/3/11 14:29
  */

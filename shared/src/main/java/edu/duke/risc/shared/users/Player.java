@@ -49,6 +49,11 @@ public class Player implements GameUser, Serializable {
      */
     private PlayerStatus status;
 
+    /**
+     * Constructor
+     * @param userId id of the user
+     * @param color color of the user
+     */
     public Player(int userId, UserColor color) {
         //init units map
         this.ownedTerritories = new HashSet<>();
@@ -109,10 +114,18 @@ public class Player implements GameUser, Serializable {
                 '}';
     }
 
+    /**
+     * Get the user id
+     * @return user id
+     */
     public int getUserId() {
         return userId;
     }
 
+    /**
+     * getTotalUnitsMap
+     * @return getTotalUnitsMap
+     */
     public Map<UnitType, Integer> getTotalUnitsMap() {
         return totalUnitsMap;
     }
@@ -120,8 +133,8 @@ public class Player implements GameUser, Serializable {
     /**
      * updateInitUnitMap
      *
-     * @param unitType
-     * @param diff
+     * @param unitType unitType
+     * @param diff either add or subtract
      */
     public void updateInitUnitMap(UnitType unitType, Integer diff) {
         this.updateUnitsMap(this.initUnitsMap, unitType, diff);
@@ -137,12 +150,20 @@ public class Player implements GameUser, Serializable {
         this.updateUnitsMap(this.totalUnitsMap, unitType, diff);
     }
 
+    /**
+     * Whether this user owns this territory
+     * @param territoryId territory id
+     * @return Whether this user owns this territory
+     */
     public boolean ownsTerritory(Integer territoryId) {
         return this.ownedTerritories.contains(territoryId);
     }
 
     /**
-     * no throw here, like Territory
+     * updateUnitsMap
+     * @param unitsMap unitsMap
+     * @param unitType unitType
+     * @param diff either add or subtract
      */
     private void updateUnitsMap(Map<UnitType, Integer> unitsMap, UnitType unitType, Integer diff) {
         assert unitsMap != null;
@@ -164,50 +185,80 @@ public class Player implements GameUser, Serializable {
         }
     }
 
+    /**
+     * removeOwnedTerritory
+     * @param territoryId territory id
+     */
     public void removeOwnedTerritory(Integer territoryId) {
         this.ownedTerritories.remove(territoryId);
     }
 
+    /**
+     * addOwnedTerritory
+     * @param territoryId territory id
+     */
     public void addOwnedTerritory(Integer territoryId) {
         this.ownedTerritories.add(territoryId);
     }
 
+    /**
+     * getOwnedTerritories
+     * @return getOwnedTerritories
+     */
     public Set<Integer> getOwnedTerritories() {
         return ownedTerritories;
     }
 
+    /**
+     * Get user color
+     * @return user's color
+     */
     public UserColor getColor() {
         return color;
     }
 
+    /**
+     * setOwnedTerritories
+     * @param ownedTerritories setOwnedTerritories
+     */
     public void setOwnedTerritories(Set<Integer> ownedTerritories) {
         this.ownedTerritories = ownedTerritories;
     }
 
-    public PlayerStatus getStatus() {
-        return status;
-    }
-
+    /**
+     * getInitUnitsMap
+     * @return getInitUnitsMap
+     */
     public Map<UnitType, Integer> getInitUnitsMap() {
         return initUnitsMap;
     }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
-
+    /**
+     * Mark this player to be lost
+     */
     public void markLost() {
         this.status = PlayerStatus.LOST;
     }
 
+    /**
+     * Judge whether this player lost
+     * @return whether this player lost
+     */
     public boolean isLost() {
         return this.status == PlayerStatus.LOST;
     }
 
+    /**
+     * Mark this player to win
+     */
     public void markWin() {
         this.status = PlayerStatus.WIN;
     }
 
+    /**
+     * Judge whether this player wins
+     * @return whether this player wins
+     */
     public boolean isWin() {
         return this.status == PlayerStatus.WIN;
     }

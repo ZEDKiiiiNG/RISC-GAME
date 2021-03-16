@@ -1,7 +1,5 @@
 package edu.duke.risc.shared;
 
-import com.google.gson.Gson;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -10,6 +8,8 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 /**
+ * Used for socket communication
+ *
  * @author eason
  * @date 2021/3/10 10:56
  */

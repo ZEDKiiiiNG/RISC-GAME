@@ -7,12 +7,18 @@ package edu.duke.risc.shared.commons;
 public enum PayloadType {
 
     /**
-     *
+     * For sending information from the server, one-way
      */
     INFO,
 
+    /**
+     * Let client knows that the board should be updated
+     */
     UPDATE,
 
+    /**
+     * Client request something, e.g. sending actions
+     */
     REQUEST,
 
     /**
@@ -25,8 +31,14 @@ public enum PayloadType {
      */
     QUIT,
 
+    /**
+     * Action requests are rejected by server
+     */
     ERROR,
 
+    /**
+     * When indicating an action is successfully delivered to the server.
+     */
     SUCCESS,
 
 }

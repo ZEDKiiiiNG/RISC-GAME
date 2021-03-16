@@ -1,6 +1,8 @@
 package edu.duke.risc.shared;
 
 /**
+ * Basic configurations of the game.
+ *
  * @author eason
  * @date 2021/3/10 14:03
  */

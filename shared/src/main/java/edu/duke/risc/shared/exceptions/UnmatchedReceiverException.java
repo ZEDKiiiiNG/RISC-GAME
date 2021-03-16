@@ -1,6 +1,8 @@
 package edu.duke.risc.shared.exceptions;
 
 /**
+ * When the receiver is unmatched
+ *
  * @author eason
  * @date 2021/3/10 16:39
  */

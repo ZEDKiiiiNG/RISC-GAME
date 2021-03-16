@@ -1,6 +1,8 @@
 package edu.duke.risc.shared.exceptions;
 
 /**
+ * When the payload content is invalid
+ *
  * @author eason
  * @date 2021/3/10 17:01
  */
