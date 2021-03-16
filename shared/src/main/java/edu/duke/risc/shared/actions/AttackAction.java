@@ -103,44 +103,50 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
         Player attackedPlayer = board.getPlayers().get(this.attackedPlayerId);
         Territory sourceTerritory = board.findTerritory(sourceTerritoryId);
         Territory desTerritory = board.findTerritory(destinationId);
-        Integer attacker = number;
-
-        int attackerLost = 0, defenderLost = 0;
-        while (!desTerritory.isEmptyTerritory()
-                && desTerritory.getUnitsMap().get(unitType) > 0 && attacker != 0) {
-            Integer random = randomWin();
-            if (random == 0) {
-                //attacked(defender) win, attacker lost
-                attacker -= 1;
-                attackerLost += 1;
-            } else {
-                //attacker win, attacked(defender) lost
-                desTerritory.updateUnitsMap(unitType, -1);
-                attackedPlayer.updateTotalUnitMap(unitType, -1);
-                defenderLost += 1;
-            }
-        }
+        Integer attackerNumber = number;
 
         builder.append("ATTACK { Attacker: ").append(player.getColor()).append(" PLAYER")
                 .append(" with ").append(number).append(" ").append(unitType)
                 .append(" Defender: PLAYER ").append(attackedPlayer.getColor()).append(" PLAYER")
                 .append(" from place ").append(sourceTerritory.getBasicInfo()).append(" to place ")
-                .append(desTerritory.getBasicInfo()).append(" }")
-                .append(" with results: attacker lost ").append(attackerLost)
-                .append(" defender lost ").append(defenderLost).append(" : ");
+                .append(desTerritory.getBasicInfo()).append(" }");
 
-        if (attacker == 0) {
-            //attacker lost
-            player.updateTotalUnitMap(unitType, -number);
-            builder.append(" Attacker lost.");
+        if (!attackedPlayerId.equals(playerId)) {
+            int attackerLost = 0, defenderLost = 0;
+            while (!desTerritory.isEmptyTerritory()
+                    && desTerritory.getUnitsMap().get(unitType) > 0 && attackerNumber != 0) {
+                Integer random = randomWin();
+                if (random == 0) {
+                    //attacked(defender) win, attacker lost
+                    attackerNumber -= 1;
+                    attackerLost += 1;
+                } else {
+                    //attacker win, attacked(defender) lost
+                    desTerritory.updateUnitsMap(unitType, -1);
+                    attackedPlayer.updateTotalUnitMap(unitType, -1);
+                    defenderLost += 1;
+                }
+            }
+
+            builder.append(" with results: attacker lost ").append(attackerLost)
+                    .append(" defender lost ").append(defenderLost).append(" : ");
+
+            if (attackerNumber == 0) {
+                //attacker lost
+                player.updateTotalUnitMap(unitType, -number);
+                builder.append(" Attacker lost.");
+            } else {
+                //attacked win, take the place
+                desTerritory.updateUnitsMap(unitType, attackerNumber);
+                player.updateTotalUnitMap(unitType, attackerNumber - number);
+
+                player.getOwnedTerritories().add(destinationId);
+                attackedPlayer.getOwnedTerritories().remove(destinationId);
+                builder.append("defender lost territory ").append(board.findTerritory(destinationId).getTerritoryName());
+            }
         } else {
-            //attacked win, take the place
-            desTerritory.getUnitsMap().put(unitType, attacker);
-            player.updateTotalUnitMap(unitType, attacker - number);
-
-            player.getOwnedTerritories().add(destinationId);
-            attackedPlayer.getOwnedTerritories().remove(destinationId);
-            builder.append("defender lost territory ").append(board.findTerritory(destinationId).getTerritoryName());
+            desTerritory.updateUnitsMap(unitType, playerId);
+            builder.append("Player ").append(playerId).append(" has already occupied this place");
         }
         builder.append(System.lineSeparator());
         return builder.toString();

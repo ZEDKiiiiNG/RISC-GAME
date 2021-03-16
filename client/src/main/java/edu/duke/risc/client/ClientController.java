@@ -188,11 +188,9 @@ public class ClientController {
     private void observerMode() {
         try {
             System.out.println("You lost the game, entering Observer Mode, you can type exit to quit...");
+            this.readExitThread = new ReadExitThread(this.consoleReader, this.communicator, this.playerId);
+            this.readExitThread.start();
             while (true) {
-                this.readExitThread = new ReadExitThread(this.consoleReader, this.communicator, this.playerId);
-                this.readExitThread.setDaemon(true);
-                this.readExitThread.start();
-
                 this.waitAndReadServerResponse();
                 System.out.println(this.loggerInfo);
                 this.gameBoard.displayBoard();

@@ -185,7 +185,7 @@ public class GameController {
             System.out.println(logger.toString());
 
             if (this.checkAndUpdatePlayerStatus()) {
-                this.terminateProcess();
+                this.terminateProcess(logger.toString());
             } else {
                 broadcastUpdatedMaps(logger.toString(), PayloadType.UPDATE);
             }
@@ -318,9 +318,8 @@ public class GameController {
         return false;
     }
 
-    private void terminateProcess() throws IOException {
-        this.broadcastUpdatedMaps("GAME OVER", PayloadType.GAME_OVER);
-        System.out.println("GAME OVER");
+    private void terminateProcess(String lastLog) throws IOException {
+        this.broadcastUpdatedMaps(lastLog, PayloadType.GAME_OVER);
         for (Map.Entry<Player, SocketCommunicator> socketCommunicatorEntry : this.playerConnections.entrySet()) {
             socketCommunicatorEntry.getValue().terminate();
         }
