@@ -4,6 +4,8 @@ import edu.duke.risc.shared.commons.ActionType;
 import edu.duke.risc.shared.commons.UnitType;
 
 /**
+ * Abstract action with source id
+ *
  * @author eason
  * @date 2021/3/13 21:47
  */

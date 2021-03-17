@@ -11,11 +11,21 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * Move action of the player
  *
+ * @author eason
  */
 public class MoveAction extends AbstractSourceAction {
 
-
+    /**
+     * Constructor
+     *
+     * @param sourceTerritoryId sourceTerritoryId
+     * @param destinationId destinationId
+     * @param unitType unitType
+     * @param number number
+     * @param player player
+     */
     public MoveAction(Integer sourceTerritoryId, Integer destinationId, UnitType unitType, Integer number, Integer player) {
         super(player, ActionType.MOVE, destinationId, unitType, number, sourceTerritoryId);
     }

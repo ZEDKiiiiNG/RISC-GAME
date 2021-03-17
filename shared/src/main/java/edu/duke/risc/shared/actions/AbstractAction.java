@@ -6,6 +6,8 @@ import edu.duke.risc.shared.commons.UnitType;
 import java.util.Map;
 
 /**
+ * Contains common fields of the action
+ *
  * @author eason
  * @date 2021/3/11 14:07
  */

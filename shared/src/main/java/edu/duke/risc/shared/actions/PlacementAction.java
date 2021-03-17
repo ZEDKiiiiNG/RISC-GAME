@@ -12,11 +12,21 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * Place units on the board
+ *
  * @author eason
  * @date 2021/3/11 13:58
  */
 public class PlacementAction extends AbstractAction {
 
+    /**
+     * Constructor
+     *
+     * @param territoryId territoryId
+     * @param unitType unitType
+     * @param number number
+     * @param player player
+     */
     public PlacementAction(Integer territoryId, UnitType unitType, Integer number, Integer player) {
         super(player, ActionType.PLACEMENT, territoryId, unitType, number);
     }

@@ -31,27 +31,57 @@ import java.util.Map;
 import static edu.duke.risc.shared.Configurations.*;
 
 /**
+ * Represents the client-side codes
+ *
  * @author eason
  * @date 2021/3/10 13:58
  */
 public class ClientController {
 
+    /**
+     * The game board
+     */
     private GameBoard gameBoard;
 
+    /**
+     * Socket communicator
+     */
     private Communicable communicator;
 
+    /**
+     * Buffered reader which reads from console
+     */
     private BufferedReader consoleReader;
 
+    /**
+     * Logger info of the last actions
+     */
     private String loggerInfo;
 
+    /**
+     * Current player id
+     */
     private Integer playerId = Configurations.DEFAULT_PLAYER_ID;
 
+    /**
+     * Thread which reads exit signal
+     */
     private ReadExitThread readExitThread;
 
+    /**
+     * Constructor
+     *
+     * @throws IOException IOException
+     */
     public ClientController() throws IOException {
         this.consoleReader = new BufferedReader(new InputStreamReader(System.in));
     }
 
+    /**
+     * Start the game, doing the game logics
+     *
+     * @throws IOException IOException
+     */
     public void startGame() throws IOException {
         tryConnectAndWait();
         assignUnits();
@@ -59,6 +89,9 @@ public class ClientController {
         observerMode();
     }
 
+    /**
+     * Try to connect with the server and wait for other users
+     */
     private void tryConnectAndWait() {
         try {
             //try connect to the server
@@ -75,6 +108,11 @@ public class ClientController {
         }
     }
 
+    /**
+     * Assign units and doing the placement
+     *
+     * @throws IOException IOException
+     */
     private void assignUnits() throws IOException {
         while (true) {
             List<Action> actions = new ArrayList<>();
@@ -125,10 +163,21 @@ public class ClientController {
         }
     }
 
+    /**
+     * Send message to the server
+     *
+     * @param payloadObject payloadObject
+     * @throws IOException IOException
+     */
     private void sendMessage(PayloadObject payloadObject) throws IOException {
         this.communicator.writeMessage(payloadObject);
     }
 
+    /**
+     * Listening to the move and attack actions and sends request to the server
+     *
+     * @throws IOException IOException
+     */
     private void moveAndAttack() throws IOException {
         while (true) {
             if (this.checkUserStatus()) {
@@ -185,6 +234,9 @@ public class ClientController {
         }
     }
 
+    /**
+     * Entering the observer's mode
+     */
     private void observerMode() {
         try {
             System.out.println("You lost the game, entering Observer Mode, you can type exit to quit...");
@@ -201,7 +253,9 @@ public class ClientController {
     }
 
     /**
-     * @param actions
+     * conductMoveOrAttack
+     *
+     * @param actions    action
      * @param actionType 0 for move and 1 for attack
      * @throws IOException
      */
@@ -219,6 +273,13 @@ public class ClientController {
         }
     }
 
+    /**
+     * waitAndReadServerResponse
+     *
+     * @throws UnmatchedReceiverException UnmatchedReceiverException
+     * @throws InvalidPayloadContent      InvalidPayloadContent
+     * @throws ServerRejectException      ServerRejectException
+     */
     private void waitAndReadServerResponse() throws UnmatchedReceiverException, InvalidPayloadContent, ServerRejectException {
         PayloadObject response = null;
         try {
@@ -270,6 +331,13 @@ public class ClientController {
         }
     }
 
+    /**
+     * Wait server response and wait there
+     *
+     * @return PayloadObject as response
+     * @throws IOException            IOException
+     * @throws ClassNotFoundException ClassNotFoundException
+     */
     private PayloadObject waitAndRead() throws IOException, ClassNotFoundException {
         while (true) {
             PayloadObject readObject = null;
@@ -282,11 +350,11 @@ public class ClientController {
     /**
      * Validate placement action and generate action object.
      *
-     * @param input
-     * @param board
-     * @param playerId
-     * @return
-     * @throws InvalidInputException
+     * @param input    input
+     * @param board    board
+     * @param playerId playerId
+     * @return action
+     * @throws InvalidInputException InvalidInputException
      */
     private Action validateInputAndGenerateAction(String input, GameBoard board, Integer playerId)
             throws InvalidInputException {
@@ -318,11 +386,11 @@ public class ClientController {
     /**
      * input in the format "sourceTerritoryId,destinationId,UnitType,amount"
      *
-     * @param input
-     * @param board
-     * @param playerId
-     * @return
-     * @throws InvalidInputException
+     * @param input    input
+     * @param board    board
+     * @param playerId id of the player
+     * @return result action
+     * @throws InvalidInputException when input is invalid
      */
     private Action readActionAndProceed(String input, GameBoard board, Integer playerId, int actionType)
             throws InvalidInputException {
@@ -354,28 +422,52 @@ public class ClientController {
         return action;
     }
 
+    /**
+     * Check whether the user is win or lost
+     *
+     * @return whether the user is win or lost
+     */
     private boolean checkUserStatus() {
         return isLost() || isWin();
     }
 
+    /**
+     * The current user has won.
+     *
+     * @return whether the current user has won.
+     */
     private boolean isWin() {
         Player player = this.gameBoard.findPlayer(playerId);
         return player.isWin();
     }
 
+    /**
+     * Print the winner information
+     */
     private void printWinnerInfo() {
-        //todo fix this bug, not print winner
         Player winner = this.gameBoard.getWinner();
-        if (winner != null){
-            System.out.println("Winner is " + winner.getColor() + " player");
+        if (winner != null) {
+            if (this.playerId.equals(winner.getId())) {
+                System.out.println("Cong! You are the winner");
+            } else {
+                System.out.println("Winner is " + winner.getColor() + " player");
+            }
         }
     }
 
+    /**
+     * Whether you are lost
+     *
+     * @return Whether you are lost
+     */
     private boolean isLost() {
         Player player = this.gameBoard.findPlayer(playerId);
         return player.isLost();
     }
 
+    /**
+     * The terminate process of the client JVM process
+     */
     private void terminateProcess() {
         try {
             System.out.println("GAME OVER");

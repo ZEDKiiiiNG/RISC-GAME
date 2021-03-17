@@ -29,27 +29,56 @@ import java.util.stream.Collectors;
 import static edu.duke.risc.shared.Configurations.*;
 
 /**
+ * Represent the main game logic and process controller.
+ *
  * @author eason
  * @date 2021/3/10 0:01
  */
 public class GameController {
 
+    /**
+     * The game board
+     */
     private GameBoard board;
 
+    /**
+     * The current server is regarded as the root
+     */
     private GameUser root;
 
+    /**
+     * Initial colors
+     */
     private final List<UserColor> colors = new ArrayList<>();
 
+    /**
+     * Socket connection with the server
+     */
     private ServerSocket serverSocket;
 
+    /**
+     * Player connections
+     */
     private Map<Player, SocketCommunicator> playerConnections;
 
+    /**
+     * Cyclic barrier
+     */
     private ThreadBarrier barrier;
 
+    /**
+     * The buffered reader who reads input from the console
+     */
     private BufferedReader reader;
 
+    /**
+     * Maximum number of players
+     */
     private int maxPlayer;
 
+    /**
+     * Constructor
+     */
     public GameController() {
         barrier = new ThreadBarrier(maxPlayer);
         root = new Master();
@@ -64,6 +93,10 @@ public class GameController {
         }
     }
 
+    /**
+     * Start the game
+     * @throws IOException IOException
+     */
     public void startGame() throws IOException {
         this.initWorld();
         this.waitPlayers();
@@ -71,6 +104,9 @@ public class GameController {
         this.moveAttackPhase();
     }
 
+    /**
+     * Read the user input and initialize the world according to number of players
+     */
     private void initWorld() {
         while (true) {
             System.out.println("Please enter number of players (2-5)");
@@ -215,6 +251,13 @@ public class GameController {
         }
     }
 
+    /**
+     * Send back error message to the client, indicating invalid input or status.
+     *
+     * @param request PayloadObject
+     * @param validateResult validateResult
+     * @throws IOException IOException
+     */
     private void sendBackErrorMessage(PayloadObject request, String validateResult) throws IOException {
         Map<String, Object> response = new HashMap<>(5);
         response.put(Configurations.ERR_MSG, validateResult);
@@ -266,6 +309,13 @@ public class GameController {
         broadcastUpdatedMaps("", PayloadType.UPDATE);
     }
 
+    /**
+     * Broadcast messages to all (alive) clients
+     *
+     * @param lastLog last log of the actions
+     * @param payloadType broadcast response
+     * @throws IOException IOException
+     */
     private void broadcastUpdatedMaps(String lastLog, PayloadType payloadType) throws IOException {
         for (Map.Entry<Player, SocketCommunicator> entry : playerConnections.entrySet()) {
             Player player = entry.getKey();
@@ -278,12 +328,22 @@ public class GameController {
         }
     }
 
+    /**
+     * Send directly package back to the client
+     *
+     * @param playerId playerId
+     * @param payloadObject payloadObject
+     * @throws IOException IOException
+     */
     private void sendPackageToPlayer(int playerId, PayloadObject payloadObject) throws IOException {
         Player player = this.board.findPlayer(playerId);
         SocketCommunicator communicator = this.playerConnections.get(player);
         communicator.writeMessage(payloadObject);
     }
 
+    /**
+     * Initialize all colors
+     */
     private void addColors() {
         colors.add(UserColor.BLUE);
         colors.add(UserColor.GREEN);
@@ -303,6 +363,10 @@ public class GameController {
         player.setOwnedTerritories(assignedTerritories);
     }
 
+    /**
+     * Get the logger
+     * @return string builder
+     */
     private StringBuilder getLogger() {
         StringBuilder builder = new StringBuilder();
         builder.append("ACTION LOGS").append(System.lineSeparator());
@@ -329,6 +393,13 @@ public class GameController {
         return this.board.isGameOver();
     }
 
+    /**
+     * Check whether the user wants to quit the game
+     *
+     * @param request request
+     * @return true if the user wants to quit, false if not
+     * @throws IOException IOException
+     */
     private boolean checkQuit(PayloadObject request) throws IOException {
         if (request.getMessageType() == PayloadType.QUIT) {
             PayloadObject response = new PayloadObject(this.root.getId(), request.getSender(), PayloadType.QUIT);
@@ -343,6 +414,11 @@ public class GameController {
         return false;
     }
 
+    /**
+     * Terminate the current server JVM process
+     * @param lastLog lastLog
+     * @throws IOException IOException
+     */
     private void terminateProcess(String lastLog) throws IOException {
         this.broadcastUpdatedMaps(lastLog, PayloadType.GAME_OVER);
         for (Map.Entry<Player, SocketCommunicator> socketCommunicatorEntry : this.playerConnections.entrySet()) {
