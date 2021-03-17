@@ -1,5 +1,7 @@
 package edu.duke.risc.shared.board;
 
+import edu.duke.risc.shared.exceptions.InvalidInputException;
+
 import java.io.Serializable;
 import java.util.Map;
 
@@ -12,9 +14,10 @@ public interface TerritoryFactory extends Serializable {
     /**
      * makeTerritories as a connected undirected graph.
      *
+     * @param playerNum number of players
      * @return set of territories
      */
-    public Map<Integer, Territory> makeTerritories();
+    public Map<Integer, Territory> makeTerritories(int playerNum) ;
 
     /**
      * get number of territories this factory make

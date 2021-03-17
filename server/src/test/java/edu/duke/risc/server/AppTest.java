@@ -23,7 +23,7 @@ class AppTest {
     @Test
     public void testFactory() {
         TerritoryFactory factory = new BasicTerritoryFactory();
-        Map<Integer, Territory> territories = factory.makeTerritories();
+        Map<Integer, Territory> territories = factory.makeTerritories(3);
         System.out.println();
     }
 

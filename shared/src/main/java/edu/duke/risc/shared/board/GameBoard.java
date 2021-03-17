@@ -29,9 +29,12 @@ public class GameBoard implements Serializable {
 
     private Displayable displayer;
 
-    public GameBoard() {
-        territoryFactory = new SmallTerritoryFactory();
-        territories = territoryFactory.makeTerritories();
+    private int maxPlayer;
+
+    public GameBoard(int playerNum) {
+        this.maxPlayer = playerNum;
+        territoryFactory = new BasicTerritoryFactory();
+        territories = territoryFactory.makeTerritories(this.maxPlayer);
         players = new HashMap<>();
         gameStage = GameStage.WAITING_USERS;
         displayer = new TextDisplayer();
@@ -50,7 +53,7 @@ public class GameBoard implements Serializable {
      */
     public Set<Integer> addPlayer(Player player) {
         int numberPlayers = this.players.size();
-        int territoryPerPlayer = this.territoryFactory.territoryNum() / Configurations.MAX_PLAYERS;
+        int territoryPerPlayer = this.territoryFactory.territoryNum() / maxPlayer;
         Set<Integer> result = new HashSet<>();
         for (int i = numberPlayers * territoryPerPlayer; i < (numberPlayers + 1) * territoryPerPlayer; i++) {
             result.add(i);

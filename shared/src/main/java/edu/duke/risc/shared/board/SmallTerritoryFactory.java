@@ -10,7 +10,7 @@ import java.util.Map;
 public class SmallTerritoryFactory implements TerritoryFactory {
 
     @Override
-    public Map<Integer, Territory> makeTerritories() {
+    public Map<Integer, Territory> makeTerritories(int playerNum) {
         Map<Integer, Territory> result = new HashMap<>(10);
         Territory narnia = new Territory(0, "Narnia");
         Territory midkemia = new Territory(1, "Midkemia");

@@ -14,7 +14,9 @@ import edu.duke.risc.shared.users.GameUser;
 import edu.duke.risc.shared.users.Master;
 import edu.duke.risc.shared.users.Player;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -44,11 +46,15 @@ public class GameController {
 
     private ThreadBarrier barrier;
 
+    private BufferedReader reader;
+
+    private int maxPlayer;
+
     public GameController() {
-        barrier = new ThreadBarrier(Configurations.MAX_PLAYERS);
+        barrier = new ThreadBarrier(maxPlayer);
         root = new Master();
-        board = new GameBoard();
         playerConnections = new HashMap<>();
+        this.reader = new BufferedReader(new InputStreamReader(System.in));
 
         this.addColors();
         try {
@@ -66,7 +72,24 @@ public class GameController {
     }
 
     private void initWorld() {
-        //todo prompt to ask user to set max player and world size
+        while (true) {
+            System.out.println("Please enter number of players (2-5)");
+            try {
+                String input = this.reader.readLine();
+                int numPlayer = Integer.parseInt(input);
+                if (numPlayer >= 2 && numPlayer <= 5) {
+                    this.maxPlayer = numPlayer;
+                    break;
+                } else {
+                    System.out.println("Should only be number 2,3,4,5");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input");
+            }
+        }
+        board = new GameBoard(maxPlayer);
     }
 
     /**
@@ -223,9 +246,9 @@ public class GameController {
      * @throws IOException IOException
      */
     private void waitPlayers() throws IOException {
-        while (this.board.getPlayers().size() < Configurations.MAX_PLAYERS) {
+        while (this.board.getPlayers().size() < maxPlayer) {
             int playerIndex = playerConnections.size();
-            System.out.println("Waiting for " + (Configurations.MAX_PLAYERS - playerIndex)
+            System.out.println("Waiting for " + (maxPlayer - playerIndex)
                     + " players to join the game.");
             Socket clientSocket = serverSocket.accept();
             SocketCommunicator communicator = new SocketCommunicator(clientSocket);
@@ -265,6 +288,8 @@ public class GameController {
         colors.add(UserColor.BLUE);
         colors.add(UserColor.GREEN);
         colors.add(UserColor.RED);
+        colors.add(UserColor.WHITE);
+        colors.add(UserColor.DARK);
     }
 
     /**
