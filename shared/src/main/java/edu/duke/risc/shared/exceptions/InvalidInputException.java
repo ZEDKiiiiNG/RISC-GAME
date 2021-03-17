@@ -1,16 +1,16 @@
 package edu.duke.risc.shared.exceptions;
 
 /**
- * When the receiver is unmatched
+ * The input is invalid
  *
  * @author eason
- * @date 2021/3/10 16:39
+ * @date 2021/3/13 16:02
  */
-public class UnmatchedReceiverException extends Exception {
+public class InvalidInputException extends Exception {
 
     private String message;
 
-    public UnmatchedReceiverException(String message) {
+    public InvalidInputException(String message) {
         this.message = message;
     }
 
@@ -18,4 +18,5 @@ public class UnmatchedReceiverException extends Exception {
     public String getMessage(){
         return this.message;
     }
+
 }

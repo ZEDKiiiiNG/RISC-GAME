@@ -10,11 +10,16 @@ import java.io.Serializable;
  */
 public enum UnitType implements Serializable {
 
+    //when adding new unit type, please do not forget to update the unitTypeMapper in the game board class
+
     /**
      * soldier
      */
-    SOLDIER("Soldiers");
+    SOLDIER("(S)oldiers");
 
+    /**
+     * String representation of the unit type
+     */
     private final String name;
 
     UnitType(String name) {

@@ -17,3 +17,7 @@ application {
     // Define the main class for the application.
     mainClassName = 'edu.duke.risc.server.App'
 }
+// for terminal input
+run {
+    standardInput = System.in
+}

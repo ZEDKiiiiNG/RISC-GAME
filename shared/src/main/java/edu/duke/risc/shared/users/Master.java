@@ -5,6 +5,8 @@ import edu.duke.risc.shared.Configurations;
 import java.io.Serializable;
 
 /**
+ * Master always stands for the server
+ *
  * @author eason
  * @date 2021/3/10 19:31
  */

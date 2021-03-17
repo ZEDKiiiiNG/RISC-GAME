@@ -9,6 +9,7 @@ import java.io.Serializable;
  * @date 2021/3/9 20:03
  */
 public enum UserColor implements Serializable {
+
     /**
      * Stands for blue user
      */
@@ -22,8 +23,22 @@ public enum UserColor implements Serializable {
     /**
      * Stands for red user
      */
-    RED("Red");
+    RED("Red"),
 
+    /**
+     * Stands for WHITE user
+     */
+    WHITE("White"),
+
+
+    /**
+     * Stands for DARK user
+     */
+    DARK("Dark");
+
+    /**
+     * String representation of the colors
+     */
     private final String name;
 
     UserColor(String s) {

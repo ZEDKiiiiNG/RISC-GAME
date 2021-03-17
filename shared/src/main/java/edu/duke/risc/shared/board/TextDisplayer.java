@@ -14,28 +14,51 @@ public class TextDisplayer implements Displayable {
     @Override
     public void display(GameBoard gameBoard) {
         Map<Integer, Player> players = gameBoard.getPlayers();
+        System.out.println();
+        System.out.println("--------------");
         for (Map.Entry<Integer, Player> entry : players.entrySet()) {
             Player player = entry.getValue();
             System.out.println(player.getColor() + " player:");
             System.out.println("-----------------------");
-            for (Integer territoryId : player.getOwnedTerritories()) {
-                //printing units
-                Territory territory = gameBoard.getTerritories().get(territoryId);
-                if (territory.getUnitsMap().isEmpty()) {
-                    System.out.print("No Units ");
-                } else {
-                    for (Map.Entry<UnitType, Integer> mapUnit : territory.getUnitsMap().entrySet()) {
-                        System.out.print(mapUnit.getValue() + " " + mapUnit.getKey() + " ");
-                    }
+            if (player.getOwnedTerritories().size() == 0) {
+                System.out.println("Not owned any territory, LOST");
+            } else {
+                //todo display territory here, not in the toString
+                for (Integer territoryId : player.getOwnedTerritories()) {
+                    //printing units
+                    Territory territory = gameBoard.getTerritories().get(territoryId);
+                    System.out.println(this.displaySingleTerritory(gameBoard, territory));
                 }
-                System.out.print("in " + territory.getTerritoryName() + " (next to: ");
-                for (Territory adjacent : territory.getAdjacentTerritories()) {
-                    System.out.print(adjacent.getTerritoryName() + ", ");
-                }
-                System.out.println(")");
             }
+            System.out.println("--------------");
             System.out.println();
         }
+    }
+
+    private String displaySingleTerritory(GameBoard gameBoard, Territory territory) {
+        StringBuilder builder = new StringBuilder();
+        if (territory.isEmptyTerritory()) {
+            builder.append("No Units ");
+        } else {
+            //real units
+            for (Map.Entry<UnitType, Integer> mapUnit : territory.getUnitsMap().entrySet()) {
+                builder.append(mapUnit.getValue()).append(" ").append(mapUnit.getKey()).append(" ");
+            }
+        }
+        builder.append("in ").append(territory.getTerritoryName())
+                .append("(").append(territory.getTerritoryId()).append(")").append(" (next to: ");
+        for (Integer adjacent : territory.getAdjacentTerritories()) {
+            Territory adjacentTerr = gameBoard.findTerritory(adjacent);
+            builder.append(adjacentTerr.getTerritoryName()).append("(")
+                    .append(adjacentTerr.getTerritoryId()).append("), ");
+        }
+        builder.append(")");
+        //virtual units for clients
+        for (Map.Entry<UnitType, Integer> mapUnit : territory.getVirtualUnitsMap().entrySet()) {
+            builder.append("(Ready to attack units: ")
+                    .append(mapUnit.getValue()).append(" ").append(mapUnit.getKey()).append(")");
+        }
+        return builder.toString();
     }
 
 }

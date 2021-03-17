@@ -6,6 +6,7 @@ import edu.duke.risc.shared.board.TerritoryFactory;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author eason
@@ -16,7 +17,7 @@ public class TestTerritoryFactory {
     @Test
     public void testFactory() {
         TerritoryFactory factory = new BasicTerritoryFactory();
-        List<Territory> territories = factory.makeTerritories();
+        Map<Integer, Territory> territories = factory.makeTerritories(3);
         System.out.println();
     }
 

@@ -9,12 +9,18 @@ import java.io.Serializable;
 public enum ActionType implements Serializable {
 
     /**
-     *
+     * Attack
      */
     ATTACK,
 
+    /**
+     * Client wants to move their units
+     */
     MOVE,
 
+    /**
+     * Client wants to make unit placements
+     */
     PLACEMENT,
 
 }

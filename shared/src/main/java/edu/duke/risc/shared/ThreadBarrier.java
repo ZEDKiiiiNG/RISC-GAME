@@ -5,6 +5,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * Used to control the game flow
+ *
  * @author eason
  * @date 2021/3/10 11:34
  */
@@ -14,6 +16,9 @@ public class ThreadBarrier {
 
     private AtomicInteger threadCounter;
 
+    /**
+     * cache, reader will block here until there are payloads in
+     */
     private BlockingQueue<PayloadObject> cache;
 
     public ThreadBarrier(int maxPlayer) {
@@ -22,6 +27,10 @@ public class ThreadBarrier {
         barrierLock = new Object();
     }
 
+    /**
+     * Consumer the request from clients
+     * @return PayloadObject
+     */
     public PayloadObject consumeRequest() {
         try {
             return cache.take();
@@ -31,6 +40,10 @@ public class ThreadBarrier {
         return null;
     }
 
+    /**
+     * Put the object received into the cache
+     * @param payloadObject payloadObject
+     */
     public void objectReceived(PayloadObject payloadObject) {
         cache.add(payloadObject);
     }
