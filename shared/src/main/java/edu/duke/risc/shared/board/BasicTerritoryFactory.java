@@ -1,16 +1,19 @@
 package edu.duke.risc.shared.board;
 
-import edu.duke.risc.shared.exceptions.InvalidInputException;
-
 import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Basic factory to produce territories map
+ *
  * @author eason
  * @date 2021/3/10 20:29
  */
 public class BasicTerritoryFactory implements TerritoryFactory {
 
+    /**
+     * Total number of territories in the map
+     */
     private int totalTerritoryNum;
 
     @Override
@@ -34,6 +37,10 @@ public class BasicTerritoryFactory implements TerritoryFactory {
         }
     }
 
+    /**
+     * createMapForFive
+     * @return map information
+     */
     private Map<Integer, Territory> createMapForFive() {
         Map<Integer, Territory> result = createMapForFour();
         Territory shanghai = new Territory(12, "Shanghai");
@@ -51,6 +58,10 @@ public class BasicTerritoryFactory implements TerritoryFactory {
         return result;
     }
 
+    /**
+     * createMapForFour
+     * @return map information
+     */
     private Map<Integer, Territory> createMapForFour() {
         Map<Integer, Territory> result = createMapForThree();
         Territory durham = new Territory(9, "Durham");
@@ -71,6 +82,10 @@ public class BasicTerritoryFactory implements TerritoryFactory {
         return result;
     }
 
+    /**
+     * createMapForThree
+     * @return map information
+     */
     private Map<Integer, Territory> createMapForThree() {
         Map<Integer, Territory> result = new HashMap<>(10);
         Territory narnia = new Territory(0, "Narnia");
@@ -114,6 +129,10 @@ public class BasicTerritoryFactory implements TerritoryFactory {
         return result;
     }
 
+    /**
+     * createMapForTwo
+     * @return map information
+     */
     private Map<Integer, Territory> createMapForTwo() {
         Map<Integer, Territory> result = new HashMap<>(5);
         Territory narnia = new Territory(0, "Narnia");

@@ -1,11 +1,11 @@
 package edu.duke.risc.shared.board;
 
-import edu.duke.risc.shared.exceptions.InvalidInputException;
-
 import java.io.Serializable;
 import java.util.Map;
 
 /**
+ * Interface for factories to produce the game map
+ *
  * @author eason
  * @date 2021/3/10 20:17
  */

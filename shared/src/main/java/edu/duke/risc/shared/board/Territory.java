@@ -43,10 +43,25 @@ public class Territory implements Serializable {
      */
     private Set<Integer> adjacentTerritories;
 
+    /**
+     * Constructor
+     *
+     * @param territoryId territory id
+     * @param territoryName territory name
+     */
     public Territory(int territoryId, String territoryName) {
         this(territoryId, territoryName, new HashMap<>(), new HashSet<>(), new HashMap<>());
     }
 
+    /**
+     * Constructor
+     *
+     * @param territoryId territory id
+     * @param territoryName territory name
+     * @param unitsMap units map
+     * @param adjacentTerritories adjacentTerritories
+     * @param virtualUnitsMap virtualUnitsMap
+     */
     private Territory(int territoryId, String territoryName, Map<UnitType, Integer> unitsMap,
                       Set<Integer> adjacentTerritories, Map<UnitType, Integer> virtualUnitsMap) {
         this.territoryId = territoryId;
@@ -56,6 +71,10 @@ public class Territory implements Serializable {
         this.virtualUnitsMap = virtualUnitsMap;
     }
 
+    /**
+     * Add neighbors to the territory, used in the factory
+     * @param territories territories
+     */
     public void addNeighbor(Integer... territories) {
         this.adjacentTerritories.addAll(Arrays.asList(territories));
     }
@@ -85,6 +104,10 @@ public class Territory implements Serializable {
         return builder.toString();
     }
 
+    /**
+     * getBasicInfo
+     * @return basic territory information in the string format
+     */
     public String getBasicInfo() {
         return this.territoryName + "(" + this.territoryId + ")";
     }
@@ -106,23 +129,20 @@ public class Territory implements Serializable {
         return territoryId == territory.territoryId;
     }
 
-    public void setTerritoryId(int territoryId) {
-        this.territoryId = territoryId;
-    }
-
-    public void setTerritoryName(String territoryName) {
-        this.territoryName = territoryName;
-    }
-
-    public void setUnitsMap(Map<UnitType, Integer> unitsMap) {
-        this.unitsMap = unitsMap;
-    }
-
-
+    /**
+     * Update virtual units map
+     * @param unitType unitType
+     * @param diff difference, -1 for subtract 1,
+     */
     public void updateVirtualUnitsMap(UnitType unitType, Integer diff) {
         this.generalUpdateUnitsMap(this.virtualUnitsMap, unitType, diff);
     }
 
+    /**
+     * Update units map
+     * @param unitType unitType
+     * @param diff difference, -1 for subtract 1,
+     */
     public void updateUnitsMap(UnitType unitType, Integer diff) {
         this.generalUpdateUnitsMap(this.unitsMap, unitType, diff);
     }
@@ -130,8 +150,8 @@ public class Territory implements Serializable {
     /**
      * Update units map in this territory. If no more units like this, remove from map
      *
-     * @param unitType
-     * @param diff
+     * @param unitType unit type
+     * @param diff difference, -1 for subtract 1
      */
     private void generalUpdateUnitsMap(Map<UnitType, Integer> unitsMap, UnitType unitType, Integer diff) {
         if (unitsMap.containsKey(unitType)) {
@@ -156,16 +176,24 @@ public class Territory implements Serializable {
      * A empty territory is the territory without units.
      * A empty territory should not be owned by anyone.
      *
-     * @return
+     * @return whether is a empty territory
      */
     public boolean isEmptyTerritory() {
         return this.unitsMap.isEmpty();
     }
 
+    /**
+     * Name of the territory
+     * @return Name of the territory
+     */
     public String getTerritoryName() {
         return territoryName;
     }
 
+    /**
+     * getUnitsMap
+     * @return units map
+     */
     public Map<UnitType, Integer> getUnitsMap() {
         return unitsMap;
     }
@@ -185,4 +213,5 @@ public class Territory implements Serializable {
     public void setVirtualUnitsMap(Map<UnitType, Integer> virtualUnitsMap) {
         this.virtualUnitsMap = virtualUnitsMap;
     }
+
 }

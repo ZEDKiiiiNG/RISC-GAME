@@ -3,6 +3,8 @@ package edu.duke.risc.shared.board;
 import java.io.Serializable;
 
 /**
+ * Interface for game board displayer.
+ *
  * @author eason
  * @date 2021/3/10 21:27
  */

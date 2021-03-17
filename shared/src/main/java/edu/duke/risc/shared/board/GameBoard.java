@@ -1,6 +1,5 @@
 package edu.duke.risc.shared.board;
 
-import edu.duke.risc.shared.Configurations;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.users.Player;
 
@@ -12,25 +11,53 @@ import java.util.Set;
 import java.util.Stack;
 
 /**
+ * Represents the game board, including all players, territories, game stage.
+ *
  * @author eason
  * @date 2021/3/9 23:58
  */
 public class GameBoard implements Serializable {
 
+    /**
+     * All territories
+     */
     private Map<Integer, Territory> territories;
 
+    /**
+     * All players
+     */
     private Map<Integer, Player> players;
 
+    /**
+     * The game stage
+     */
     private GameStage gameStage;
 
+    /**
+     * Factory used to produce the whole map
+     */
     private TerritoryFactory territoryFactory;
 
+    /**
+     * unit type mapper
+     */
     private final Map<String, UnitType> unitTypeMapper = new HashMap<>();
 
+    /**
+     * The board displayer
+     */
     private Displayable displayer;
 
+    /**
+     * max player, assigned at the beginning
+     */
     private int maxPlayer;
 
+    /**
+     * The max number of players, the map will be generated according to this value
+     *
+     * @param playerNum max number of players
+     */
     public GameBoard(int playerNum) {
         this.maxPlayer = playerNum;
         territoryFactory = new BasicTerritoryFactory();
@@ -41,6 +68,9 @@ public class GameBoard implements Serializable {
         this.initUnitTypeMapping();
     }
 
+    /**
+     * Display the board to the standard output
+     */
     public void displayBoard() {
         displayer.display(this);
     }
@@ -63,7 +93,10 @@ public class GameBoard implements Serializable {
     }
 
     /**
-     * @return
+     * Returns the assigned territories of the player, in the string format.
+     *
+     * @param playerId id of the player
+     * @return string representation of the assigned territories
      */
     public String getPlayerAssignedTerritoryInfo(Integer playerId) {
         StringBuilder builder = new StringBuilder();
@@ -75,10 +108,22 @@ public class GameBoard implements Serializable {
         return builder.toString();
     }
 
+    /**
+     * Find territory based on id
+     *
+     * @param territoryId territory id
+     * @return territory object, null if not exists
+     */
     public Territory findTerritory(Integer territoryId) {
         return this.territories.get(territoryId);
     }
 
+    /**
+     * Find player based on id
+     *
+     * @param playerId player id
+     * @return player object, null if not exists
+     */
     public Player findPlayer(Integer playerId) {
         return this.players.get(playerId);
     }
@@ -91,6 +136,9 @@ public class GameBoard implements Serializable {
                 '}';
     }
 
+    /**
+     * Initialize the unit type mapping
+     */
     private void initUnitTypeMapping() {
         this.unitTypeMapper.put("s", UnitType.SOLDIER);
         this.unitTypeMapper.put("S", UnitType.SOLDIER);
@@ -116,10 +164,12 @@ public class GameBoard implements Serializable {
     }
 
     /**
-     * @param playerId
-     * @param sourceTerritoryId
-     * @param unitType
-     * @param number
+     * Pretend to move certain number of units from one place to another, only for the client-side pre-check.
+     *
+     * @param playerId id of the player
+     * @param sourceTerritoryId id of the source territory
+     * @param unitType unit type
+     * @param number number of the units
      */
     public void playerMoveFromTerritory(int playerId, int sourceTerritoryId, UnitType unitType, int number) {
         Territory sourceTerritory = this.getTerritories().get(sourceTerritoryId);
@@ -172,6 +222,11 @@ public class GameBoard implements Serializable {
         return false;
     }
 
+    /**
+     * Get how many players should the current server wait
+     *
+     * @return number of players that the current server should wait
+     */
     public int getShouldWaitPlayers() {
         int count = 0;
         for (Map.Entry<Integer, Player> playerEntry : this.players.entrySet()) {
@@ -185,8 +240,8 @@ public class GameBoard implements Serializable {
     /**
      * Get the player information
      *
-     * @param playerId
-     * @return
+     * @param playerId player id
+     * @return player information in the string format
      */
     public String getPlayerInfo(int playerId) {
         StringBuilder builder = new StringBuilder();
@@ -218,31 +273,57 @@ public class GameBoard implements Serializable {
         return null;
     }
 
+    /**
+     * setGameStart
+     */
     public void setGameStart() {
         this.gameStage = GameStage.GAME_START;
     }
 
+    /**
+     * setGameOver
+     */
     public void setGameOver() {
         this.gameStage = GameStage.GAME_OVER;
     }
 
+    /**
+     * isGameOver
+     * @return isGameOver
+     */
     public boolean isGameOver() {
         return this.gameStage == GameStage.GAME_OVER;
     }
 
+    /**
+     * Get the map the players
+     * @return player map
+     */
     public Map<Integer, Player> getPlayers() {
         return players;
     }
 
+    /**
+     * Set the game stage into placement
+     */
     public void forwardPlacementPhase() {
         this.gameStage = GameStage.PLACEMENT;
     }
 
+    /**
+     * getTerritories
+     * @return getTerritories
+     */
     public Map<Integer, Territory> getTerritories() {
         return territories;
     }
 
+    /**
+     * getUnitTypeMapper
+     * @return getUnitTypeMapper
+     */
     public Map<String, UnitType> getUnitTypeMapper() {
         return unitTypeMapper;
     }
+
 }

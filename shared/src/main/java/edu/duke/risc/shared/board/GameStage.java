@@ -7,14 +7,23 @@ package edu.duke.risc.shared.board;
 public enum GameStage {
 
     /**
-     *
+     * The server is waiting for users
      */
     WAITING_USERS,
 
+    /**
+     * The users are placing their units into assigned territories
+     */
     PLACEMENT,
 
+    /**
+     * The game starts, users should input attack or move
+     */
     GAME_START,
 
+    /**
+     * The game is over, server should broadcast to all client and then quit
+     */
     GAME_OVER,
 
 }
