@@ -162,16 +162,25 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
         return builder.toString();
     }
 
-    /***
-     * roll a dice
-     * @return 0 for defender win, 1 for attacked win
+    /**
+     * @return 0 for defender win, 1 for attacker win
      */
     public Integer randomWin() {
-        if (Math.random() > 0.5) {
+        Integer defender = rollADice();
+        Integer attacker = rollADice();
+        if (defender >= attacker) {
             return 0;
         } else {
             return 1;
         }
     }
 
+    /**
+     * roll a 20-sided dice
+     *
+     * @return the answer of the dice
+     */
+    public Integer rollADice() {
+        return (int) (Math.random() * 20) + 1;
+    }
 }
