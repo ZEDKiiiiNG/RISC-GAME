@@ -67,6 +67,10 @@ public class MoveActionTest {
      Set<Territory> playerT =  newMove2.getPlayerTerritory(testBoard);
      try{newMove1.apply(testBoard);}
      catch(InvalidActionException e){}
+     //abstract Action class's applybefore&applyafter
+     try{assertEquals(null, newMove.applyBefore(testBoard));
+       assertEquals(null, newMove.applyAfter(testBoard));}
+     catch(InvalidActionException e){}
   }
 
 }
