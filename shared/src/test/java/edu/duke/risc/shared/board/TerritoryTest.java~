@@ -1,0 +1,15 @@
+package edu.duke.risc.shared.board;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+public class TerritoryTest {
+  @Test
+  public void test_Territory() {
+    Territory T1 = new Territory(1, "T1");
+    Territory T1 = new Territory(1, "T1");
+    assertEquals(true, T1.equals(T1));
+  }
+
+}
