@@ -8,7 +8,7 @@ This is the group project for Duke ECE 651.
 
 [Detailed coverage](https://yh254.pages.oit.duke.edu/ece651-risc-game/dashboard.html)
 
-Game folw:
+Game flow:
 In this project, version1, we make a board game "RISK". This game can be divided into two parts: a server and a text-based client. 
 
 At first, the server will ask in terminal how many players are in this game. Number of players can be set to 2-5. After committed how many players exactly, server will wait the connection of clients. After all players connect the sever, the game begin.

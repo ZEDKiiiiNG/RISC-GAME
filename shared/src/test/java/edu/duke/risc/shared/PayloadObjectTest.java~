@@ -1,0 +1,13 @@
+package edu.duke.risc.shared;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+public class PayloadObjectTest {
+  @Test
+  public void test_payload() {
+    PayloadObject PL = new PayloadObject(1, 0, PayloadType.UPDATE);
+  }
+
+}

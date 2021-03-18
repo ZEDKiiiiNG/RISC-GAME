@@ -48,11 +48,12 @@ public class AttackActionTest {
     player2.setOwnedTerritories(terris2);
     newAttack1.isValid(testBoard);
     //now attack another territory, but no unit type
-    AttackAction newAttack2 = new AttackAction(0, 1, UnitType.SOLDIER, 2, 0);
+    AttackAction newAttack2 = new AttackAction(0, 4, UnitType.SOLDIER, 2, 0);
     newAttack2.isValid(testBoard);
     //now has unit type, but not enough Unit type
     testBoard.getTerritories().get(0).updateUnitsMap(UnitType.SOLDIER, 1);//player 1 has 1 soldier at territory 0
     testBoard.getTerritories().get(1).updateUnitsMap(UnitType.SOLDIER, 1);//player 2 has 1 soldier at territory 1
+    testBoard.getTerritories().get(4).updateUnitsMap(UnitType.SOLDIER, 1);//player 2 has 1 soldier at territory 1
     newAttack2.isValid(testBoard);
     //enough unit type, but not reachable
      testBoard.getTerritories().get(0).updateUnitsMap(UnitType.SOLDIER, 4);//player 1 has 4 soldier at territory 0
@@ -74,6 +75,7 @@ public class AttackActionTest {
      catch(InvalidActionException e){i = 1;}
      try{newAttack1.simulateApply(testBoard);}
      catch(InvalidActionException e){i = 1;}
+     newAttack.toString();
 
 
   }
