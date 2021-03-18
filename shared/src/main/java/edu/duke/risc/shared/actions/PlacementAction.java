@@ -5,11 +5,7 @@ import edu.duke.risc.shared.board.Territory;
 import edu.duke.risc.shared.commons.ActionType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
-import edu.duke.risc.shared.exceptions.InvalidInputException;
 import edu.duke.risc.shared.users.Player;
-
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Place units on the board
@@ -23,9 +19,9 @@ public class PlacementAction extends AbstractAction {
      * Constructor
      *
      * @param territoryId territoryId
-     * @param unitType unitType
-     * @param number number
-     * @param player player
+     * @param unitType    unitType
+     * @param number      number
+     * @param player      player
      */
     public PlacementAction(Integer territoryId, UnitType unitType, Integer number, Integer player) {
         super(player, ActionType.PLACEMENT, territoryId, unitType, number);
@@ -33,12 +29,15 @@ public class PlacementAction extends AbstractAction {
 
     @Override
     public String isValid(GameBoard board) {
+        if (number <= 0) {
+            return "Number of units should be larger than 0";
+        }
         if (!board.getPlayers().containsKey(super.playerId)) {
             return "Does not contain user: " + playerId;
         }
         Player player = board.getPlayers().get(super.playerId);
 
-        if (!player.ownsTerritory(destinationId)){
+        if (!player.ownsTerritory(destinationId)) {
             return "You are not assigned territory with id = " + destinationId;
         }
 

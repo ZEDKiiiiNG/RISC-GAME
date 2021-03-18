@@ -210,8 +210,4 @@ public class Territory implements Serializable {
         return virtualUnitsMap;
     }
 
-    public void setVirtualUnitsMap(Map<UnitType, Integer> virtualUnitsMap) {
-        this.virtualUnitsMap = virtualUnitsMap;
-    }
-
 }
