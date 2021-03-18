@@ -1,0 +1,59 @@
+package edu.duke.risc.shared.actions;
+
+
+
+import static org.junit.jupiter.api.Assertions.*;
+import edu.duke.risc.shared.board.BasicTerritoryFactory;
+import edu.duke.risc.shared.board.Territory;
+import edu.duke.risc.shared.board.TerritoryFactory;
+import org.junit.jupiter.api.Test;
+import edu.duke.risc.shared.commons.UnitType;
+import edu.duke.risc.shared.commons.UserColor;
+import edu.duke.risc.shared.board.GameBoard;
+import edu.duke.risc.shared.exceptions.InvalidActionException;
+import edu.duke.risc.shared.users.Player;
+
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.junit.jupiter.api.Test;
+
+public class AttackActionTest {
+  @Test
+  public void test_AttackAction() {
+    AttackAction newAttack = new AttackAction(0, 0, UnitType.SOLDIER, 0, 0);
+    //apply
+    GameBoard testBoard = new GameBoard();
+    try{newAttack.apply(testBoard);}
+    catch(InvalidActionException e){}//should return " "
+    //Testing isValid
+    newAttack.isValid(testBoard);
+    //number > 0, but no player
+    AttackAction newAttack1 = new AttackAction(0, 0, UnitType.SOLDIER, 1, 0);
+    newAttack1.isValid(testBoard);
+    //now contains user
+    //but
+    //do not own territory
+    Player player = new Player(0, UserColor.BLUE);
+    Set<Integer> terris = testBoard.addPlayer(player);
+    assert(testBoard.getPlayers().containsKey(0));
+    assert(testBoard.getPlayers().containsKey(0));
+    assert(testBoard.getPlayers().get(0).equals(player));
+    player.setOwnedTerritories(terris);
+    newAttack.isValid(testBoard);
+    
+  }
+  @Test
+  public void test_randomWIN(){
+    //to be continue
+    AttackAction newAttack = new AttackAction(0, 0, UnitType.SOLDIER, 0, 0);
+    int result = newAttack.randomWin();
+    for(int i = 0; i < 99; i++){
+      result = newAttack.randomWin(); 
+    }
+  }
+ 
+
+}
