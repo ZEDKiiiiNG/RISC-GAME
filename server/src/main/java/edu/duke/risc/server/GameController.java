@@ -20,6 +20,7 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,6 +96,7 @@ public class GameController {
 
     /**
      * Start the game
+     *
      * @throws IOException IOException
      */
     public void startGame() throws IOException {
@@ -217,10 +219,18 @@ public class GameController {
             }
 
             //then conduct attack actions
-            List<Action> validList = attackCacheActions.stream().filter((action -> action.isValid(board) == null))
-                    .collect(Collectors.toList());
+            List<Action> validAttackList = attackCacheActions.stream().filter((action -> {
+                String error;
+                if ((error = action.isValid(board)) != null) {
+                    logger.append("FAILED: ").append(action).append(" : ").append(error).append(System.lineSeparator());
+                    return false;
+                } else {
+                    return true;
+                }
+            })).collect(Collectors.toList());
 
-            for (Action action : validList) {
+            Collections.shuffle(validAttackList);
+            for (Action action : validAttackList) {
                 try {
                     action.applyBefore(this.board);
                 } catch (InvalidActionException e) {
@@ -228,7 +238,7 @@ public class GameController {
                     logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
                 }
             }
-            for (Action action : validList) {
+            for (Action action : validAttackList) {
                 try {
                     String result = action.applyAfter(this.board);
                     logger.append(result);
@@ -254,7 +264,7 @@ public class GameController {
     /**
      * Send back error message to the client, indicating invalid input or status.
      *
-     * @param request PayloadObject
+     * @param request        PayloadObject
      * @param validateResult validateResult
      * @throws IOException IOException
      */
@@ -312,7 +322,7 @@ public class GameController {
     /**
      * Broadcast messages to all (alive) clients
      *
-     * @param lastLog last log of the actions
+     * @param lastLog     last log of the actions
      * @param payloadType broadcast response
      * @throws IOException IOException
      */
@@ -331,7 +341,7 @@ public class GameController {
     /**
      * Send directly package back to the client
      *
-     * @param playerId playerId
+     * @param playerId      playerId
      * @param payloadObject payloadObject
      * @throws IOException IOException
      */
@@ -365,6 +375,7 @@ public class GameController {
 
     /**
      * Get the logger
+     *
      * @return string builder
      */
     private StringBuilder getLogger() {
@@ -416,6 +427,7 @@ public class GameController {
 
     /**
      * Terminate the current server JVM process
+     *
      * @param lastLog lastLog
      * @throws IOException IOException
      */

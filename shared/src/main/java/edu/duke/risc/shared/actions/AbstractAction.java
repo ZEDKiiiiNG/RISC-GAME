@@ -21,8 +21,6 @@ public abstract class AbstractAction implements Action {
     protected UnitType unitType;
     protected Integer number;
 
-    public AbstractAction() {
-    }
 
     public AbstractAction(Integer playerId, ActionType actionType, Integer destinationId, UnitType unitType, Integer number) {
         this.playerId = playerId;
@@ -32,7 +30,4 @@ public abstract class AbstractAction implements Action {
         this.number = number;
     }
 
-    public Integer getPlayer() {
-        return playerId;
-    }
 }

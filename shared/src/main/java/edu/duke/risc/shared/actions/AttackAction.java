@@ -183,4 +183,12 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
     public Integer rollADice() {
         return (int) (Math.random() * 20) + 1;
     }
+
+
+    @Override
+    public String toString() {
+        return "Attack by player " + playerId + " from territory " + sourceTerritoryId + " to " + destinationId
+                 + " with " + number + " " + unitType;
+    }
+
 }

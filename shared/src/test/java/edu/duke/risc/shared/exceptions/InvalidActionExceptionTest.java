@@ -1,0 +1,29 @@
+package edu.duke.risc.shared.exceptions;
+
+import org.junit.jupiter.api.Test;
+
+
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class InvalidActionExceptionTest {
+    @Test
+    public void exceptionTest(){
+        Exception invalidActionException = new InvalidActionException("InvalidActionException");
+        Exception invalidInputException = new InvalidInputException("InvalidInputException");
+        Exception invalidPayloadContent = new InvalidPayloadContent("InvalidPayloadContent");
+        Exception serverRejectException = new ServerRejectException("ServerRejectException");
+        Exception unmatchedReceiverException = new UnmatchedReceiverException("UnmatchedReceiverException");
+
+
+
+        assertEquals(invalidActionException.getMessage(),"InvalidActionException");
+        assertEquals(invalidInputException.getMessage(),"InvalidInputException");
+        assertEquals(invalidPayloadContent.getMessage(),"InvalidPayloadContent");
+        assertEquals(serverRejectException.getMessage(),"ServerRejectException");
+        assertEquals(unmatchedReceiverException.getMessage(),"UnmatchedReceiverException");
+
+
+
+    }
+}

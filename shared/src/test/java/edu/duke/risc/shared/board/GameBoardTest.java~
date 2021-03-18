@@ -1,0 +1,14 @@
+package edu.duke.risc.shared.board;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+public class GameBoardTest {
+  @Test
+  public void test_GameBoard() {
+    GameBoard newGB = new GameBoard();
+    newGB.displayBoard();
+  }
+
+}
