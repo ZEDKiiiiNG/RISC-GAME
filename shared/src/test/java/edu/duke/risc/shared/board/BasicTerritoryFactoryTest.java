@@ -8,6 +8,7 @@ public class BasicTerritoryFactoryTest {
   @Test
   public void test_territoryNum() {
     BasicTerritoryFactory f = new BasicTerritoryFactory();
+    f.makeTerritories(3);
     assertEquals(9, f.territoryNum());
   }
 

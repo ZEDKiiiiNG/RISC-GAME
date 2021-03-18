@@ -17,13 +17,8 @@ public class TerritoryTest {
     assertEquals(false, T1.equals(null));
     assertEquals(true, T1.equals(T2));
     //sets
-    T1.setTerritoryId(1);
-    T1.setTerritoryName("changedT1");
     Map<UnitType, Integer> myMap = new HashMap<UnitType, Integer>();
     myMap.put(UnitType.SOLDIER, 1);
-    T1.setUnitsMap(myMap);
-    //virtual
-    T1.setVirtualUnitsMap(myMap);
     T1.getVirtualUnitsMap();
   }
 

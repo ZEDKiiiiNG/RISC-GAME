@@ -25,7 +25,7 @@ public class MoveActionTest {
   public void test_MoveAction() {
     MoveAction newMove = new MoveAction(0, 0, UnitType.SOLDIER, 0, 0);
     //apply
-    GameBoard testBoard = new GameBoard();
+    GameBoard testBoard = new GameBoard(3);
     try{newMove.apply(testBoard);}
     catch(InvalidActionException e){}//should return " "
     //Testing isValid
@@ -54,7 +54,7 @@ public class MoveActionTest {
     testBoard.getTerritories().get(0).updateUnitsMap(UnitType.SOLDIER, 1);//player 1 has 1 soldier at territory 0
     testBoard.getTerritories().get(1).updateUnitsMap(UnitType.SOLDIER, 1);//player 2 has 1 soldier at territory 1
     newMove1.isValid(testBoard);
-    
+
     //enough unit type, but not reachable
      testBoard.getTerritories().get(0).updateUnitsMap(UnitType.SOLDIER, 4);//player 1 has 4 soldier at territory 0
      MoveAction newMove3 = new MoveAction(0, 0, UnitType.SOLDIER, 99, 0);

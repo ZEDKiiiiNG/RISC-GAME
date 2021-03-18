@@ -15,7 +15,7 @@ class PlacementActionTest {
 
     @Test
     public void placementActionTest() {
-        GameBoard gameBoard = new GameBoard();
+        GameBoard gameBoard = new GameBoard(3);
         Player player = new Player(0, UserColor.BLUE);
         assertEquals(UserColor.BLUE.toString(), "Blue");
         player.addOwnedTerritory(0);

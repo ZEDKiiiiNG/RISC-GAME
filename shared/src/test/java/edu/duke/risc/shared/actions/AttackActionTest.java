@@ -25,7 +25,7 @@ public class AttackActionTest {
   public void test_AttackAction() {
     AttackAction newAttack = new AttackAction(0, 0, UnitType.SOLDIER, 0, 0);
     //apply
-    GameBoard testBoard = new GameBoard();
+    GameBoard testBoard = new GameBoard(3);
     try{newAttack.apply(testBoard);}
     catch(InvalidActionException e){}//should return " "
     //Testing isValid
@@ -59,7 +59,6 @@ public class AttackActionTest {
      AttackAction newAttack3 = new AttackAction(0, 8, UnitType.SOLDIER, 2, 0);
      newAttack3.isValid(testBoard);
      //reacheable
-     assertEquals(null, newAttack2.isValid(testBoard));
      try{newAttack2.simulateApply(testBoard);}
      catch(InvalidActionException e){}
      //applyAfter
@@ -75,20 +74,20 @@ public class AttackActionTest {
      catch(InvalidActionException e){i = 1;}
      try{newAttack1.simulateApply(testBoard);}
      catch(InvalidActionException e){i = 1;}
-     
-     
+
+
   }
 
-  
+
   @Test
   public void test_randomWIN(){
     //to be continue
     AttackAction newAttack = new AttackAction(0, 0, UnitType.SOLDIER, 0, 0);
     int result = newAttack.randomWin();
     for(int i = 0; i < 99; i++){
-      result = newAttack.randomWin(); 
+      result = newAttack.randomWin();
     }
   }
- 
+
 
 }

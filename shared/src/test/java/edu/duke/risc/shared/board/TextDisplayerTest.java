@@ -24,7 +24,7 @@ public class TextDisplayerTest {
   public void test_TextDisplay() {
     TextDisplayer dis = new TextDisplayer();
     //board and display it
-    GameBoard testBoard = new GameBoard();
+    GameBoard testBoard = new GameBoard(3);
     Player player = new Player(0, UserColor.BLUE);
     Player player2 = new Player(1, UserColor.GREEN);
     Set<Integer> terris = testBoard.addPlayer(player);

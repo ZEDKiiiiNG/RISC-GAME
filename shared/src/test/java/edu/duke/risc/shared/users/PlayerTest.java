@@ -18,7 +18,6 @@ class PlayerTest {
         assertEquals(player.getUnitsInfo(player.getInitUnitsMap()), "(S)oldiers : 10");
         assertEquals(player.getId(), 0);
         assertEquals(player.getColor(), UserColor.BLUE);
-        assertEquals(player.getStatus(), PlayerStatus.IN_GAME);
         assertEquals(playerb, player);
         assertEquals(player, player);
         assertNotEquals(player, null);
@@ -45,7 +44,6 @@ class PlayerTest {
         Set<Integer> set = new HashSet<Integer>();
         set.add(1);
         playerb.setOwnedTerritories(set);
-        playerb.setUserId(1);
 
         assertEquals(player.getOwnedTerritories(), playerb.getOwnedTerritories());
         assertNotNull(player.getOwnedTerritories());

@@ -13,7 +13,7 @@ import java.util.Set;
 public class GameBoardTest {
   @Test
   public void test_GameBoard() {
-    GameBoard testBoard = new GameBoard();
+    GameBoard testBoard = new GameBoard(3);
     testBoard.displayBoard();
     Player player = new Player(0, UserColor.BLUE);
     Player player2 = new Player(1, UserColor.GREEN);
@@ -24,7 +24,6 @@ public class GameBoardTest {
     testBoard.getPlayerAssignedTerritoryInfo(0);
     testBoard.toString();
     testBoard.territoryGrow();
-    assertEquals(3, testBoard.getTerritoriesSize());//to be updated for future version
     assertEquals(2, testBoard.getShouldWaitPlayers());
     testBoard.getPlayerInfo(0);
     testBoard.getWinner();
@@ -34,6 +33,6 @@ public class GameBoardTest {
     testBoard.forwardPlacementPhase();
     testBoard.getUnitTypeMapper();
   }
-    
+
 
 }
