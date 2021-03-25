@@ -22,17 +22,17 @@ public class Player implements GameUser, Serializable {
     /**
      * Unique user identifier
      */
-    private int userId;
+    private final int userId;
 
     /**
      * Total unitsMap, key for unit type, value for counts
      */
-    private Map<UnitType, Integer> totalUnitsMap;
+    private final Map<UnitType, Integer> totalUnitsMap;
 
     /**
      * Initial unitsMap, key for unit type, value for counts
      */
-    private Map<UnitType, Integer> initUnitsMap;
+    private final Map<UnitType, Integer> initUnitsMap;
 
     /**
      * Owned territories.
@@ -42,7 +42,7 @@ public class Player implements GameUser, Serializable {
     /**
      * Assigned Color
      */
-    private UserColor color;
+    private final UserColor color;
 
     /**
      * Player status
@@ -50,9 +50,20 @@ public class Player implements GameUser, Serializable {
     private PlayerStatus status;
 
     /**
+     * The resources that this player owns
+     */
+    private int resources = Configurations.DEFAULT_RESOURCE;
+
+    /**
+     * The technology level that this player owns
+     */
+    private int technology = Configurations.DEFAULT_TECHNOLOGY;
+
+    /**
      * Constructor
+     *
      * @param userId id of the user
-     * @param color color of the user
+     * @param color  color of the user
      */
     public Player(int userId, UserColor color) {
         //init units map
@@ -116,6 +127,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * Get the user id
+     *
      * @return user id
      */
     public int getUserId() {
@@ -124,6 +136,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * getTotalUnitsMap
+     *
      * @return getTotalUnitsMap
      */
     public Map<UnitType, Integer> getTotalUnitsMap() {
@@ -134,7 +147,7 @@ public class Player implements GameUser, Serializable {
      * updateInitUnitMap
      *
      * @param unitType unitType
-     * @param diff either add or subtract
+     * @param diff     either add or subtract
      */
     public void updateInitUnitMap(UnitType unitType, Integer diff) {
         this.updateUnitsMap(this.initUnitsMap, unitType, diff);
@@ -143,8 +156,8 @@ public class Player implements GameUser, Serializable {
     /**
      * updateTotalUnitMap
      *
-     * @param unitType
-     * @param diff
+     * @param unitType unitType
+     * @param diff diff
      */
     public void updateTotalUnitMap(UnitType unitType, Integer diff) {
         this.updateUnitsMap(this.totalUnitsMap, unitType, diff);
@@ -152,6 +165,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * Whether this user owns this territory
+     *
      * @param territoryId territory id
      * @return Whether this user owns this territory
      */
@@ -161,9 +175,10 @@ public class Player implements GameUser, Serializable {
 
     /**
      * updateUnitsMap
+     *
      * @param unitsMap unitsMap
      * @param unitType unitType
-     * @param diff either add or subtract
+     * @param diff     either add or subtract
      */
     private void updateUnitsMap(Map<UnitType, Integer> unitsMap, UnitType unitType, Integer diff) {
         assert unitsMap != null;
@@ -187,6 +202,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * removeOwnedTerritory
+     *
      * @param territoryId territory id
      */
     public void removeOwnedTerritory(Integer territoryId) {
@@ -195,6 +211,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * addOwnedTerritory
+     *
      * @param territoryId territory id
      */
     public void addOwnedTerritory(Integer territoryId) {
@@ -203,6 +220,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * getOwnedTerritories
+     *
      * @return getOwnedTerritories
      */
     public Set<Integer> getOwnedTerritories() {
@@ -211,6 +229,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * Get user color
+     *
      * @return user's color
      */
     public UserColor getColor() {
@@ -219,6 +238,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * setOwnedTerritories
+     *
      * @param ownedTerritories setOwnedTerritories
      */
     public void setOwnedTerritories(Set<Integer> ownedTerritories) {
@@ -227,6 +247,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * getInitUnitsMap
+     *
      * @return getInitUnitsMap
      */
     public Map<UnitType, Integer> getInitUnitsMap() {
@@ -242,6 +263,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * Judge whether this player lost
+     *
      * @return whether this player lost
      */
     public boolean isLost() {
@@ -257,9 +279,21 @@ public class Player implements GameUser, Serializable {
 
     /**
      * Judge whether this player wins
+     *
      * @return whether this player wins
      */
     public boolean isWin() {
         return this.status == PlayerStatus.WIN;
     }
+
+    /**
+     * Whether the current players owns enough resources to make move/upgrade/attack action
+     *
+     * @param required resources required
+     * @return boolean
+     */
+    public boolean hasEnoughResources(int required) {
+        return this.resources >= required;
+    }
+
 }

@@ -23,7 +23,6 @@ public class TextDisplayer implements Displayable {
             if (player.getOwnedTerritories().size() == 0) {
                 System.out.println("Not owned any territory, LOST");
             } else {
-                //todo display territory here, not in the toString
                 for (Integer territoryId : player.getOwnedTerritories()) {
                     //printing units
                     Territory territory = gameBoard.getTerritories().get(territoryId);

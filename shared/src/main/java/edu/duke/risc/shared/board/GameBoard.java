@@ -21,12 +21,12 @@ public class GameBoard implements Serializable {
     /**
      * All territories
      */
-    private Map<Integer, Territory> territories;
+    private final Map<Integer, Territory> territories;
 
     /**
      * All players
      */
-    private Map<Integer, Player> players;
+    private final Map<Integer, Player> players;
 
     /**
      * The game stage
@@ -36,7 +36,7 @@ public class GameBoard implements Serializable {
     /**
      * Factory used to produce the whole map
      */
-    private TerritoryFactory territoryFactory;
+    private final TerritoryFactory territoryFactory;
 
     /**
      * unit type mapper
@@ -46,12 +46,12 @@ public class GameBoard implements Serializable {
     /**
      * The board displayer
      */
-    private Displayable displayer;
+    private final Displayable displayer;
 
     /**
      * max player, assigned at the beginning
      */
-    private int maxPlayer;
+    private final int maxPlayer;
 
     /**
      * The max number of players, the map will be generated according to this value
@@ -103,7 +103,7 @@ public class GameBoard implements Serializable {
         Player player = this.players.get(playerId);
         for (Integer territoryId : player.getOwnedTerritories()) {
             Territory territory = this.territories.get(territoryId);
-            builder.append(territory.getTerritoryName() + " (" + territory.getTerritoryId() + ") ");
+            builder.append(territory.getTerritoryName()).append(" (").append(territory.getTerritoryId()).append(") ");
         }
         return builder.toString();
     }

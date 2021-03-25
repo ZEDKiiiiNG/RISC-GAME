@@ -9,7 +9,8 @@ package edu.duke.risc.shared;
 public class Configurations {
 
     public static final int MAX_PLAYERS = 3;
-    //public static final int MAP_SIZE = 3;
+    public static final int DEFAULT_RESOURCE = 50;
+    public static final int DEFAULT_TECHNOLOGY = 1;
 
     public static final int DEFAULT_SERVER_PORT = 8085;
 

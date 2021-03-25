@@ -21,32 +21,42 @@ public class Territory implements Serializable {
     /**
      * Unique Territory identifier
      */
-    private int territoryId;
+    private final int territoryId;
 
     /**
      * Territory Name
      */
-    private String territoryName;
+    private final String territoryName;
 
     /**
      * Total unitsMap, key for unit type, value for counts
      */
-    private Map<UnitType, Integer> unitsMap;
+    private final Map<UnitType, Integer> unitsMap;
 
     /**
      * virtual unitsMap, only for client simulation of attack
      */
-    private Map<UnitType, Integer> virtualUnitsMap;
+    private final Map<UnitType, Integer> virtualUnitsMap;
 
     /**
      * Adjacent territories
      */
-    private Set<Integer> adjacentTerritories;
+    private final Set<Integer> adjacentTerritories;
 
     /**
      * We created a big world map, factory will invalidate some of them depends on number of players
      */
     private boolean isValid;
+
+    /**
+     * Number of resources this territory produces at the end of each turn
+     */
+    private final int productivity;
+
+    /**
+     * Cost of resources when moving units from this area
+     */
+    private final int size;
 
     /**
      * Constructor
@@ -55,7 +65,18 @@ public class Territory implements Serializable {
      * @param territoryName territory name
      */
     public Territory(int territoryId, String territoryName) {
-        this(territoryId, territoryName, new HashMap<>(), new HashSet<>(), new HashMap<>(), false);
+        this(territoryId, territoryName, 1, 1);
+    }
+
+    /**
+     * Constructor
+     *
+     * @param territoryId territory id
+     * @param territoryName territory name
+     */
+    public Territory(int territoryId, String territoryName, int productivity, int size) {
+        this(territoryId, territoryName, new HashMap<>(), new HashSet<>(), new HashMap<>(),
+                false, productivity, size);
     }
 
     /**
@@ -70,13 +91,15 @@ public class Territory implements Serializable {
      */
     private Territory(int territoryId, String territoryName, Map<UnitType, Integer> unitsMap,
                       Set<Integer> adjacentTerritories, Map<UnitType, Integer> virtualUnitsMap,
-                      boolean isValid) {
+                      boolean isValid, int productivity, int size) {
         this.territoryId = territoryId;
         this.territoryName = territoryName;
         this.unitsMap = unitsMap;
         this.adjacentTerritories = adjacentTerritories;
         this.virtualUnitsMap = virtualUnitsMap;
         this.isValid = isValid;
+        this.productivity = productivity;
+        this.size = size;
     }
 
     /**
@@ -226,4 +249,11 @@ public class Territory implements Serializable {
         return isValid;
     }
 
+    public int getProductivity() {
+        return productivity;
+    }
+
+    public int getSize() {
+        return size;
+    }
 }
