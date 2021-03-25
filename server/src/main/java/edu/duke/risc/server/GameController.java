@@ -45,7 +45,7 @@ public class GameController {
     /**
      * The current server is regarded as the root
      */
-    private GameUser root;
+    private final GameUser root;
 
     /**
      * Initial colors
@@ -60,17 +60,17 @@ public class GameController {
     /**
      * Player connections
      */
-    private Map<Player, SocketCommunicator> playerConnections;
+    private final Map<Player, SocketCommunicator> playerConnections;
 
     /**
      * Cyclic barrier
      */
-    private ThreadBarrier barrier;
+    private final ThreadBarrier barrier;
 
     /**
      * The buffered reader who reads input from the console
      */
-    private BufferedReader reader;
+    private final BufferedReader reader;
 
     /**
      * Maximum number of players
@@ -197,9 +197,12 @@ public class GameController {
                     sendBackErrorMessage(request, "Invalid request type");
                     continue;
                 }
-                List<Action> moveActions = (List<Action>) request.getContents().get(Configurations.REQUEST_MOVE_ACTIONS);
+                List<Action> moveActions =
+                        (List<Action>) request.getContents().get(Configurations.REQUEST_MOVE_ACTIONS);
                 List<Action> attackActions =
                         (List<Action>) request.getContents().get(Configurations.REQUEST_ATTACK_ACTIONS);
+                List<Action> upgradeUnitsAction =
+                        (List<Action>) request.getContents().get(Configurations.REQUEST_UPGRADE_UNITS_ACTIONS);
                 //validate success, response the client with success message and continues the next request
                 moveCacheActions.addAll(moveActions);
                 attackCacheActions.addAll(attackActions);

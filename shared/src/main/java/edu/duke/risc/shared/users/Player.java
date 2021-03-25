@@ -1,6 +1,7 @@
 package edu.duke.risc.shared.users;
 
 import edu.duke.risc.shared.Configurations;
+import edu.duke.risc.shared.commons.ResourceType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.commons.UserColor;
 
@@ -52,12 +53,12 @@ public class Player implements GameUser, Serializable {
     /**
      * The resources that this player owns
      */
-    private int resources = Configurations.DEFAULT_RESOURCE;
+    private Map<ResourceType, Integer> resources;
 
     /**
      * The technology level that this player owns
      */
-    private int technology = Configurations.DEFAULT_TECHNOLOGY;
+    private int technology = Configurations.DEFAULT_TECHNOLOGY_LEVEL;
 
     /**
      * Constructor
@@ -74,6 +75,11 @@ public class Player implements GameUser, Serializable {
         this.userId = userId;
         this.color = color;
         this.totalUnitsMap = new HashMap<>();
+
+        //initialize resources
+        this.resources = new HashMap<>();
+        resources.put(ResourceType.FOOD, Configurations.DEFAULT_FOOD_RESOURCE);
+        resources.put(ResourceType.TECH, Configurations.DEFAULT_TECH_RESOURCE);
     }
 
     /**
@@ -85,6 +91,33 @@ public class Player implements GameUser, Serializable {
         StringBuilder builder = new StringBuilder();
         for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
             builder.append(entry.getKey()).append(" : ").append(entry.getValue());
+        }
+        return builder.toString();
+    }
+
+    /**
+     * Get player information: units owned, tech, resources
+     *
+     * @return player information in the string format
+     */
+    public String getPlayerInfo() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("-------------").append(System.lineSeparator());
+
+        //color info
+        builder.append("You are the ").append(this.color).append(" player").append(System.lineSeparator());
+
+        //tech, resources
+        builder.append("You have ").append(this.resources).append(" food")
+                .append(" and is currently in tech level ").append(this.technology)
+                .append(System.lineSeparator());
+
+        //print total units
+        builder.append("You have in total: ").append(System.lineSeparator());
+        for (Map.Entry<UnitType, Integer> unitTypeIntegerEntry : this.totalUnitsMap.entrySet()) {
+            builder.append(unitTypeIntegerEntry.getKey()).append(" : ")
+                    .append(unitTypeIntegerEntry.getValue())
+                    .append(System.lineSeparator());
         }
         return builder.toString();
     }
@@ -157,7 +190,7 @@ public class Player implements GameUser, Serializable {
      * updateTotalUnitMap
      *
      * @param unitType unitType
-     * @param diff diff
+     * @param diff     diff
      */
     public void updateTotalUnitMap(UnitType unitType, Integer diff) {
         this.updateUnitsMap(this.totalUnitsMap, unitType, diff);
@@ -292,8 +325,26 @@ public class Player implements GameUser, Serializable {
      * @param required resources required
      * @return boolean
      */
-    public boolean hasEnoughResources(int required) {
-        return this.resources >= required;
+    public boolean hasEnoughResources(ResourceType resourceType, int required) {
+        return this.resources.get(resourceType) >= required;
     }
 
+    /**
+     * Use certain number of resources
+     *
+     * @param used resources used
+     */
+    public void useResources(ResourceType resourceType, int used) {
+        assert hasEnoughResources(resourceType, used);
+        this.resources.put(resourceType, resources.get(resourceType) - used);
+    }
+
+    /**
+     * getResources
+     *
+     * @return getResources
+     */
+    public int getResources(ResourceType resourceType) {
+        return resources.get(resourceType);
+    }
 }

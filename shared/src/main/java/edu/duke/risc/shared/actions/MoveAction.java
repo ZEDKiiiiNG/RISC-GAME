@@ -33,8 +33,8 @@ public class MoveAction extends AbstractSourceAction {
     public Set<Territory> getPlayerTerritory(GameBoard board) {
         Set<Territory> ans = new HashSet<>();
         Player player = board.getPlayers().get(super.playerId);
-        Set<Integer> terr_ids = player.getOwnedTerritories();
-        for (Integer t : terr_ids) {
+        Set<Integer> terrIds = player.getOwnedTerritories();
+        for (Integer t : terrIds) {
             ans.add(board.getTerritories().get(t));
         }
         return ans;

@@ -1,6 +1,8 @@
 package edu.duke.risc.shared.commons;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Unit type: SOLDIER, TANK
@@ -71,6 +73,74 @@ public enum UnitType implements Serializable {
     @Override
     public String toString() {
         return name;
+    }
+
+    /**
+     * Get resources required for upgrading
+     *
+     * @return resources required for upgrading
+     */
+    public int getUpgradeResources(int number) {
+        return this.upgradePerUnit * number;
+    }
+
+    /**
+     * Get top level, which cannot be upgraded
+     * @return top level
+     */
+    public static UnitType getTopLevel(){
+        return MASTER;
+    }
+
+    /**
+     * Get the next level of unit type
+     *
+     * @param currentUnit current level of unit type
+     * @return next level of unit type
+     */
+    public static UnitType getNextLevelOfUnit(UnitType currentUnit) {
+        switch (currentUnit) {
+            case SOLDIER:
+                return INFANTRY;
+            case INFANTRY:
+                return CAVALRY;
+            case CAVALRY:
+                return KNIGHT;
+            case KNIGHT:
+                return ROOK;
+            case ROOK:
+                return QUEEN;
+            case QUEEN:
+            case MASTER:
+                return MASTER;
+            default:
+                return null;
+        }
+    }
+
+    public static Map<String, UnitType> getUnitTypeMapper(){
+        Map<String, UnitType> unitTypeMapper = new HashMap<>();
+        unitTypeMapper.put("s", UnitType.SOLDIER);
+        unitTypeMapper.put("S", UnitType.SOLDIER);
+
+        unitTypeMapper.put("i", UnitType.INFANTRY);
+        unitTypeMapper.put("I", UnitType.INFANTRY);
+
+        unitTypeMapper.put("c", UnitType.CAVALRY);
+        unitTypeMapper.put("C", UnitType.CAVALRY);
+
+        unitTypeMapper.put("k", UnitType.KNIGHT);
+        unitTypeMapper.put("K", UnitType.KNIGHT);
+
+        unitTypeMapper.put("r", UnitType.ROOK);
+        unitTypeMapper.put("R", UnitType.ROOK);
+
+        unitTypeMapper.put("q", UnitType.QUEEN);
+        unitTypeMapper.put("Q", UnitType.QUEEN);
+
+        unitTypeMapper.put("m", UnitType.MASTER);
+        unitTypeMapper.put("M", UnitType.MASTER);
+        return unitTypeMapper;
     }
 
 }

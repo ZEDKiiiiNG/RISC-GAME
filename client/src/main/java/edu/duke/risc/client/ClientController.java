@@ -8,6 +8,7 @@ import edu.duke.risc.shared.actions.Action;
 import edu.duke.risc.shared.actions.AttackAction;
 import edu.duke.risc.shared.actions.MoveAction;
 import edu.duke.risc.shared.actions.PlacementAction;
+import edu.duke.risc.shared.actions.UpgradeUnitAction;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UnitType;
@@ -123,6 +124,9 @@ public class ClientController {
                 //print basic information
                 System.out.println("You are the " + player.getColor() + " player: ");
 
+                //print resource and technology information
+                System.out.println();
+
                 //asking target territory
                 System.out.println("You are assigned " + gameBoard.getPlayerAssignedTerritoryInfo(playerId));
                 System.out.println("You still have " + player.getUnitsInfo(player.getInitUnitsMap()) + " available");
@@ -132,7 +136,7 @@ public class ClientController {
                 String input = this.consoleReader.readLine();
                 Action action = null;
                 try {
-                    action = this.validateInputAndGenerateAction(input, this.gameBoard, playerId);
+                    action = this.validateInputAndGeneratePlacementAction(input, this.gameBoard, playerId);
                     action.simulateApply(this.gameBoard);
                     actions.add(action);
                 } catch (InvalidInputException | InvalidActionException e) {
@@ -187,12 +191,15 @@ public class ClientController {
             boolean isFinished = false;
             List<Action> moveActions = new ArrayList<>();
             List<Action> attackActions = new ArrayList<>();
+            List<Action> upgradeUnitsActions = new ArrayList<>();
             while (!isFinished) {
                 this.gameBoard.displayBoard();
-                System.out.println(this.gameBoard.getPlayerInfo(this.playerId));
-                System.out.println("You are the " + player.getColor() + " player, what would you like to do?");
+                System.out.println(player.getPlayerInfo());
+                System.out.println("What would you like to do?");
                 System.out.println("(M)ove");
                 System.out.println("(A)ttack");
+                System.out.println("(U)nits upgrade");
+                System.out.println("(T)echnology upgrade");
                 System.out.println("(D)one");
                 String input = this.consoleReader.readLine();
                 switch (input) {
@@ -201,6 +208,9 @@ public class ClientController {
                         break;
                     case "A":
                         conductMoveOrAttack(attackActions, 1);
+                        break;
+                    case "U":
+                        conductUpgradeUnits(upgradeUnitsActions);
                         break;
                     case "D":
                         System.out.println("You have finished your actions, submitting...");
@@ -212,13 +222,13 @@ public class ClientController {
                 }
             }
 
-            //todo combine all attack actions
             //sending to the server
             //constructing payload objects
             Map<String, Object> content = new HashMap<>(3);
             content.put(Configurations.REQUEST_MOVE_ACTIONS, moveActions);
 
             content.put(Configurations.REQUEST_ATTACK_ACTIONS, attackActions);
+            content.put(Configurations.REQUEST_UPGRADE_UNITS_ACTIONS, upgradeUnitsActions);
             PayloadObject request = new PayloadObject(this.playerId,
                     Configurations.MASTER_ID, PayloadType.REQUEST, content);
             try {
@@ -265,7 +275,27 @@ public class ClientController {
         String moveInput = this.consoleReader.readLine();
         Action action;
         try {
-            action = this.readActionAndProceed(moveInput, this.gameBoard, playerId, actionType);
+            action = this.readAttackOrMoveAction(moveInput, this.gameBoard, playerId, actionType);
+            action.simulateApply(this.gameBoard);
+            actions.add(action);
+        } catch (InvalidInputException | InvalidActionException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * conductUpgradeUnits
+     *
+     * @param actions    action
+     * @throws IOException
+     */
+    private void conductUpgradeUnits(List<Action> actions) throws IOException {
+        System.out.println("Please enter instruction in the following format: " +
+                "<targetTerritoryId>,<UnitType>,<amount>");
+        String upgradeUnitInput = this.consoleReader.readLine();
+        Action action;
+        try {
+            action = this.readUpgradeUnitAction(upgradeUnitInput, this.gameBoard, playerId);
             action.simulateApply(this.gameBoard);
             actions.add(action);
         } catch (InvalidInputException | InvalidActionException e) {
@@ -356,7 +386,7 @@ public class ClientController {
      * @return action
      * @throws InvalidInputException InvalidInputException
      */
-    private Action validateInputAndGenerateAction(String input, GameBoard board, Integer playerId)
+    private Action validateInputAndGeneratePlacementAction(String input, GameBoard board, Integer playerId)
             throws InvalidInputException {
         List<String> inputs = new ArrayList<>(Arrays.asList(input.split(",")));
         if (inputs.size() != 3) {
@@ -392,7 +422,41 @@ public class ClientController {
      * @return result action
      * @throws InvalidInputException when input is invalid
      */
-    private Action readActionAndProceed(String input, GameBoard board, Integer playerId, int actionType)
+    private Action readUpgradeUnitAction(String input, GameBoard board, Integer playerId)
+            throws InvalidInputException {
+        List<String> inputs = new ArrayList<>(Arrays.asList(input.split(",")));
+        if (inputs.size() != 3) {
+            throw new InvalidInputException("Invalid input size");
+        }
+        Action action;
+        try {
+            int targetTerritoryId = Integer.parseInt(inputs.get(0));
+            String unitTypeString = inputs.get(1);
+            int unitNum = Integer.parseInt(inputs.get(2));
+
+            //check valid unit type mapping
+            Map<String, UnitType> unitTypeMapper = board.getUnitTypeMapper();
+            if (!unitTypeMapper.containsKey(unitTypeString)) {
+                throw new InvalidInputException("Invalid unit type string " + unitTypeString);
+            }
+            UnitType unitType = unitTypeMapper.get(unitTypeString);
+            action = new UpgradeUnitAction(playerId, targetTerritoryId, unitType, unitNum);
+        } catch (NumberFormatException e) {
+            throw new InvalidInputException("Cannot parse string to valid int");
+        }
+        return action;
+    }
+
+    /**
+     * input in the format "sourceTerritoryId,destinationId,UnitType,amount"
+     *
+     * @param input    input
+     * @param board    board
+     * @param playerId id of the player
+     * @return result action
+     * @throws InvalidInputException when input is invalid
+     */
+    private Action readAttackOrMoveAction(String input, GameBoard board, Integer playerId, int actionType)
             throws InvalidInputException {
         List<String> inputs = new ArrayList<>(Arrays.asList(input.split(",")));
         if (inputs.size() != 4) {

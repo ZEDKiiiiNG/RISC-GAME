@@ -41,7 +41,7 @@ public class GameBoard implements Serializable {
     /**
      * unit type mapper
      */
-    private final Map<String, UnitType> unitTypeMapper = new HashMap<>();
+    private final Map<String, UnitType> unitTypeMapper = UnitType.getUnitTypeMapper();
 
     /**
      * The board displayer
@@ -65,7 +65,6 @@ public class GameBoard implements Serializable {
         players = new HashMap<>();
         gameStage = GameStage.WAITING_USERS;
         displayer = new TextDisplayer();
-        this.initUnitTypeMapping();
     }
 
     /**
@@ -134,14 +133,6 @@ public class GameBoard implements Serializable {
                 ", players=" + players +
                 ", gameStage=" + gameStage +
                 '}';
-    }
-
-    /**
-     * Initialize the unit type mapping
-     */
-    private void initUnitTypeMapping() {
-        this.unitTypeMapper.put("s", UnitType.SOLDIER);
-        this.unitTypeMapper.put("S", UnitType.SOLDIER);
     }
 
     /**
@@ -244,19 +235,7 @@ public class GameBoard implements Serializable {
      * @return player information in the string format
      */
     public String getPlayerInfo(int playerId) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("-------------").append(System.lineSeparator());
-        Player player = this.findPlayer(playerId);
-
-        //print total units
-        builder.append("You have in total: ").append(System.lineSeparator());
-        for (Map.Entry<UnitType, Integer> unitTypeIntegerEntry : player.getTotalUnitsMap().entrySet()) {
-            builder.append(unitTypeIntegerEntry.getKey()).append(" : ")
-                    .append(unitTypeIntegerEntry.getValue())
-                    .append(System.lineSeparator());
-        }
-
-        return builder.toString();
+        return this.findPlayer(playerId).getPlayerInfo();
     }
 
     /**
