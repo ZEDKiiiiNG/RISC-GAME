@@ -44,13 +44,18 @@ public class Territory implements Serializable {
     private Set<Integer> adjacentTerritories;
 
     /**
+     * We created a big world map, factory will invalidate some of them depends on number of players
+     */
+    private boolean isValid;
+
+    /**
      * Constructor
      *
      * @param territoryId territory id
      * @param territoryName territory name
      */
     public Territory(int territoryId, String territoryName) {
-        this(territoryId, territoryName, new HashMap<>(), new HashSet<>(), new HashMap<>());
+        this(territoryId, territoryName, new HashMap<>(), new HashSet<>(), new HashMap<>(), false);
     }
 
     /**
@@ -61,14 +66,17 @@ public class Territory implements Serializable {
      * @param unitsMap units map
      * @param adjacentTerritories adjacentTerritories
      * @param virtualUnitsMap virtualUnitsMap
+     * @param isValid is current territory valid or not
      */
     private Territory(int territoryId, String territoryName, Map<UnitType, Integer> unitsMap,
-                      Set<Integer> adjacentTerritories, Map<UnitType, Integer> virtualUnitsMap) {
+                      Set<Integer> adjacentTerritories, Map<UnitType, Integer> virtualUnitsMap,
+                      boolean isValid) {
         this.territoryId = territoryId;
         this.territoryName = territoryName;
         this.unitsMap = unitsMap;
         this.adjacentTerritories = adjacentTerritories;
         this.virtualUnitsMap = virtualUnitsMap;
+        this.isValid = isValid;
     }
 
     /**
@@ -208,6 +216,14 @@ public class Territory implements Serializable {
 
     public Map<UnitType, Integer> getVirtualUnitsMap() {
         return virtualUnitsMap;
+    }
+
+    public void setValid(boolean valid) {
+        isValid = valid;
+    }
+
+    public boolean isValid() {
+        return isValid;
     }
 
 }

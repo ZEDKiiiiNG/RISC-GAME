@@ -60,7 +60,7 @@ public class GameBoard implements Serializable {
      */
     public GameBoard(int playerNum) {
         this.maxPlayer = playerNum;
-        territoryFactory = new BasicTerritoryFactory();
+        territoryFactory = new WorldMapTerritoryFactory();
         territories = territoryFactory.makeTerritories(this.maxPlayer);
         players = new HashMap<>();
         gameStage = GameStage.WAITING_USERS;

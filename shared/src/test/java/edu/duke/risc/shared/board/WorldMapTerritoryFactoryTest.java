@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-public class BasicTerritoryFactoryTest {
+public class WorldMapTerritoryFactoryTest {
   @Test
   public void test_territoryNum() {
-    BasicTerritoryFactory f = new BasicTerritoryFactory();
+    WorldMapTerritoryFactory f = new WorldMapTerritoryFactory();
     f.makeTerritories(5);
     f.makeTerritories(1);//default
     f.makeTerritories(2);
