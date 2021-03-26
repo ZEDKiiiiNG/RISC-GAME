@@ -183,6 +183,8 @@ public class GameController {
             int numberOfRequestRequired = this.board.getShouldWaitPlayers();
             List<Action> moveCacheActions = new ArrayList<>();
             List<Action> attackCacheActions = new ArrayList<>();
+            List<Action> upgradeUnitsCacheActions = new ArrayList<>();
+            List<Action> upgradeTechCacheActions = new ArrayList<>();
             StringBuilder logger = getLogger();
             while (numberOfRequestRequired > 0) {
                 PayloadObject request = this.barrier.consumeRequest();
@@ -203,14 +205,40 @@ public class GameController {
                         (List<Action>) request.getContents().get(Configurations.REQUEST_ATTACK_ACTIONS);
                 List<Action> upgradeUnitsAction =
                         (List<Action>) request.getContents().get(Configurations.REQUEST_UPGRADE_UNITS_ACTIONS);
+                List<Action> upgradeTechAction =
+                        (List<Action>) request.getContents().get(Configurations.REQUEST_UPGRADE_TECH_ACTIONS);
                 //validate success, response the client with success message and continues the next request
                 moveCacheActions.addAll(moveActions);
                 attackCacheActions.addAll(attackActions);
+                upgradeUnitsCacheActions.addAll(upgradeUnitsAction);
+                upgradeTechCacheActions.addAll(upgradeTechAction);
                 numberOfRequestRequired -= 1;
             }
             //with all requests received, process them simultaneously
 
-            //first conduct move actions
+            //conduct upgrade tech actions
+            for (Action action : upgradeTechCacheActions) {
+                try {
+                    String result = action.apply(this.board);
+                    logger.append(result);
+                } catch (InvalidActionException e) {
+                    //simply ignore this
+                    logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
+                }
+            }
+
+            //first conduct upgrade units actions
+            for (Action action : upgradeUnitsCacheActions) {
+                try {
+                    String result = action.apply(this.board);
+                    logger.append(result);
+                } catch (InvalidActionException e) {
+                    //simply ignore this
+                    logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
+                }
+            }
+
+            //then conduct move actions
             for (Action action : moveCacheActions) {
                 try {
                     String result = action.apply(this.board);
@@ -250,6 +278,7 @@ public class GameController {
                     logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
                 }
             }
+
             //grow the territories owned by players
             String growResult = this.board.territoryGrow();
 

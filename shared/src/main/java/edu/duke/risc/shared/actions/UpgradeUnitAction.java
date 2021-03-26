@@ -110,7 +110,7 @@ public class UpgradeUnitAction extends AbstractAction {
                 .append(" conducted by player ").append(playerId)
                 .append(", at territory ").append(destinationId)
                 .append(", from type ").append(unitType)
-                .append(", to type").append(nextUnit)
+                .append(", to type ").append(nextUnit)
                 .append(", with number ").append(number)
                 .append(" }").append(System.lineSeparator());
         return builder.toString();

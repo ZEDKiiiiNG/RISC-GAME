@@ -66,7 +66,7 @@ public class Territory implements Serializable {
      * @param territoryName territory name
      */
     public Territory(int territoryId, String territoryName) {
-        this(territoryId, territoryName, 1,1, 1);
+        this(territoryId, territoryName, 1, 1, 1);
     }
 
     /**
@@ -117,6 +117,24 @@ public class Territory implements Serializable {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
+        //print territory info
+        builder.append(territoryName).append("(").append(this.territoryId).append(")").append(System.lineSeparator());
+
+        //print resources
+        builder.append("    Productivity: ");
+        for (Map.Entry<ResourceType, Integer> entry : productivity.entrySet()) {
+            builder.append(entry.getValue()).append(" ").append(entry.getKey());
+        }
+        builder.append(System.lineSeparator());
+
+        //print neighbors
+        builder.append("    ").append(" (next to: ");
+        for (Integer adjacent : this.adjacentTerritories) {
+            builder.append(adjacent).append(", ");
+        }
+        builder.append(")").append(System.lineSeparator());
+
+        //print units in that territory
         if (this.isEmptyTerritory()) {
             builder.append("No Units ");
         } else {
@@ -125,12 +143,7 @@ public class Territory implements Serializable {
                 builder.append(mapUnit.getValue()).append(" ").append(mapUnit.getKey()).append(" ");
             }
         }
-        builder.append("in ").append(this.territoryName)
-                .append("(").append(this.territoryId).append(")").append(" (next to: ");
-        for (Integer adjacent : this.adjacentTerritories) {
-            builder.append(adjacent).append(", ");
-        }
-        builder.append(")");
+
         //virtual units for clients
         for (Map.Entry<UnitType, Integer> mapUnit : this.virtualUnitsMap.entrySet()) {
             builder.append("(Ready to attack units: ")
@@ -254,4 +267,7 @@ public class Territory implements Serializable {
         isValid = valid;
     }
 
+    public Map<ResourceType, Integer> getProductivity() {
+        return productivity;
+    }
 }

@@ -19,37 +19,37 @@ public enum UnitType implements Serializable {
     /**
      * soldier with 0 bonus, requires 3 resources to upgrade into INFANTRY
      */
-    SOLDIER("(S)oldiers(0)", 0, 3),
+    SOLDIER("(S)oldiers(I)", 0, 3),
 
     /**
      * INFANTRY with 1 bonus, requires 8 resources to upgrade into CAVALRY
      */
-    INFANTRY("(I)fantry(1)", 1, 8),
+    INFANTRY("(I)fantry(II)", 1, 8),
 
     /**
      * INFANTRY with 3 bonus, requires 19 resources to upgrade into KNIGHT
      */
-    CAVALRY("(C)avalry(2)", 3, 19),
+    CAVALRY("(C)avalry(III)", 3, 19),
 
     /**
      * INFANTRY with 5 bonus, requires 25 resources to upgrade into ROOK
      */
-    KNIGHT("(K)night(3)", 5, 25),
+    KNIGHT("(K)night(IV)", 5, 25),
 
     /**
      * INFANTRY with 8 bonus, requires 35 resources to upgrade into QUEEN
      */
-    ROOK("(R)ook(4)", 8, 35),
+    ROOK("(R)ook(V)", 8, 35),
 
     /**
      * INFANTRY with 11 bonus, requires 50 resources to upgrade into MASTER
      */
-    QUEEN("(Q)ueen(5)", 11, 50),
+    QUEEN("(Q)ueen(VI)", 11, 50),
 
     /**
      * INFANTRY with 15 bonus, the highest level of units
      */
-    MASTER("(M)aster(6)", 15, Integer.MAX_VALUE);
+    MASTER("(M)aster(VII)", 15, Integer.MAX_VALUE);
 
     /**
      * String representation of the unit type

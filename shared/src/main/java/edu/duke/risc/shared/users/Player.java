@@ -196,7 +196,7 @@ public class Player implements GameUser, Serializable {
      * @param diff     either add or subtract
      */
     public void updateInitUnitMap(UnitType unitType, Integer diff) {
-        this.updateUnitsMap(this.initUnitsMap, unitType, diff);
+        this.updateMap(this.initUnitsMap, unitType, diff);
     }
 
     /**
@@ -206,7 +206,17 @@ public class Player implements GameUser, Serializable {
      * @param diff     diff
      */
     public void updateTotalUnitMap(UnitType unitType, Integer diff) {
-        this.updateUnitsMap(this.totalUnitsMap, unitType, diff);
+        this.updateMap(this.totalUnitsMap, unitType, diff);
+    }
+
+    /**
+     * updateTotalUnitMap
+     *
+     * @param resourceType unitType
+     * @param diff         diff
+     */
+    public void updateResourceMap(ResourceType resourceType, Integer diff) {
+        this.updateMap(this.resources, resourceType, diff);
     }
 
     /**
@@ -226,7 +236,7 @@ public class Player implements GameUser, Serializable {
      * @param unitType unitType
      * @param diff     either add or subtract
      */
-    private void updateUnitsMap(Map<UnitType, Integer> unitsMap, UnitType unitType, Integer diff) {
+    private <T> void updateMap(Map<T, Integer> unitsMap, T unitType, Integer diff) {
         assert unitsMap != null;
         if (unitsMap.containsKey(unitType)) {
             int originVal = unitsMap.get(unitType);
@@ -428,7 +438,7 @@ public class Player implements GameUser, Serializable {
 
         for (Map.Entry<ResourceType, Integer> entry : required.entrySet()) {
             useResources(entry.getKey(), entry.getValue());
-            builder.append(entry.getValue()).append(entry.getKey());
+            builder.append(entry.getValue()).append(" ").append(entry.getKey());
         }
         builder.append(" }").append(System.lineSeparator());
         return builder.toString();
@@ -451,6 +461,5 @@ public class Player implements GameUser, Serializable {
     public boolean isAlreadyUpgradeTechInTurn() {
         return this.virtualTechnology != this.technology;
     }
-
 
 }

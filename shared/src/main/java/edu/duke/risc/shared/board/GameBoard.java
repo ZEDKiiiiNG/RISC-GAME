@@ -1,5 +1,6 @@
 package edu.duke.risc.shared.board;
 
+import edu.duke.risc.shared.commons.ResourceType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.users.Player;
 
@@ -148,19 +149,23 @@ public class GameBoard implements Serializable {
                 UnitType unitType = UnitType.SOLDIER;
                 territory.updateUnitsMap(unitType, 1);
                 player.updateTotalUnitMap(unitType, 1);
+                //increase resources of the player based on their territories
+                for (Map.Entry<ResourceType, Integer> entry : territory.getProductivity().entrySet()) {
+                    player.updateResourceMap(entry.getKey(), entry.getValue());
+                }
             }
         }
-        builder.append("Increment territories by 1");
+        builder.append("Increment units and resources at the end of the turn");
         return builder.toString();
     }
 
     /**
      * Pretend to move certain number of units from one place to another, only for the client-side pre-check.
      *
-     * @param playerId id of the player
+     * @param playerId          id of the player
      * @param sourceTerritoryId id of the source territory
-     * @param unitType unit type
-     * @param number number of the units
+     * @param unitType          unit type
+     * @param number            number of the units
      */
     public void playerMoveFromTerritory(int playerId, int sourceTerritoryId, UnitType unitType, int number) {
         Territory sourceTerritory = this.getTerritories().get(sourceTerritoryId);
@@ -268,6 +273,7 @@ public class GameBoard implements Serializable {
 
     /**
      * isGameOver
+     *
      * @return isGameOver
      */
     public boolean isGameOver() {
@@ -276,6 +282,7 @@ public class GameBoard implements Serializable {
 
     /**
      * Get the map the players
+     *
      * @return player map
      */
     public Map<Integer, Player> getPlayers() {
@@ -291,6 +298,7 @@ public class GameBoard implements Serializable {
 
     /**
      * getTerritories
+     *
      * @return getTerritories
      */
     public Map<Integer, Territory> getTerritories() {
@@ -299,6 +307,7 @@ public class GameBoard implements Serializable {
 
     /**
      * getUnitTypeMapper
+     *
      * @return getUnitTypeMapper
      */
     public Map<String, UnitType> getUnitTypeMapper() {
