@@ -267,6 +267,14 @@ public class Territory implements Serializable {
         isValid = valid;
     }
 
+    public boolean isValid() {
+        return isValid;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
     public Map<ResourceType, Integer> getProductivity() {
         return productivity;
     }

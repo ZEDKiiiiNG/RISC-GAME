@@ -3,6 +3,7 @@ package edu.duke.risc.shared.actions;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.board.Territory;
 import edu.duke.risc.shared.commons.ActionType;
+import edu.duke.risc.shared.commons.ResourceType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
 import edu.duke.risc.shared.users.Player;
@@ -64,9 +65,17 @@ public class MoveAction extends AbstractSourceAction {
             return "The source territory does not have enough unit number: "
                     + sourceTerritory.getUnitsMap().get(unitType) + " < " + number;
         }
-        if (!board.isReachable(sourceTerritoryId, destinationId, playerId)) {
+        int moveCost;
+        if ((moveCost = board.calculateMoveCost(sourceTerritoryId, destinationId, playerId)) == Integer.MAX_VALUE) {
             return "The destination territory is not reachable";
         }
+
+        //whether current player has enough resource to move units
+        String error;
+        if ((error = player.hasEnoughResources(ResourceType.FOOD, moveCost)) != null){
+            return error;
+        }
+
         return null;
     }
 
@@ -78,6 +87,12 @@ public class MoveAction extends AbstractSourceAction {
             throw new InvalidActionException(error);
         }
         Player player = board.getPlayers().get(super.playerId);
+
+        //update resource map
+        int moveCostPerUnit = board.calculateMoveCost(sourceTerritoryId, destinationId, playerId);
+        int totalCost = moveCostPerUnit * number;
+        player.updateResourceMap(ResourceType.FOOD, -totalCost);
+
         //update source territory units, if number reduced to 0, this territory should not be
         //owned by player anymore -- remove from owned territory
         Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
@@ -85,7 +100,7 @@ public class MoveAction extends AbstractSourceAction {
         //update destination territory
         Territory desTerritory = board.getTerritories().get(destinationId);
         desTerritory.updateUnitsMap(unitType, number);
-        builder.append("SUCCESS: ").append(this.toString());
+        builder.append("SUCCESS: ").append(printInfo(totalCost));
         return builder.toString();
     }
 
@@ -94,8 +109,7 @@ public class MoveAction extends AbstractSourceAction {
         return this.apply(board);
     }
 
-    @Override
-    public String toString() {
+    public String printInfo(int costs) {
         StringBuilder builder = new StringBuilder();
         builder.append("MOVE ACTION { ")
                 .append(" conducted by player ").append(playerId)
@@ -103,6 +117,7 @@ public class MoveAction extends AbstractSourceAction {
                 .append(", to ").append(destinationId)
                 .append(", unit type ").append(unitType)
                 .append(", number of units ").append(number)
+                .append(", costs ").append(costs).append(" ").append(ResourceType.FOOD)
                 .append(" }").append(System.lineSeparator());
         return builder.toString();
     }
