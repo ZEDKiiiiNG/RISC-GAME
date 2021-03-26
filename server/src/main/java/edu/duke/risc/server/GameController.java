@@ -45,7 +45,7 @@ public class GameController {
     /**
      * The current server is regarded as the root
      */
-    private GameUser root;
+    private final GameUser root;
 
     /**
      * Initial colors
@@ -60,17 +60,17 @@ public class GameController {
     /**
      * Player connections
      */
-    private Map<Player, SocketCommunicator> playerConnections;
+    private final Map<Player, SocketCommunicator> playerConnections;
 
     /**
      * Cyclic barrier
      */
-    private ThreadBarrier barrier;
+    private final ThreadBarrier barrier;
 
     /**
      * The buffered reader who reads input from the console
      */
-    private BufferedReader reader;
+    private final BufferedReader reader;
 
     /**
      * Maximum number of players
@@ -183,6 +183,8 @@ public class GameController {
             int numberOfRequestRequired = this.board.getShouldWaitPlayers();
             List<Action> moveCacheActions = new ArrayList<>();
             List<Action> attackCacheActions = new ArrayList<>();
+            List<Action> upgradeUnitsCacheActions = new ArrayList<>();
+            List<Action> upgradeTechCacheActions = new ArrayList<>();
             StringBuilder logger = getLogger();
             while (numberOfRequestRequired > 0) {
                 PayloadObject request = this.barrier.consumeRequest();
@@ -197,17 +199,46 @@ public class GameController {
                     sendBackErrorMessage(request, "Invalid request type");
                     continue;
                 }
-                List<Action> moveActions = (List<Action>) request.getContents().get(Configurations.REQUEST_MOVE_ACTIONS);
+                List<Action> moveActions =
+                        (List<Action>) request.getContents().get(Configurations.REQUEST_MOVE_ACTIONS);
                 List<Action> attackActions =
                         (List<Action>) request.getContents().get(Configurations.REQUEST_ATTACK_ACTIONS);
+                List<Action> upgradeUnitsAction =
+                        (List<Action>) request.getContents().get(Configurations.REQUEST_UPGRADE_UNITS_ACTIONS);
+                List<Action> upgradeTechAction =
+                        (List<Action>) request.getContents().get(Configurations.REQUEST_UPGRADE_TECH_ACTIONS);
                 //validate success, response the client with success message and continues the next request
                 moveCacheActions.addAll(moveActions);
                 attackCacheActions.addAll(attackActions);
+                upgradeUnitsCacheActions.addAll(upgradeUnitsAction);
+                upgradeTechCacheActions.addAll(upgradeTechAction);
                 numberOfRequestRequired -= 1;
             }
             //with all requests received, process them simultaneously
 
-            //first conduct move actions
+            //conduct upgrade tech actions
+            for (Action action : upgradeTechCacheActions) {
+                try {
+                    String result = action.apply(this.board);
+                    logger.append(result);
+                } catch (InvalidActionException e) {
+                    //simply ignore this
+                    logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
+                }
+            }
+
+            //first conduct upgrade units actions
+            for (Action action : upgradeUnitsCacheActions) {
+                try {
+                    String result = action.apply(this.board);
+                    logger.append(result);
+                } catch (InvalidActionException e) {
+                    //simply ignore this
+                    logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
+                }
+            }
+
+            //then conduct move actions
             for (Action action : moveCacheActions) {
                 try {
                     String result = action.apply(this.board);
@@ -247,6 +278,7 @@ public class GameController {
                     logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
                 }
             }
+
             //grow the territories owned by players
             String growResult = this.board.territoryGrow();
 

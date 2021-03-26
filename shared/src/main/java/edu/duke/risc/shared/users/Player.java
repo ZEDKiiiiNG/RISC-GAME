@@ -1,8 +1,11 @@
 package edu.duke.risc.shared.users;
 
 import edu.duke.risc.shared.Configurations;
+import edu.duke.risc.shared.commons.ResourceType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.commons.UserColor;
+import edu.duke.risc.shared.exceptions.InvalidInputException;
+import edu.duke.risc.shared.util.TechHelper;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -22,17 +25,17 @@ public class Player implements GameUser, Serializable {
     /**
      * Unique user identifier
      */
-    private int userId;
+    private final int userId;
 
     /**
      * Total unitsMap, key for unit type, value for counts
      */
-    private Map<UnitType, Integer> totalUnitsMap;
+    private final Map<UnitType, Integer> totalUnitsMap;
 
     /**
      * Initial unitsMap, key for unit type, value for counts
      */
-    private Map<UnitType, Integer> initUnitsMap;
+    private final Map<UnitType, Integer> initUnitsMap;
 
     /**
      * Owned territories.
@@ -42,7 +45,7 @@ public class Player implements GameUser, Serializable {
     /**
      * Assigned Color
      */
-    private UserColor color;
+    private final UserColor color;
 
     /**
      * Player status
@@ -50,9 +53,25 @@ public class Player implements GameUser, Serializable {
     private PlayerStatus status;
 
     /**
+     * The resources that this player owns
+     */
+    private final Map<ResourceType, Integer> resources;
+
+    /**
+     * The technology level that this player owns
+     */
+    private int technology = Configurations.DEFAULT_TECHNOLOGY_LEVEL;
+
+    /**
+     * The virtual technology level means that player wants to upgrade
+     */
+    private int virtualTechnology = Configurations.DEFAULT_TECHNOLOGY_LEVEL;
+
+    /**
      * Constructor
+     *
      * @param userId id of the user
-     * @param color color of the user
+     * @param color  color of the user
      */
     public Player(int userId, UserColor color) {
         //init units map
@@ -63,6 +82,11 @@ public class Player implements GameUser, Serializable {
         this.userId = userId;
         this.color = color;
         this.totalUnitsMap = new HashMap<>();
+
+        //initialize resources
+        this.resources = new HashMap<>();
+        resources.put(ResourceType.FOOD, Configurations.DEFAULT_FOOD_RESOURCE);
+        resources.put(ResourceType.TECH, Configurations.DEFAULT_TECH_RESOURCE);
     }
 
     /**
@@ -74,6 +98,39 @@ public class Player implements GameUser, Serializable {
         StringBuilder builder = new StringBuilder();
         for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
             builder.append(entry.getKey()).append(" : ").append(entry.getValue());
+        }
+        return builder.toString();
+    }
+
+    /**
+     * Get player information: units owned, tech, resources
+     *
+     * @return player information in the string format
+     */
+    public String getPlayerInfo() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("-------------").append(System.lineSeparator());
+
+        //color info
+        builder.append("You are the ").append(this.color).append(" player").append(System.lineSeparator());
+
+        //tech, resources
+        builder.append("You have ");
+        for (Map.Entry<ResourceType, Integer> entry : resources.entrySet()) {
+            builder.append(entry.getValue()).append(" ").append(entry.getKey()).append(", ");
+        }
+        builder.append(" and is currently in tech level ").append(this.technology);
+        if (virtualTechnology != technology) {
+            builder.append(" -> (").append(virtualTechnology).append(")");
+        }
+        builder.append(System.lineSeparator());
+
+        //print total units
+        builder.append("You have in total: ").append(System.lineSeparator());
+        for (Map.Entry<UnitType, Integer> unitTypeIntegerEntry : this.totalUnitsMap.entrySet()) {
+            builder.append(unitTypeIntegerEntry.getKey()).append(" : ")
+                    .append(unitTypeIntegerEntry.getValue())
+                    .append(System.lineSeparator());
         }
         return builder.toString();
     }
@@ -116,6 +173,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * Get the user id
+     *
      * @return user id
      */
     public int getUserId() {
@@ -124,6 +182,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * getTotalUnitsMap
+     *
      * @return getTotalUnitsMap
      */
     public Map<UnitType, Integer> getTotalUnitsMap() {
@@ -134,24 +193,35 @@ public class Player implements GameUser, Serializable {
      * updateInitUnitMap
      *
      * @param unitType unitType
-     * @param diff either add or subtract
+     * @param diff     either add or subtract
      */
     public void updateInitUnitMap(UnitType unitType, Integer diff) {
-        this.updateUnitsMap(this.initUnitsMap, unitType, diff);
+        this.updateMap(this.initUnitsMap, unitType, diff);
     }
 
     /**
      * updateTotalUnitMap
      *
-     * @param unitType
-     * @param diff
+     * @param unitType unitType
+     * @param diff     diff
      */
     public void updateTotalUnitMap(UnitType unitType, Integer diff) {
-        this.updateUnitsMap(this.totalUnitsMap, unitType, diff);
+        this.updateMap(this.totalUnitsMap, unitType, diff);
+    }
+
+    /**
+     * updateTotalUnitMap
+     *
+     * @param resourceType unitType
+     * @param diff         diff
+     */
+    public void updateResourceMap(ResourceType resourceType, Integer diff) {
+        this.updateMap(this.resources, resourceType, diff);
     }
 
     /**
      * Whether this user owns this territory
+     *
      * @param territoryId territory id
      * @return Whether this user owns this territory
      */
@@ -161,11 +231,12 @@ public class Player implements GameUser, Serializable {
 
     /**
      * updateUnitsMap
+     *
      * @param unitsMap unitsMap
      * @param unitType unitType
-     * @param diff either add or subtract
+     * @param diff     either add or subtract
      */
-    private void updateUnitsMap(Map<UnitType, Integer> unitsMap, UnitType unitType, Integer diff) {
+    private <T> void updateMap(Map<T, Integer> unitsMap, T unitType, Integer diff) {
         assert unitsMap != null;
         if (unitsMap.containsKey(unitType)) {
             int originVal = unitsMap.get(unitType);
@@ -187,6 +258,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * removeOwnedTerritory
+     *
      * @param territoryId territory id
      */
     public void removeOwnedTerritory(Integer territoryId) {
@@ -195,6 +267,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * addOwnedTerritory
+     *
      * @param territoryId territory id
      */
     public void addOwnedTerritory(Integer territoryId) {
@@ -203,6 +276,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * getOwnedTerritories
+     *
      * @return getOwnedTerritories
      */
     public Set<Integer> getOwnedTerritories() {
@@ -211,6 +285,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * Get user color
+     *
      * @return user's color
      */
     public UserColor getColor() {
@@ -219,6 +294,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * setOwnedTerritories
+     *
      * @param ownedTerritories setOwnedTerritories
      */
     public void setOwnedTerritories(Set<Integer> ownedTerritories) {
@@ -227,6 +303,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * getInitUnitsMap
+     *
      * @return getInitUnitsMap
      */
     public Map<UnitType, Integer> getInitUnitsMap() {
@@ -242,6 +319,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * Judge whether this player lost
+     *
      * @return whether this player lost
      */
     public boolean isLost() {
@@ -257,9 +335,131 @@ public class Player implements GameUser, Serializable {
 
     /**
      * Judge whether this player wins
+     *
      * @return whether this player wins
      */
     public boolean isWin() {
         return this.status == PlayerStatus.WIN;
     }
+
+    /**
+     * Whether the current players owns enough resources to make move/upgrade/attack action
+     *
+     * @param required resources required
+     * @return boolean
+     */
+    public String hasEnoughResources(ResourceType resourceType, int required) {
+        if (resources.containsKey(resourceType) && resources.get(resourceType) >= required) {
+            return null;
+        } else {
+            return "The player does not have enough " + resourceType + " resources: "
+                    + getResources(resourceType) + " < " + required;
+        }
+    }
+
+    /**
+     * Use certain number of resources
+     *
+     * @param used resources used
+     */
+    public void useResources(ResourceType resourceType, int used) {
+        assert hasEnoughResources(resourceType, used) == null;
+        this.resources.put(resourceType, resources.get(resourceType) - used);
+    }
+
+    /**
+     * hasEnoughTechLevel
+     *
+     * @param requiredTech requiredTech
+     * @return hasEnoughTechLevel
+     */
+    public String hasEnoughTechLevel(int requiredTech) {
+        if (this.technology >= requiredTech) {
+            return null;
+        } else {
+            return "Not enough tech level: " + technology + " < " + requiredTech;
+        }
+    }
+
+    /**
+     * getResources
+     *
+     * @return getResources
+     */
+    public int getResources(ResourceType resourceType) {
+        return resources.get(resourceType);
+    }
+
+    /**
+     * hasEnoughResourcesForTechUpgrade
+     *
+     * @return null if success, error message if failed
+     */
+    public String hasEnoughResourcesForTechUpgrade() {
+        try {
+            Map<ResourceType, Integer> required = TechHelper.getRequiredForTechUpgrade(technology);
+            for (Map.Entry<ResourceType, Integer> entry : required.entrySet()) {
+                String error;
+                if ((error = hasEnoughResources(entry.getKey(), entry.getValue())) != null) {
+                    return error;
+                }
+            }
+            return null;
+        } catch (InvalidInputException e) {
+            return e.getMessage();
+        }
+    }
+
+    /**
+     * @param isReal client-side set to false, server-side set to true
+     * @return null if success, error message if failed
+     */
+    public String upgradeTechLevel(boolean isReal) {
+        assert hasEnoughResourcesForTechUpgrade() == null;
+        int nextTech = TechHelper.getNextTechLevel(technology);
+
+        Map<ResourceType, Integer> required = null;
+        try {
+            required = TechHelper.getRequiredForTechUpgrade(technology);
+        } catch (InvalidInputException e) {
+            return e.getMessage();
+        }
+        StringBuilder builder = new StringBuilder();
+        builder.append("UPGRADE TECH ACTION { ")
+                .append(" conducted by player ").append(userId)
+                .append(", from tech ").append(technology)
+                .append(", to tech ").append(nextTech).append(", used ");
+
+        //upgrade action
+        if (isReal) {
+            this.technology = nextTech;
+        }
+        this.virtualTechnology = nextTech;
+
+        for (Map.Entry<ResourceType, Integer> entry : required.entrySet()) {
+            useResources(entry.getKey(), entry.getValue());
+            builder.append(entry.getValue()).append(" ").append(entry.getKey());
+        }
+        builder.append(" }").append(System.lineSeparator());
+        return builder.toString();
+    }
+
+    /**
+     * Whether the current player is at the top tech level
+     *
+     * @return Whether the current player is at the top tech level
+     */
+    public boolean isAtTopLevel() {
+        return this.technology == TechHelper.getTopTechLevel();
+    }
+
+    /**
+     * isAlreadyUpgradeTechInTurn
+     *
+     * @return isAlreadyUpgradeTechInTurn
+     */
+    public boolean isAlreadyUpgradeTechInTurn() {
+        return this.virtualTechnology != this.technology;
+    }
+
 }

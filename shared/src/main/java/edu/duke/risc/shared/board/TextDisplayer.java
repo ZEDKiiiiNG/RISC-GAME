@@ -1,5 +1,6 @@
 package edu.duke.risc.shared.board;
 
+import edu.duke.risc.shared.commons.ResourceType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.users.Player;
 
@@ -23,7 +24,6 @@ public class TextDisplayer implements Displayable {
             if (player.getOwnedTerritories().size() == 0) {
                 System.out.println("Not owned any territory, LOST");
             } else {
-                //todo display territory here, not in the toString
                 for (Integer territoryId : player.getOwnedTerritories()) {
                     //printing units
                     Territory territory = gameBoard.getTerritories().get(territoryId);
@@ -37,6 +37,29 @@ public class TextDisplayer implements Displayable {
 
     private String displaySingleTerritory(GameBoard gameBoard, Territory territory) {
         StringBuilder builder = new StringBuilder();
+
+        //print territory info
+        builder.append(territory.getTerritoryName()).append("(")
+                .append(territory.getTerritoryId()).append(")").append(System.lineSeparator());
+
+        //print resources
+        builder.append("    Productivity: ");
+        for (Map.Entry<ResourceType, Integer> entry : territory.getProductivity().entrySet()) {
+            builder.append(entry.getValue()).append(" ").append(entry.getKey()).append(" ");
+        }
+        builder.append(System.lineSeparator());
+
+        //print neighbors
+        builder.append("    Next to: ");
+        for (Integer adjacent : territory.getAdjacentTerritories()) {
+            Territory adjacentTerr = gameBoard.findTerritory(adjacent);
+            builder.append(adjacentTerr.getTerritoryName()).append("(")
+                    .append(adjacentTerr.getTerritoryId()).append("), ");
+        }
+        builder.append(System.lineSeparator());
+
+        //print units in that territory
+        builder.append("    Current Units: ");
         if (territory.isEmptyTerritory()) {
             builder.append("No Units ");
         } else {
@@ -45,14 +68,7 @@ public class TextDisplayer implements Displayable {
                 builder.append(mapUnit.getValue()).append(" ").append(mapUnit.getKey()).append(" ");
             }
         }
-        builder.append("in ").append(territory.getTerritoryName())
-                .append("(").append(territory.getTerritoryId()).append(")").append(" (next to: ");
-        for (Integer adjacent : territory.getAdjacentTerritories()) {
-            Territory adjacentTerr = gameBoard.findTerritory(adjacent);
-            builder.append(adjacentTerr.getTerritoryName()).append("(")
-                    .append(adjacentTerr.getTerritoryId()).append("), ");
-        }
-        builder.append(")");
+
         //virtual units for clients
         for (Map.Entry<UnitType, Integer> mapUnit : territory.getVirtualUnitsMap().entrySet()) {
             builder.append("(Ready to attack units: ")

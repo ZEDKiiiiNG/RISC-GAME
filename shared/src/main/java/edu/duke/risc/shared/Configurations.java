@@ -9,7 +9,9 @@ package edu.duke.risc.shared;
 public class Configurations {
 
     public static final int MAX_PLAYERS = 3;
-    //public static final int MAP_SIZE = 3;
+    public static final int DEFAULT_FOOD_RESOURCE = 50;
+    public static final int DEFAULT_TECH_RESOURCE = 50;
+    public static final int DEFAULT_TECHNOLOGY_LEVEL = 1;
 
     public static final int DEFAULT_SERVER_PORT = 8085;
 
@@ -26,5 +28,7 @@ public class Configurations {
     public static final String REQUEST_PLACEMENT_ACTIONS = "REQUEST_PLACEMENT_ACTIONS";
     public static final String REQUEST_MOVE_ACTIONS = "REQUEST_MOVE_ACTIONS";
     public static final String REQUEST_ATTACK_ACTIONS = "REQUEST_ATTACK_ACTIONS";
+    public static final String REQUEST_UPGRADE_UNITS_ACTIONS = "REQUEST_UPGRADE_UNITS_ACTIONS";
+    public static final String REQUEST_UPGRADE_TECH_ACTIONS = "REQUEST_UPGRADE_TECH_ACTIONS";
 
 }

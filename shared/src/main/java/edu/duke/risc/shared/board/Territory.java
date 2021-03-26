@@ -1,5 +1,6 @@
 package edu.duke.risc.shared.board;
 
+import edu.duke.risc.shared.commons.ResourceType;
 import edu.duke.risc.shared.commons.UnitType;
 
 import java.io.Serializable;
@@ -21,58 +22,92 @@ public class Territory implements Serializable {
     /**
      * Unique Territory identifier
      */
-    private int territoryId;
+    private final int territoryId;
 
     /**
      * Territory Name
      */
-    private String territoryName;
+    private final String territoryName;
 
     /**
      * Total unitsMap, key for unit type, value for counts
      */
-    private Map<UnitType, Integer> unitsMap;
+    private final Map<UnitType, Integer> unitsMap;
 
     /**
      * virtual unitsMap, only for client simulation of attack
      */
-    private Map<UnitType, Integer> virtualUnitsMap;
+    private final Map<UnitType, Integer> virtualUnitsMap;
 
     /**
      * Adjacent territories
      */
-    private Set<Integer> adjacentTerritories;
+    private final Set<Integer> adjacentTerritories;
+
+    /**
+     * We created a big world map, factory will invalidate some of them depends on number of players
+     */
+    private boolean isValid;
+
+    /**
+     * Number of resources this territory produces at the end of each turn
+     */
+    private final Map<ResourceType, Integer> productivity;
+
+    /**
+     * Cost of resources when moving units from this area
+     */
+    private final int size;
 
     /**
      * Constructor
      *
-     * @param territoryId territory id
+     * @param territoryId   territory id
      * @param territoryName territory name
      */
     public Territory(int territoryId, String territoryName) {
-        this(territoryId, territoryName, new HashMap<>(), new HashSet<>(), new HashMap<>());
+        this(territoryId, territoryName, 1, 1, 1);
     }
 
     /**
      * Constructor
      *
-     * @param territoryId territory id
+     * @param territoryId   territory id
      * @param territoryName territory name
-     * @param unitsMap units map
+     */
+    public Territory(int territoryId, String territoryName, int techProd, int foodProd, int size) {
+        this(territoryId, territoryName, new HashMap<>(), new HashSet<>(), new HashMap<>(),
+                false, techProd, foodProd, size);
+    }
+
+    /**
+     * Constructor
+     *
+     * @param territoryId         territory id
+     * @param territoryName       territory name
+     * @param unitsMap            units map
      * @param adjacentTerritories adjacentTerritories
-     * @param virtualUnitsMap virtualUnitsMap
+     * @param virtualUnitsMap     virtualUnitsMap
+     * @param isValid             is current territory valid or not
      */
     private Territory(int territoryId, String territoryName, Map<UnitType, Integer> unitsMap,
-                      Set<Integer> adjacentTerritories, Map<UnitType, Integer> virtualUnitsMap) {
+                      Set<Integer> adjacentTerritories, Map<UnitType, Integer> virtualUnitsMap,
+                      boolean isValid, int techProd, int foodProd, int size) {
         this.territoryId = territoryId;
         this.territoryName = territoryName;
         this.unitsMap = unitsMap;
         this.adjacentTerritories = adjacentTerritories;
         this.virtualUnitsMap = virtualUnitsMap;
+        this.isValid = isValid;
+        this.productivity = new HashMap<>();
+        productivity.put(ResourceType.FOOD, foodProd);
+        productivity.put(ResourceType.TECH, techProd);
+        this.size = size;
     }
 
     /**
      * Add neighbors to the territory, used in the factory
+     *
      * @param territories territories
      */
     public void addNeighbor(Integer... territories) {
@@ -82,6 +117,24 @@ public class Territory implements Serializable {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
+        //print territory info
+        builder.append(territoryName).append("(").append(this.territoryId).append(")").append(System.lineSeparator());
+
+        //print resources
+        builder.append("    Productivity: ");
+        for (Map.Entry<ResourceType, Integer> entry : productivity.entrySet()) {
+            builder.append(entry.getValue()).append(" ").append(entry.getKey());
+        }
+        builder.append(System.lineSeparator());
+
+        //print neighbors
+        builder.append("    ").append(" (next to: ");
+        for (Integer adjacent : this.adjacentTerritories) {
+            builder.append(adjacent).append(", ");
+        }
+        builder.append(")").append(System.lineSeparator());
+
+        //print units in that territory
         if (this.isEmptyTerritory()) {
             builder.append("No Units ");
         } else {
@@ -90,12 +143,7 @@ public class Territory implements Serializable {
                 builder.append(mapUnit.getValue()).append(" ").append(mapUnit.getKey()).append(" ");
             }
         }
-        builder.append("in ").append(this.territoryName)
-                .append("(").append(this.territoryId).append(")").append(" (next to: ");
-        for (Integer adjacent : this.adjacentTerritories) {
-            builder.append(adjacent).append(", ");
-        }
-        builder.append(")");
+
         //virtual units for clients
         for (Map.Entry<UnitType, Integer> mapUnit : this.virtualUnitsMap.entrySet()) {
             builder.append("(Ready to attack units: ")
@@ -106,6 +154,7 @@ public class Territory implements Serializable {
 
     /**
      * getBasicInfo
+     *
      * @return basic territory information in the string format
      */
     public String getBasicInfo() {
@@ -131,8 +180,9 @@ public class Territory implements Serializable {
 
     /**
      * Update virtual units map
+     *
      * @param unitType unitType
-     * @param diff difference, -1 for subtract 1,
+     * @param diff     difference, -1 for subtract 1,
      */
     public void updateVirtualUnitsMap(UnitType unitType, Integer diff) {
         this.generalUpdateUnitsMap(this.virtualUnitsMap, unitType, diff);
@@ -140,8 +190,9 @@ public class Territory implements Serializable {
 
     /**
      * Update units map
+     *
      * @param unitType unitType
-     * @param diff difference, -1 for subtract 1,
+     * @param diff     difference, -1 for subtract 1,
      */
     public void updateUnitsMap(UnitType unitType, Integer diff) {
         this.generalUpdateUnitsMap(this.unitsMap, unitType, diff);
@@ -151,7 +202,7 @@ public class Territory implements Serializable {
      * Update units map in this territory. If no more units like this, remove from map
      *
      * @param unitType unit type
-     * @param diff difference, -1 for subtract 1
+     * @param diff     difference, -1 for subtract 1
      */
     private void generalUpdateUnitsMap(Map<UnitType, Integer> unitsMap, UnitType unitType, Integer diff) {
         if (unitsMap.containsKey(unitType)) {
@@ -184,6 +235,7 @@ public class Territory implements Serializable {
 
     /**
      * Name of the territory
+     *
      * @return Name of the territory
      */
     public String getTerritoryName() {
@@ -192,6 +244,7 @@ public class Territory implements Serializable {
 
     /**
      * getUnitsMap
+     *
      * @return units map
      */
     public Map<UnitType, Integer> getUnitsMap() {
@@ -210,4 +263,11 @@ public class Territory implements Serializable {
         return virtualUnitsMap;
     }
 
+    public void setValid(boolean valid) {
+        isValid = valid;
+    }
+
+    public Map<ResourceType, Integer> getProductivity() {
+        return productivity;
+    }
 }

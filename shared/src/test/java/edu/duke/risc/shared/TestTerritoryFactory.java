@@ -1,11 +1,10 @@
 package edu.duke.risc.shared;
 
-import edu.duke.risc.shared.board.BasicTerritoryFactory;
+import edu.duke.risc.shared.board.WorldMapTerritoryFactory;
 import edu.duke.risc.shared.board.Territory;
 import edu.duke.risc.shared.board.TerritoryFactory;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -16,7 +15,7 @@ public class TestTerritoryFactory {
 
     @Test
     public void testFactory() {
-        TerritoryFactory factory = new BasicTerritoryFactory();
+        TerritoryFactory factory = new WorldMapTerritoryFactory();
         Map<Integer, Territory> territories = factory.makeTerritories(3);
         System.out.println();
     }

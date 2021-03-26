@@ -1,5 +1,6 @@
 package edu.duke.risc.shared.board;
 
+import edu.duke.risc.shared.commons.ResourceType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.users.Player;
 
@@ -21,12 +22,12 @@ public class GameBoard implements Serializable {
     /**
      * All territories
      */
-    private Map<Integer, Territory> territories;
+    private final Map<Integer, Territory> territories;
 
     /**
      * All players
      */
-    private Map<Integer, Player> players;
+    private final Map<Integer, Player> players;
 
     /**
      * The game stage
@@ -36,22 +37,22 @@ public class GameBoard implements Serializable {
     /**
      * Factory used to produce the whole map
      */
-    private TerritoryFactory territoryFactory;
+    private final TerritoryFactory territoryFactory;
 
     /**
      * unit type mapper
      */
-    private final Map<String, UnitType> unitTypeMapper = new HashMap<>();
+    private final Map<String, UnitType> unitTypeMapper = UnitType.getUnitTypeMapper();
 
     /**
      * The board displayer
      */
-    private Displayable displayer;
+    private final Displayable displayer;
 
     /**
      * max player, assigned at the beginning
      */
-    private int maxPlayer;
+    private final int maxPlayer;
 
     /**
      * The max number of players, the map will be generated according to this value
@@ -60,12 +61,11 @@ public class GameBoard implements Serializable {
      */
     public GameBoard(int playerNum) {
         this.maxPlayer = playerNum;
-        territoryFactory = new BasicTerritoryFactory();
+        territoryFactory = new WorldMapTerritoryFactory();
         territories = territoryFactory.makeTerritories(this.maxPlayer);
         players = new HashMap<>();
         gameStage = GameStage.WAITING_USERS;
         displayer = new TextDisplayer();
-        this.initUnitTypeMapping();
     }
 
     /**
@@ -103,7 +103,7 @@ public class GameBoard implements Serializable {
         Player player = this.players.get(playerId);
         for (Integer territoryId : player.getOwnedTerritories()) {
             Territory territory = this.territories.get(territoryId);
-            builder.append(territory.getTerritoryName() + " (" + territory.getTerritoryId() + ") ");
+            builder.append(territory.getTerritoryName()).append(" (").append(territory.getTerritoryId()).append(") ");
         }
         return builder.toString();
     }
@@ -137,14 +137,6 @@ public class GameBoard implements Serializable {
     }
 
     /**
-     * Initialize the unit type mapping
-     */
-    private void initUnitTypeMapping() {
-        this.unitTypeMapper.put("s", UnitType.SOLDIER);
-        this.unitTypeMapper.put("S", UnitType.SOLDIER);
-    }
-
-    /**
      * Grow the territory by 1.
      *
      * @return action log
@@ -157,19 +149,23 @@ public class GameBoard implements Serializable {
                 UnitType unitType = UnitType.SOLDIER;
                 territory.updateUnitsMap(unitType, 1);
                 player.updateTotalUnitMap(unitType, 1);
+                //increase resources of the player based on their territories
+                for (Map.Entry<ResourceType, Integer> entry : territory.getProductivity().entrySet()) {
+                    player.updateResourceMap(entry.getKey(), entry.getValue());
+                }
             }
         }
-        builder.append("Increment territories by 1");
+        builder.append("Increment units and resources at the end of the turn");
         return builder.toString();
     }
 
     /**
      * Pretend to move certain number of units from one place to another, only for the client-side pre-check.
      *
-     * @param playerId id of the player
+     * @param playerId          id of the player
      * @param sourceTerritoryId id of the source territory
-     * @param unitType unit type
-     * @param number number of the units
+     * @param unitType          unit type
+     * @param number            number of the units
      */
     public void playerMoveFromTerritory(int playerId, int sourceTerritoryId, UnitType unitType, int number) {
         Territory sourceTerritory = this.getTerritories().get(sourceTerritoryId);
@@ -244,19 +240,7 @@ public class GameBoard implements Serializable {
      * @return player information in the string format
      */
     public String getPlayerInfo(int playerId) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("-------------").append(System.lineSeparator());
-        Player player = this.findPlayer(playerId);
-
-        //print total units
-        builder.append("You have in total: ").append(System.lineSeparator());
-        for (Map.Entry<UnitType, Integer> unitTypeIntegerEntry : player.getTotalUnitsMap().entrySet()) {
-            builder.append(unitTypeIntegerEntry.getKey()).append(" : ")
-                    .append(unitTypeIntegerEntry.getValue())
-                    .append(System.lineSeparator());
-        }
-
-        return builder.toString();
+        return this.findPlayer(playerId).getPlayerInfo();
     }
 
     /**
@@ -289,6 +273,7 @@ public class GameBoard implements Serializable {
 
     /**
      * isGameOver
+     *
      * @return isGameOver
      */
     public boolean isGameOver() {
@@ -297,6 +282,7 @@ public class GameBoard implements Serializable {
 
     /**
      * Get the map the players
+     *
      * @return player map
      */
     public Map<Integer, Player> getPlayers() {
@@ -312,6 +298,7 @@ public class GameBoard implements Serializable {
 
     /**
      * getTerritories
+     *
      * @return getTerritories
      */
     public Map<Integer, Territory> getTerritories() {
@@ -320,6 +307,7 @@ public class GameBoard implements Serializable {
 
     /**
      * getUnitTypeMapper
+     *
      * @return getUnitTypeMapper
      */
     public Map<String, UnitType> getUnitTypeMapper() {
