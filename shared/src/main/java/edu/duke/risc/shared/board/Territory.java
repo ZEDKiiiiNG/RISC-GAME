@@ -1,5 +1,6 @@
 package edu.duke.risc.shared.board;
 
+import edu.duke.risc.shared.commons.ResourceType;
 import edu.duke.risc.shared.commons.UnitType;
 
 import java.io.Serializable;
@@ -51,7 +52,7 @@ public class Territory implements Serializable {
     /**
      * Number of resources this territory produces at the end of each turn
      */
-    private final int productivity;
+    private final Map<ResourceType, Integer> productivity;
 
     /**
      * Cost of resources when moving units from this area
@@ -61,49 +62,52 @@ public class Territory implements Serializable {
     /**
      * Constructor
      *
-     * @param territoryId territory id
+     * @param territoryId   territory id
      * @param territoryName territory name
      */
     public Territory(int territoryId, String territoryName) {
-        this(territoryId, territoryName, 1, 1);
+        this(territoryId, territoryName, 1,1, 1);
     }
 
     /**
      * Constructor
      *
-     * @param territoryId territory id
+     * @param territoryId   territory id
      * @param territoryName territory name
      */
-    public Territory(int territoryId, String territoryName, int productivity, int size) {
+    public Territory(int territoryId, String territoryName, int techProd, int foodProd, int size) {
         this(territoryId, territoryName, new HashMap<>(), new HashSet<>(), new HashMap<>(),
-                false, productivity, size);
+                false, techProd, foodProd, size);
     }
 
     /**
      * Constructor
      *
-     * @param territoryId territory id
-     * @param territoryName territory name
-     * @param unitsMap units map
+     * @param territoryId         territory id
+     * @param territoryName       territory name
+     * @param unitsMap            units map
      * @param adjacentTerritories adjacentTerritories
-     * @param virtualUnitsMap virtualUnitsMap
-     * @param isValid is current territory valid or not
+     * @param virtualUnitsMap     virtualUnitsMap
+     * @param isValid             is current territory valid or not
      */
     private Territory(int territoryId, String territoryName, Map<UnitType, Integer> unitsMap,
                       Set<Integer> adjacentTerritories, Map<UnitType, Integer> virtualUnitsMap,
-                      boolean isValid, int productivity, int size) {
+                      boolean isValid, int techProd, int foodProd, int size) {
         this.territoryId = territoryId;
         this.territoryName = territoryName;
         this.unitsMap = unitsMap;
         this.adjacentTerritories = adjacentTerritories;
         this.virtualUnitsMap = virtualUnitsMap;
         this.isValid = isValid;
-        this.productivity = productivity;
+        this.productivity = new HashMap<>();
+        productivity.put(ResourceType.FOOD, foodProd);
+        productivity.put(ResourceType.TECH, techProd);
         this.size = size;
     }
 
     /**
      * Add neighbors to the territory, used in the factory
+     *
      * @param territories territories
      */
     public void addNeighbor(Integer... territories) {
@@ -137,6 +141,7 @@ public class Territory implements Serializable {
 
     /**
      * getBasicInfo
+     *
      * @return basic territory information in the string format
      */
     public String getBasicInfo() {
@@ -162,8 +167,9 @@ public class Territory implements Serializable {
 
     /**
      * Update virtual units map
+     *
      * @param unitType unitType
-     * @param diff difference, -1 for subtract 1,
+     * @param diff     difference, -1 for subtract 1,
      */
     public void updateVirtualUnitsMap(UnitType unitType, Integer diff) {
         this.generalUpdateUnitsMap(this.virtualUnitsMap, unitType, diff);
@@ -171,8 +177,9 @@ public class Territory implements Serializable {
 
     /**
      * Update units map
+     *
      * @param unitType unitType
-     * @param diff difference, -1 for subtract 1,
+     * @param diff     difference, -1 for subtract 1,
      */
     public void updateUnitsMap(UnitType unitType, Integer diff) {
         this.generalUpdateUnitsMap(this.unitsMap, unitType, diff);
@@ -182,7 +189,7 @@ public class Territory implements Serializable {
      * Update units map in this territory. If no more units like this, remove from map
      *
      * @param unitType unit type
-     * @param diff difference, -1 for subtract 1
+     * @param diff     difference, -1 for subtract 1
      */
     private void generalUpdateUnitsMap(Map<UnitType, Integer> unitsMap, UnitType unitType, Integer diff) {
         if (unitsMap.containsKey(unitType)) {
@@ -215,6 +222,7 @@ public class Territory implements Serializable {
 
     /**
      * Name of the territory
+     *
      * @return Name of the territory
      */
     public String getTerritoryName() {
@@ -223,6 +231,7 @@ public class Territory implements Serializable {
 
     /**
      * getUnitsMap
+     *
      * @return units map
      */
     public Map<UnitType, Integer> getUnitsMap() {
@@ -245,15 +254,4 @@ public class Territory implements Serializable {
         isValid = valid;
     }
 
-    public boolean isValid() {
-        return isValid;
-    }
-
-    public int getProductivity() {
-        return productivity;
-    }
-
-    public int getSize() {
-        return size;
-    }
 }

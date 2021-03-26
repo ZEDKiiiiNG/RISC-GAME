@@ -42,16 +42,16 @@ public class WorldMapTerritoryFactory implements TerritoryFactory {
      */
     private Map<Integer, Territory> createWholeUsMap() {
         Map<Integer, Territory> result = new HashMap<>(20);
-        Territory utah = new Territory(0, "Utah", 30, 5);
-        Territory nevada = new Territory(1, "Nevada", 30, 5);
-        Territory idaho = new Territory(2, "Idaho", 25, 4);
-        Territory wyoming = new Territory(3, "Wyoming", 35, 6);
-        Territory colorado = new Territory(4, "Colorado", 20, 3);
-        Territory newMexico = new Territory(5, "New Mexico", 40, 7);
-        Territory arizona = new Territory(6, "Arizona", 45, 8);
-        Territory california = new Territory(7, "California", 15, 2);
-        Territory oregon = new Territory(8, "Oregon", 10, 1);
-        Territory washington = new Territory(9, "Washington", 50, 9);
+        Territory utah = new Territory(0, "Utah", 30, 30, 5);
+        Territory nevada = new Territory(1, "Nevada", 30, 30, 5);
+        Territory idaho = new Territory(2, "Idaho", 25, 25, 4);
+        Territory wyoming = new Territory(3, "Wyoming", 35, 35, 6);
+        Territory colorado = new Territory(4, "Colorado", 20, 20, 3);
+        Territory newMexico = new Territory(5, "New Mexico", 40, 40, 7);
+        Territory arizona = new Territory(6, "Arizona", 45, 45, 8);
+        Territory california = new Territory(7, "California", 15, 15, 2);
+        Territory oregon = new Territory(8, "Oregon", 10, 10, 1);
+        Territory washington = new Territory(9, "Washington", 50, 50, 9);
 
         //Nevada, Idaho, Wyoming, Colorado, New Mexico, Arizona
         utah.addNeighbor(1, 2, 3, 4, 5, 6);

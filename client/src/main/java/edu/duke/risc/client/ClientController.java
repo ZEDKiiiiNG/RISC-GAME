@@ -8,8 +8,10 @@ import edu.duke.risc.shared.actions.Action;
 import edu.duke.risc.shared.actions.AttackAction;
 import edu.duke.risc.shared.actions.MoveAction;
 import edu.duke.risc.shared.actions.PlacementAction;
+import edu.duke.risc.shared.actions.UpgradeTechAction;
 import edu.duke.risc.shared.actions.UpgradeUnitAction;
 import edu.duke.risc.shared.board.GameBoard;
+import edu.duke.risc.shared.commons.ActionType;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
@@ -192,6 +194,7 @@ public class ClientController {
             List<Action> moveActions = new ArrayList<>();
             List<Action> attackActions = new ArrayList<>();
             List<Action> upgradeUnitsActions = new ArrayList<>();
+            List<Action> upgradeTechActions = new ArrayList<>();
             while (!isFinished) {
                 this.gameBoard.displayBoard();
                 System.out.println(player.getPlayerInfo());
@@ -212,6 +215,13 @@ public class ClientController {
                     case "U":
                         conductUpgradeUnits(upgradeUnitsActions);
                         break;
+                    case "T":
+                        if (player.isAlreadyUpgradeTechInTurn()) {
+                            System.out.println("Already upgraded in this turn");
+                        } else {
+                            conductUpgradeTechLevel(upgradeTechActions);
+                        }
+                        break;
                     case "D":
                         System.out.println("You have finished your actions, submitting...");
                         isFinished = true;
@@ -226,9 +236,9 @@ public class ClientController {
             //constructing payload objects
             Map<String, Object> content = new HashMap<>(3);
             content.put(Configurations.REQUEST_MOVE_ACTIONS, moveActions);
-
             content.put(Configurations.REQUEST_ATTACK_ACTIONS, attackActions);
             content.put(Configurations.REQUEST_UPGRADE_UNITS_ACTIONS, upgradeUnitsActions);
+            content.put(Configurations.REQUEST_UPGRADE_TECH_ACTIONS, upgradeTechActions);
             PayloadObject request = new PayloadObject(this.playerId,
                     Configurations.MASTER_ID, PayloadType.REQUEST, content);
             try {
@@ -286,8 +296,24 @@ public class ClientController {
     /**
      * conductUpgradeUnits
      *
-     * @param actions    action
-     * @throws IOException
+     * @param actions action
+     */
+    private void conductUpgradeTechLevel(List<Action> actions) {
+        Action action;
+        try {
+            action = new UpgradeTechAction(playerId, ActionType.UPGRADE_TECH);
+            action.simulateApply(this.gameBoard);
+            actions.add(action);
+        } catch (InvalidActionException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * conductUpgradeUnits
+     *
+     * @param actions action
+     * @throws IOException IOException
      */
     private void conductUpgradeUnits(List<Action> actions) throws IOException {
         System.out.println("Please enter instruction in the following format: " +

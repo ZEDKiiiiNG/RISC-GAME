@@ -48,15 +48,20 @@ public class UpgradeUnitAction extends AbstractAction {
                     + targetTerritory.getUnitsMap().get(unitType) + " < " + number;
         }
         //not enough resources
+        String error;
         int resourceRequired = unitType.getUpgradeResources(number);
-        if (!player.hasEnoughResources(ResourceType.TECH, resourceRequired)){
-            return "The player does not have enough resources: " +
-                    player.getResources(ResourceType.TECH) + " < " + resourceRequired;
+        if ((error = player.hasEnoughResources(ResourceType.TECH, resourceRequired)) != null){
+            return error;
         }
 
         //already at top level, cannot upgrade
         if (unitType == UnitType.getTopLevel()){
             return "Already at " + unitType + " cannot upgrade more." ;
+        }
+
+        //not enough technology level
+        if ((error = player.hasEnoughTechLevel(UnitType.getTechRequiredToUpgrade(unitType))) != null){
+            return error;
         }
 
         return null;
@@ -84,8 +89,6 @@ public class UpgradeUnitAction extends AbstractAction {
         //update total units map
         player.updateTotalUnitMap(unitType, -number);
         player.updateTotalUnitMap(nextUnit, number);
-
-        //todo not enough tech level
 
         builder.append("SUCCESS: ").append(this.getActionInfo(nextUnit));
         return builder.toString();

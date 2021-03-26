@@ -29,5 +29,6 @@ public class Configurations {
     public static final String REQUEST_MOVE_ACTIONS = "REQUEST_MOVE_ACTIONS";
     public static final String REQUEST_ATTACK_ACTIONS = "REQUEST_ATTACK_ACTIONS";
     public static final String REQUEST_UPGRADE_UNITS_ACTIONS = "REQUEST_UPGRADE_UNITS_ACTIONS";
+    public static final String REQUEST_UPGRADE_TECH_ACTIONS = "REQUEST_UPGRADE_TECH_ACTIONS";
 
 }

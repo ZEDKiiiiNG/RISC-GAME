@@ -24,8 +24,13 @@ public enum ActionType implements Serializable {
     PLACEMENT,
 
     /**
-     *
+     * Upgrade units
      */
     UPGRADE_UNIT,
+
+    /**
+     * Upgrade tech
+     */
+    UPGRADE_TECH,
 
 }

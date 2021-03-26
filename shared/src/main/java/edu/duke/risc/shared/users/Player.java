@@ -4,6 +4,8 @@ import edu.duke.risc.shared.Configurations;
 import edu.duke.risc.shared.commons.ResourceType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.commons.UserColor;
+import edu.duke.risc.shared.exceptions.InvalidInputException;
+import edu.duke.risc.shared.util.TechHelper;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -53,12 +55,17 @@ public class Player implements GameUser, Serializable {
     /**
      * The resources that this player owns
      */
-    private Map<ResourceType, Integer> resources;
+    private final Map<ResourceType, Integer> resources;
 
     /**
      * The technology level that this player owns
      */
     private int technology = Configurations.DEFAULT_TECHNOLOGY_LEVEL;
+
+    /**
+     * The virtual technology level means that player wants to upgrade
+     */
+    private int virtualTechnology = Configurations.DEFAULT_TECHNOLOGY_LEVEL;
 
     /**
      * Constructor
@@ -108,9 +115,15 @@ public class Player implements GameUser, Serializable {
         builder.append("You are the ").append(this.color).append(" player").append(System.lineSeparator());
 
         //tech, resources
-        builder.append("You have ").append(this.resources).append(" food")
-                .append(" and is currently in tech level ").append(this.technology)
-                .append(System.lineSeparator());
+        builder.append("You have ");
+        for (Map.Entry<ResourceType, Integer> entry : resources.entrySet()) {
+            builder.append(entry.getValue()).append(" ").append(entry.getKey()).append(", ");
+        }
+        builder.append(" and is currently in tech level ").append(this.technology);
+        if (virtualTechnology != technology) {
+            builder.append(" -> (").append(virtualTechnology).append(")");
+        }
+        builder.append(System.lineSeparator());
 
         //print total units
         builder.append("You have in total: ").append(System.lineSeparator());
@@ -325,8 +338,13 @@ public class Player implements GameUser, Serializable {
      * @param required resources required
      * @return boolean
      */
-    public boolean hasEnoughResources(ResourceType resourceType, int required) {
-        return this.resources.get(resourceType) >= required;
+    public String hasEnoughResources(ResourceType resourceType, int required) {
+        if (resources.containsKey(resourceType) && resources.get(resourceType) >= required) {
+            return null;
+        } else {
+            return "The player does not have enough " + resourceType + " resources: "
+                    + getResources(resourceType) + " < " + required;
+        }
     }
 
     /**
@@ -335,8 +353,22 @@ public class Player implements GameUser, Serializable {
      * @param used resources used
      */
     public void useResources(ResourceType resourceType, int used) {
-        assert hasEnoughResources(resourceType, used);
+        assert hasEnoughResources(resourceType, used) == null;
         this.resources.put(resourceType, resources.get(resourceType) - used);
+    }
+
+    /**
+     * hasEnoughTechLevel
+     *
+     * @param requiredTech requiredTech
+     * @return hasEnoughTechLevel
+     */
+    public String hasEnoughTechLevel(int requiredTech) {
+        if (this.technology >= requiredTech) {
+            return null;
+        } else {
+            return "Not enough tech level: " + technology + " < " + requiredTech;
+        }
     }
 
     /**
@@ -347,4 +379,78 @@ public class Player implements GameUser, Serializable {
     public int getResources(ResourceType resourceType) {
         return resources.get(resourceType);
     }
+
+    /**
+     * hasEnoughResourcesForTechUpgrade
+     *
+     * @return null if success, error message if failed
+     */
+    public String hasEnoughResourcesForTechUpgrade() {
+        try {
+            Map<ResourceType, Integer> required = TechHelper.getRequiredForTechUpgrade(technology);
+            for (Map.Entry<ResourceType, Integer> entry : required.entrySet()) {
+                String error;
+                if ((error = hasEnoughResources(entry.getKey(), entry.getValue())) != null) {
+                    return error;
+                }
+            }
+            return null;
+        } catch (InvalidInputException e) {
+            return e.getMessage();
+        }
+    }
+
+    /**
+     * @param isReal client-side set to false, server-side set to true
+     * @return null if success, error message if failed
+     */
+    public String upgradeTechLevel(boolean isReal) {
+        assert hasEnoughResourcesForTechUpgrade() == null;
+        int nextTech = TechHelper.getNextTechLevel(technology);
+
+        Map<ResourceType, Integer> required = null;
+        try {
+            required = TechHelper.getRequiredForTechUpgrade(technology);
+        } catch (InvalidInputException e) {
+            return e.getMessage();
+        }
+        StringBuilder builder = new StringBuilder();
+        builder.append("UPGRADE TECH ACTION { ")
+                .append(" conducted by player ").append(userId)
+                .append(", from tech ").append(technology)
+                .append(", to tech ").append(nextTech).append(", used ");
+
+        //upgrade action
+        if (isReal) {
+            this.technology = nextTech;
+        }
+        this.virtualTechnology = nextTech;
+
+        for (Map.Entry<ResourceType, Integer> entry : required.entrySet()) {
+            useResources(entry.getKey(), entry.getValue());
+            builder.append(entry.getValue()).append(entry.getKey());
+        }
+        builder.append(" }").append(System.lineSeparator());
+        return builder.toString();
+    }
+
+    /**
+     * Whether the current player is at the top tech level
+     *
+     * @return Whether the current player is at the top tech level
+     */
+    public boolean isAtTopLevel() {
+        return this.technology == TechHelper.getTopTechLevel();
+    }
+
+    /**
+     * isAlreadyUpgradeTechInTurn
+     *
+     * @return isAlreadyUpgradeTechInTurn
+     */
+    public boolean isAlreadyUpgradeTechInTurn() {
+        return this.virtualTechnology != this.technology;
+    }
+
+
 }

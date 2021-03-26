@@ -9,11 +9,22 @@ public enum ResourceType {
     /**
      * technology resource
      */
-    TECH,
+    TECH("tech"),
 
     /**
      * food resource
      */
-    FOOD,
+    FOOD("food");
+
+    private final String name;
+
+    ResourceType(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 
 }
