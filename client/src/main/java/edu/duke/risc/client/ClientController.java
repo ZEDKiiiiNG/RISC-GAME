@@ -281,7 +281,7 @@ public class ClientController {
      */
     private void conductMoveOrAttack(List<Action> actions, int actionType) throws IOException {
         System.out.println("Please enter instruction in the following format: " +
-                "<sourceTerritoryId>,<destinationId>,<UnitType>,<amount>");
+                "<sourceTerritoryId>,<destinationId>;<UnitType1>,<amount1>;<UnitType2>,<amount2>");
         String moveInput = this.consoleReader.readLine();
         Action action;
         try {
