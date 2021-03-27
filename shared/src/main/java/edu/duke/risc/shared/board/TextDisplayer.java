@@ -74,13 +74,15 @@ public class TextDisplayer implements Displayable {
             }
         }
 
-        builder.append("(Ready to attack units: ");
-
-        //virtual units for clients
-        for (Map.Entry<UnitType, Integer> mapUnit : territory.getVirtualUnitsMap().entrySet()) {
-            builder.append(mapUnit.getValue()).append(" ").append(mapUnit.getKey());
+        if (!territory.getVirtualUnitsMap().isEmpty()){
+            builder.append("(Ready to attack units: ");
+            //virtual units for clients
+            for (Map.Entry<UnitType, Integer> mapUnit : territory.getVirtualUnitsMap().entrySet()) {
+                builder.append(mapUnit.getValue()).append(" ").append(mapUnit.getKey());
+            }
+            builder.append(")");
         }
-        builder.append(")");
+
         return builder.toString();
     }
 

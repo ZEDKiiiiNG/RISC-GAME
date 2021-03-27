@@ -7,7 +7,9 @@ import edu.duke.risc.shared.commons.ResourceType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
 import edu.duke.risc.shared.users.Player;
+import edu.duke.risc.shared.util.MapHelper;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -162,43 +164,62 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
                 .append(" from place ").append(sourceTerritory.getBasicInfo()).append(" to place ")
                 .append(desTerritory.getBasicInfo()).append(" }");
 
-//        if (!defenderPlayerId.equals(playerId)) {
-//            int attackerLost = 0, defenderLost = 0;
-//            while (!desTerritory.isEmptyTerritory()
-//                    && desTerritory.getUnitsMap().get(unitType) > 0 && attackerNumber != 0) {
-//                Integer random = randomWin();
-//                if (random == 0) {
-//                    //attacked(defender) win, attacker lost
-//                    attackerNumber -= 1;
-//                    attackerLost += 1;
-//                } else {
-//                    //attacker win, attacked(defender) lost
-//                    desTerritory.updateUnitsMap(unitType, -1);
-//                    defenderPlayer.updateTotalUnitMap(unitType, -1);
-//                    defenderLost += 1;
-//                }
-//            }
-//
-//            builder.append(" with results: attacker lost ").append(attackerLost)
-//                    .append(" defender lost ").append(defenderLost).append(" : ");
-//
-//            if (attackerNumber == 0) {
-//                //attacker lost
-//                attackerPlayer.updateTotalUnitMap(unitType, -number);
-//                builder.append(" Attacker lost.");
-//            } else {
-//                //attacked win, take the place
-//                desTerritory.updateUnitsMap(unitType, attackerNumber);
-//                attackerPlayer.updateTotalUnitMap(unitType, attackerNumber - number);
-//
-//                attackerPlayer.getOwnedTerritories().add(destinationId);
-//                defenderPlayer.removeOwnedTerritory(destinationId);
-//                builder.append("defender lost territory ").append(board.findTerritory(destinationId).getTerritoryName());
-//            }
-//        } else {
-//            desTerritory.updateUnitsMap(unitType, playerId);
-//            builder.append("Player ").append(playerId).append(" has already occupied this place");
-//        }
+        if (!defenderPlayerId.equals(playerId)) {
+            Map<UnitType, Integer> attackerLost = new HashMap<>(), defenderLost = new HashMap<>();
+            //attack phase
+            boolean isReversed = true;
+            while (!defenderMap.isEmpty() && !attackerMap.isEmpty()) {
+                UnitType attackerType, defenderType;
+                if (isReversed) {
+                    attackerType = UnitType.getHighestLevelUnitType(attackerMap);
+                    defenderType = UnitType.getLowestLevelUnitType(defenderMap);
+                } else {
+                    attackerType = UnitType.getLowestLevelUnitType(attackerMap);
+                    defenderType = UnitType.getHighestLevelUnitType(defenderMap);
+                }
+                System.out.println("Attacker: " + attackerType + " V.S Defender" + defenderType);
+                assert attackerType != null;
+                assert defenderType != null;
+                Integer random = randomWin(attackerType, defenderType);
+                if (random == 0) {
+                    //attacked(defender) win, attacker lost
+                    MapHelper.updateMap(attackerMap, attackerType, -1);
+                    attackerPlayer.updateTotalUnitMap(attackerType, -1);
+                    MapHelper.updateMap(attackerLost, attackerType, 1);
+                    System.out.println("Attacker lost 1 " + attackerType);
+                } else {
+                    //attacker win, attacked(defender) lost
+                    MapHelper.updateMap(defenderLost, defenderType, 1);
+                    desTerritory.updateUnitsMap(defenderType, -1);
+                    defenderPlayer.updateTotalUnitMap(defenderType, -1);
+                    System.out.println("Defender lost 1 " + defenderType);
+                }
+                isReversed = !isReversed;
+            }
+
+            builder.append(" with results: attacker lost ");
+            for (Map.Entry<UnitType, Integer> entry : attackerLost.entrySet()) {
+                builder.append(entry.getValue()).append(" ").append(entry.getKey());
+            }
+            builder.append(" defender lost ").append(defenderLost).append(" : ");
+            for (Map.Entry<UnitType, Integer> entry : defenderLost.entrySet()) {
+                builder.append(entry.getValue()).append(" ").append(entry.getKey());
+            }
+
+            if (attackerMap.isEmpty()) {
+                //attacker lost
+                builder.append(" Attacker lost.");
+            } else {
+                attackerPlayer.getOwnedTerritories().add(destinationId);
+                defenderPlayer.removeOwnedTerritory(destinationId);
+                builder.append("defender lost territory ").append(board.findTerritory(destinationId).getTerritoryName());
+            }
+        } else {
+            for (Map.Entry<UnitType, Integer> entry : attackerMap.entrySet()) {
+                desTerritory.updateUnitsMap(entry.getKey(), entry.getValue());
+            }
+            builder.append("Player ").append(playerId).append(" has already occupied this place");
+        }
         builder.append(System.lineSeparator());
         return builder.toString();
     }

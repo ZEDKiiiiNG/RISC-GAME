@@ -147,7 +147,7 @@ public class UpgradeUnitAction extends AbstractAction {
                     .append(nextUnit)
                     .append(", with number ").append(number);
         }
-        result.append(", with costs").append(costs).append(" }").append(System.lineSeparator());
+        result.append(", with costs ").append(costs).append(" }").append(System.lineSeparator());
         return result.toString();
     }
 
