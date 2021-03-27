@@ -3,6 +3,7 @@ package edu.duke.risc.shared.actions;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.board.Territory;
 import edu.duke.risc.shared.commons.ActionType;
+import edu.duke.risc.shared.commons.ResourceType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
 import edu.duke.risc.shared.users.Player;
@@ -13,11 +14,6 @@ import edu.duke.risc.shared.users.Player;
  * @author eason
  */
 public class AttackAction extends AbstractSourceAction implements TwoStepsAction {
-
-    /**
-     * -1 if the target place is not occupied
-     */
-    private Integer attackedPlayerId;
 
     /**
      * Constructor
@@ -59,7 +55,7 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
             return "You do not own territory " + sourceTerritoryId;
         }
         if (player.ownsTerritory(destinationId)) {
-            return "You cannot attack owned " + sourceTerritoryId + ", please try move";
+            return "You cannot attack owned " + destinationId + ", please try move";
         }
         Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
         Territory destTerritory = board.getTerritories().get(destinationId);
@@ -69,8 +65,16 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
         if (sourceTerritory.getUnitsMap().get(unitType) < number) {
             return "The source territory does not contain enough unit type.";
         }
-        if (board.calculateMoveCost(sourceTerritoryId, destinationId, playerId) == Integer.MAX_VALUE) {
+        int moveCost;
+        if ((moveCost = board.calculateMoveCost(sourceTerritoryId, destinationId, playerId)) == Integer.MAX_VALUE) {
             return "Not reachable from source " + sourceTerritory + " to destination" + destTerritory;
+        }
+        //whether current player has enough resource to move units
+        String error;
+        int attackCost = number;
+        int totalCost = moveCost + attackCost;
+        if ((error = player.hasEnoughResources(ResourceType.FOOD, totalCost)) != null){
+            return error;
         }
         return null;
     }
@@ -86,6 +90,14 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
         if ((error = isValid(board)) != null) {
             throw new InvalidActionException(error);
         }
+
+        //calculate and deduct costs
+        Player attackingPlayer = board.findPlayer(playerId);
+        int moveCost = board.calculateMoveCost(sourceTerritoryId, destinationId, playerId);
+        int attackCost = number;
+        int totalCost = moveCost + attackCost;
+        attackingPlayer.updateResourceMap(ResourceType.FOOD, -totalCost);
+
         Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
         Territory destTerritory = board.getTerritories().get(destinationId);
         sourceTerritory.updateUnitsMap(unitType, -number);
@@ -107,17 +119,27 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
     public String applyAfter(GameBoard board) throws InvalidActionException {
         StringBuilder builder = new StringBuilder();
 
-        Player player = board.getPlayers().get(super.playerId);
+        Player attackingPlayer = board.getPlayers().get(super.playerId);
 
-        this.attackedPlayerId = findPlayerOwnsTerritory(board);
-        Player attackedPlayer = board.getPlayers().get(this.attackedPlayerId);
+        /**
+         * -1 if the target place is not occupied
+         */
+        Integer attackedPlayerId = findPlayerOwnsTerritory(board);
+        Player attackedPlayer = board.findPlayer(attackedPlayerId);
         Territory sourceTerritory = board.findTerritory(sourceTerritoryId);
         Territory desTerritory = board.findTerritory(destinationId);
         Integer attackerNumber = number;
 
-        builder.append("ATTACK { Attacker: ").append(player.getColor()).append(" PLAYER")
+        //calculate and deduct costs
+        int moveCost = board.calculateMoveCost(sourceTerritoryId, destinationId, playerId);
+        int attackCost = number;
+        int totalCost = moveCost + attackCost;
+        attackingPlayer.updateResourceMap(ResourceType.FOOD, -totalCost);
+
+        builder.append("ATTACK { Attacker: ").append(attackingPlayer.getColor()).append(" PLAYER")
                 .append(" with ").append(number).append(" ").append(unitType)
-                .append(" Defender: PLAYER ").append(attackedPlayer.getColor()).append(" PLAYER")
+                .append(", costs ").append(totalCost).append(" ").append(ResourceType.FOOD)
+                .append(", Defender: PLAYER ").append(attackedPlayer.getColor()).append(" PLAYER")
                 .append(" from place ").append(sourceTerritory.getBasicInfo()).append(" to place ")
                 .append(desTerritory.getBasicInfo()).append(" }");
 
@@ -143,14 +165,14 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
 
             if (attackerNumber == 0) {
                 //attacker lost
-                player.updateTotalUnitMap(unitType, -number);
+                attackingPlayer.updateTotalUnitMap(unitType, -number);
                 builder.append(" Attacker lost.");
             } else {
                 //attacked win, take the place
                 desTerritory.updateUnitsMap(unitType, attackerNumber);
-                player.updateTotalUnitMap(unitType, attackerNumber - number);
+                attackingPlayer.updateTotalUnitMap(unitType, attackerNumber - number);
 
-                player.getOwnedTerritories().add(destinationId);
+                attackingPlayer.getOwnedTerritories().add(destinationId);
                 attackedPlayer.removeOwnedTerritory(destinationId);
                 builder.append("defender lost territory ").append(board.findTerritory(destinationId).getTerritoryName());
             }

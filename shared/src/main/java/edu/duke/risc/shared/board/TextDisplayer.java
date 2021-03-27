@@ -56,8 +56,10 @@ public class TextDisplayer implements Displayable {
         builder.append("    Next to: ");
         for (Integer adjacent : territory.getAdjacentTerritories()) {
             Territory adjacentTerr = gameBoard.findTerritory(adjacent);
-            builder.append(adjacentTerr.getTerritoryName()).append("(")
-                    .append(adjacentTerr.getTerritoryId()).append("), ");
+            if (adjacentTerr.isValid()){
+                builder.append(adjacentTerr.getTerritoryName()).append("(")
+                        .append(adjacentTerr.getTerritoryId()).append("), ");
+            }
         }
         builder.append(System.lineSeparator());
 

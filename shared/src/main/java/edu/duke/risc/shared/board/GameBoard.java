@@ -6,14 +6,11 @@ import edu.duke.risc.shared.users.Player;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -221,6 +218,11 @@ public class GameBoard implements Serializable {
             Integer current = queue.remove();
             Territory currentTerritory = findTerritory(current);
             for (Integer neighbor : currentTerritory.getAdjacentTerritories()) {
+                if (neighbor == destId) {
+                    shortestPath.set(neighbor, shortestPath.get(neighbor) == Integer.MAX_VALUE ?
+                            currentTerritory.getSize() : currentTerritory.getSize() + shortestPath.get(neighbor));
+                    return shortestPath.get(destId);
+                }
                 //area not visited and ( or territory is empty -- not owned by anyone)
                 if (!visited.contains(neighbor) && findTerritory(neighbor).isValid()
                         && player.ownsTerritory(neighbor)) {

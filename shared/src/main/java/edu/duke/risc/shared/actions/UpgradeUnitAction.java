@@ -90,7 +90,7 @@ public class UpgradeUnitAction extends AbstractAction {
         player.updateTotalUnitMap(unitType, -number);
         player.updateTotalUnitMap(nextUnit, number);
 
-        builder.append("SUCCESS: ").append(this.getActionInfo(nextUnit));
+        builder.append("SUCCESS: ").append(this.getActionInfo(nextUnit, resourceRequired));
         return builder.toString();
     }
 
@@ -104,7 +104,7 @@ public class UpgradeUnitAction extends AbstractAction {
      * @param nextUnit getActionInfo
      * @return getActionInfo
      */
-    public String getActionInfo(UnitType nextUnit) {
+    public String getActionInfo(UnitType nextUnit, int costs) {
         StringBuilder builder = new StringBuilder();
         builder.append("UPGRADE UNITS ACTION { ")
                 .append(" conducted by player ").append(playerId)
@@ -112,6 +112,7 @@ public class UpgradeUnitAction extends AbstractAction {
                 .append(", from type ").append(unitType)
                 .append(", to type ").append(nextUnit)
                 .append(", with number ").append(number)
+                .append(", with costs").append(costs)
                 .append(" }").append(System.lineSeparator());
         return builder.toString();
     }
