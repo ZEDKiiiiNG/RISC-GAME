@@ -3,6 +3,8 @@ package edu.duke.risc.shared.actions;
 import edu.duke.risc.shared.commons.ActionType;
 import edu.duke.risc.shared.commons.UnitType;
 
+import java.util.Map;
+
 /**
  * Abstract action with source id
  *
@@ -18,8 +20,8 @@ public abstract class AbstractSourceAction extends AbstractAction {
 
 
     public AbstractSourceAction(Integer playerId, ActionType actionType, Integer destinationId,
-                                UnitType unitType, Integer number, Integer sourceTerritoryId) {
-        super(playerId, actionType, destinationId, unitType, number);
+                                Map<UnitType, Integer> unitMap, Integer sourceTerritoryId) {
+        super(playerId, actionType, destinationId, unitMap);
         this.sourceTerritoryId = sourceTerritoryId;
     }
 

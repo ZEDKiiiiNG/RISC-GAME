@@ -175,4 +175,7 @@ public enum UnitType implements Serializable {
         return unitTypeMapper;
     }
 
+    public int getBonus() {
+        return bonus;
+    }
 }

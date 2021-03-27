@@ -12,7 +12,7 @@ import edu.duke.risc.shared.users.Player;
 public class UpgradeTechAction extends AbstractAction {
 
     public UpgradeTechAction(Integer playerId, ActionType actionType) {
-        super(playerId, actionType, null, null, null);
+        super(playerId, actionType, null, null);
     }
 
     @Override

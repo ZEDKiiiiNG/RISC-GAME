@@ -164,14 +164,16 @@ public class GameBoard implements Serializable {
     /**
      * Pretend to move certain number of units from one place to another, only for the client-side pre-check.
      *
-     * @param playerId          id of the player
      * @param sourceTerritoryId id of the source territory
-     * @param unitType          unit type
-     * @param number            number of the units
+     * @param unitMap units map
      */
-    public void playerMoveFromTerritory(int playerId, int sourceTerritoryId, UnitType unitType, int number) {
+    public void playerMoveFromTerritory(int sourceTerritoryId, Map<UnitType, Integer> unitMap) {
         Territory sourceTerritory = this.getTerritories().get(sourceTerritoryId);
-        sourceTerritory.updateUnitsMap(unitType, -number);
+        for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
+            UnitType unitType = entry.getKey();
+            int number = entry.getValue();
+            sourceTerritory.updateUnitsMap(unitType, -number);
+        }
     }
 
     /**

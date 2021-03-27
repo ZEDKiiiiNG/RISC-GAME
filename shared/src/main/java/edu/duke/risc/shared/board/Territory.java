@@ -243,6 +243,26 @@ public class Territory implements Serializable {
     }
 
     /**
+     * Whether this territory contains unit type
+     *
+     * @param unitType unitType
+     * @return Whether this territory contains unit type
+     */
+    public boolean containsUnitType(UnitType unitType) {
+        return unitsMap.containsKey(unitType);
+    }
+
+    /**
+     * Whether this territory contains numberOfUnits
+     *
+     * @param unitType unitType
+     * @return number of specific units that this territory contains
+     */
+    public int numberOfUnits(UnitType unitType) {
+        return unitsMap.get(unitType);
+    }
+
+    /**
      * getUnitsMap
      *
      * @return units map

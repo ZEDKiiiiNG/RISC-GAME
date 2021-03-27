@@ -267,6 +267,7 @@ public class GameController {
                 } catch (InvalidActionException e) {
                     //simply ignore this
                     logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
+                    validAttackList.remove(action);
                 }
             }
             for (Action action : validAttackList) {

@@ -8,6 +8,8 @@ import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
 import edu.duke.risc.shared.users.Player;
 
+import java.util.Map;
+
 /**
  * Attack Action
  *
@@ -17,15 +19,15 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
 
     /**
      * Constructor
+     *
      * @param sourceTerritoryId sourceTerritoryId
-     * @param destinationId destinationId
-     * @param unitType unitType
-     * @param number number
-     * @param player player
+     * @param destinationId     destinationId
+     * @param unitMap           map of units
+     * @param player            player
      */
-    public AttackAction(Integer sourceTerritoryId, Integer destinationId, UnitType unitType,
-                        Integer number, Integer player) {
-        super(player, ActionType.ATTACK, destinationId, unitType, number, sourceTerritoryId);
+    public AttackAction(Integer sourceTerritoryId, Integer destinationId,
+                        Map<UnitType, Integer> unitMap, Integer player) {
+        super(player, ActionType.ATTACK, destinationId, unitMap, sourceTerritoryId);
     }
 
     /**
@@ -44,8 +46,11 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
 
     @Override
     public String isValid(GameBoard board) {
-        if (number <= 0) {
-            return "Invalid or unnecessary number " + number;
+        //check whether input has valid number
+        for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
+            if (entry.getValue() <= 0) {
+                return "Invalid number " + entry.getValue() + " for unit type " + entry.getKey();
+            }
         }
         if (!board.getPlayers().containsKey(super.playerId)) {
             return "Does not contain user: " + playerId;
@@ -59,21 +64,27 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
         }
         Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
         Territory destTerritory = board.getTerritories().get(destinationId);
-        if (!sourceTerritory.getUnitsMap().containsKey(unitType)) {
-            return "The source territory does not contain the unit type.";
+
+        for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
+            UnitType unitType = entry.getKey();
+            int number = entry.getValue();
+            if (!sourceTerritory.getUnitsMap().containsKey(unitType)) {
+                return "The source territory does not contain the unit type.";
+            }
+            if (sourceTerritory.getUnitsMap().get(unitType) < number) {
+                return "The source territory does not contain enough unit type.";
+            }
         }
-        if (sourceTerritory.getUnitsMap().get(unitType) < number) {
-            return "The source territory does not contain enough unit type.";
-        }
-        int moveCost;
-        if ((moveCost = board.calculateMoveCost(sourceTerritoryId, destinationId, playerId)) == Integer.MAX_VALUE) {
+
+        int moveCostPerUnit;
+        if ((moveCostPerUnit = board.calculateMoveCost(sourceTerritoryId, destinationId, playerId)) == Integer.MAX_VALUE) {
             return "Not reachable from source " + sourceTerritory + " to destination" + destTerritory;
         }
+        int totalCost = getResourceRequired(moveCostPerUnit, 1);
+
         //whether current player has enough resource to move units
         String error;
-        int attackCost = number;
-        int totalCost = moveCost + attackCost;
-        if ((error = player.hasEnoughResources(ResourceType.FOOD, totalCost)) != null){
+        if ((error = player.hasEnoughResources(ResourceType.FOOD, totalCost)) != null) {
             return error;
         }
         return null;
@@ -91,17 +102,22 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
             throw new InvalidActionException(error);
         }
 
-        //calculate and deduct costs
+        //calculate and deduct costs and update attacker's resources map
         Player attackingPlayer = board.findPlayer(playerId);
-        int moveCost = board.calculateMoveCost(sourceTerritoryId, destinationId, playerId);
-        int attackCost = number;
-        int totalCost = moveCost + attackCost;
+        int moveCostPerUnit = board.calculateMoveCost(sourceTerritoryId, destinationId, playerId);
+        int totalCost = getResourceRequired(moveCostPerUnit, 1);
         attackingPlayer.updateResourceMap(ResourceType.FOOD, -totalCost);
 
         Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
         Territory destTerritory = board.getTerritories().get(destinationId);
-        sourceTerritory.updateUnitsMap(unitType, -number);
-        destTerritory.updateVirtualUnitsMap(unitType, number);
+
+        //update virtual units map in the front
+        for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
+            UnitType unitType = entry.getKey();
+            int number = entry.getValue();
+            sourceTerritory.updateUnitsMap(unitType, -number);
+            destTerritory.updateVirtualUnitsMap(unitType, number);
+        }
         return "";
     }
 
@@ -111,7 +127,7 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
         if ((error = isValid(board)) != null) {
             throw new InvalidActionException(error);
         }
-        board.playerMoveFromTerritory(playerId, sourceTerritoryId, unitType, number);
+        board.playerMoveFromTerritory(sourceTerritoryId, unitMap);
         return "";
     }
 
@@ -119,77 +135,95 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
     public String applyAfter(GameBoard board) throws InvalidActionException {
         StringBuilder builder = new StringBuilder();
 
-        Player attackingPlayer = board.getPlayers().get(super.playerId);
+        Player attackerPlayer = board.getPlayers().get(super.playerId);
 
-        /**
-         * -1 if the target place is not occupied
-         */
-        Integer attackedPlayerId = findPlayerOwnsTerritory(board);
-        Player attackedPlayer = board.findPlayer(attackedPlayerId);
+        /* -1 if the target place is not occupied */
+        Integer defenderPlayerId = findPlayerOwnsTerritory(board);
+        Player defenderPlayer = board.findPlayer(defenderPlayerId);
         Territory sourceTerritory = board.findTerritory(sourceTerritoryId);
         Territory desTerritory = board.findTerritory(destinationId);
-        Integer attackerNumber = number;
-
         //calculate and deduct costs
-        int moveCost = board.calculateMoveCost(sourceTerritoryId, destinationId, playerId);
-        int attackCost = number;
-        int totalCost = moveCost + attackCost;
-        attackingPlayer.updateResourceMap(ResourceType.FOOD, -totalCost);
+        int moveCostPerUnit = board.calculateMoveCost(sourceTerritoryId, destinationId, playerId);
+        int totalCost = getResourceRequired(moveCostPerUnit, 1);
+        attackerPlayer.updateResourceMap(ResourceType.FOOD, -totalCost);
 
-        builder.append("ATTACK { Attacker: ").append(attackingPlayer.getColor()).append(" PLAYER")
-                .append(" with ").append(number).append(" ").append(unitType)
-                .append(", costs ").append(totalCost).append(" ").append(ResourceType.FOOD)
-                .append(", Defender: PLAYER ").append(attackedPlayer.getColor()).append(" PLAYER")
+        Map<UnitType, Integer> attackerMap = unitMap;
+        Map<UnitType, Integer> defenderMap = desTerritory.getUnitsMap();
+
+        builder.append("ATTACK { Attacker: ").append(attackerPlayer.getColor()).append(" PLAYER")
+                .append(", costs ").append(totalCost).append(" ").append(ResourceType.FOOD);
+        for (Map.Entry<UnitType, Integer> entry : attackerMap.entrySet()) {
+            UnitType unitType = entry.getKey();
+            int number = entry.getValue();
+            builder.append(" with ").append(number).append(" ").append(unitType);
+        }
+        builder.append(System.lineSeparator()).append(", Defender: PLAYER ")
+                .append(defenderPlayer.getColor()).append(" PLAYER")
                 .append(" from place ").append(sourceTerritory.getBasicInfo()).append(" to place ")
                 .append(desTerritory.getBasicInfo()).append(" }");
 
-        if (!attackedPlayerId.equals(playerId)) {
-            int attackerLost = 0, defenderLost = 0;
-            while (!desTerritory.isEmptyTerritory()
-                    && desTerritory.getUnitsMap().get(unitType) > 0 && attackerNumber != 0) {
-                Integer random = randomWin();
-                if (random == 0) {
-                    //attacked(defender) win, attacker lost
-                    attackerNumber -= 1;
-                    attackerLost += 1;
-                } else {
-                    //attacker win, attacked(defender) lost
-                    desTerritory.updateUnitsMap(unitType, -1);
-                    attackedPlayer.updateTotalUnitMap(unitType, -1);
-                    defenderLost += 1;
-                }
-            }
-
-            builder.append(" with results: attacker lost ").append(attackerLost)
-                    .append(" defender lost ").append(defenderLost).append(" : ");
-
-            if (attackerNumber == 0) {
-                //attacker lost
-                attackingPlayer.updateTotalUnitMap(unitType, -number);
-                builder.append(" Attacker lost.");
-            } else {
-                //attacked win, take the place
-                desTerritory.updateUnitsMap(unitType, attackerNumber);
-                attackingPlayer.updateTotalUnitMap(unitType, attackerNumber - number);
-
-                attackingPlayer.getOwnedTerritories().add(destinationId);
-                attackedPlayer.removeOwnedTerritory(destinationId);
-                builder.append("defender lost territory ").append(board.findTerritory(destinationId).getTerritoryName());
-            }
-        } else {
-            desTerritory.updateUnitsMap(unitType, playerId);
-            builder.append("Player ").append(playerId).append(" has already occupied this place");
-        }
+//        if (!defenderPlayerId.equals(playerId)) {
+//            int attackerLost = 0, defenderLost = 0;
+//            while (!desTerritory.isEmptyTerritory()
+//                    && desTerritory.getUnitsMap().get(unitType) > 0 && attackerNumber != 0) {
+//                Integer random = randomWin();
+//                if (random == 0) {
+//                    //attacked(defender) win, attacker lost
+//                    attackerNumber -= 1;
+//                    attackerLost += 1;
+//                } else {
+//                    //attacker win, attacked(defender) lost
+//                    desTerritory.updateUnitsMap(unitType, -1);
+//                    defenderPlayer.updateTotalUnitMap(unitType, -1);
+//                    defenderLost += 1;
+//                }
+//            }
+//
+//            builder.append(" with results: attacker lost ").append(attackerLost)
+//                    .append(" defender lost ").append(defenderLost).append(" : ");
+//
+//            if (attackerNumber == 0) {
+//                //attacker lost
+//                attackerPlayer.updateTotalUnitMap(unitType, -number);
+//                builder.append(" Attacker lost.");
+//            } else {
+//                //attacked win, take the place
+//                desTerritory.updateUnitsMap(unitType, attackerNumber);
+//                attackerPlayer.updateTotalUnitMap(unitType, attackerNumber - number);
+//
+//                attackerPlayer.getOwnedTerritories().add(destinationId);
+//                defenderPlayer.removeOwnedTerritory(destinationId);
+//                builder.append("defender lost territory ").append(board.findTerritory(destinationId).getTerritoryName());
+//            }
+//        } else {
+//            desTerritory.updateUnitsMap(unitType, playerId);
+//            builder.append("Player ").append(playerId).append(" has already occupied this place");
+//        }
         builder.append(System.lineSeparator());
         return builder.toString();
     }
 
     /**
+     * Get resources required for moving
+     *
+     * @param moveCostPerUnit moveCostPerUnit
+     * @return resources required for moving
+     */
+    private int getResourceRequired(int moveCostPerUnit, int attackCostPerUnit) {
+        int totalCost = 0;
+        for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
+            int number = entry.getValue();
+            totalCost += (moveCostPerUnit + attackCostPerUnit) * number;
+        }
+        return totalCost;
+    }
+
+    /**
      * @return 0 for defender win, 1 for attacker win
      */
-    public Integer randomWin() {
-        Integer defender = rollADice();
-        Integer attacker = rollADice();
+    public Integer randomWin(UnitType attackerType, UnitType defenderType) {
+        Integer defender = rollADice(defenderType.getBonus());
+        Integer attacker = rollADice(attackerType.getBonus());
         if (defender >= attacker) {
             return 0;
         } else {
@@ -202,15 +236,14 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
      *
      * @return the answer of the dice
      */
-    public Integer rollADice() {
-        return (int) (Math.random() * 20) + 1;
+    public Integer rollADice(int bonus) {
+        return (int) (Math.random() * 20) + 1 + bonus;
     }
 
 
     @Override
     public String toString() {
-        return "Attack by player " + playerId + " from territory " + sourceTerritoryId + " to " + destinationId
-                 + " with " + number + " " + unitType;
+        return "Attack by player " + playerId + " from territory " + sourceTerritoryId + " to " + destinationId;
     }
 
 }

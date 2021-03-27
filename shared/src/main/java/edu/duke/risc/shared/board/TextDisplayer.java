@@ -56,7 +56,7 @@ public class TextDisplayer implements Displayable {
         builder.append("    Next to: ");
         for (Integer adjacent : territory.getAdjacentTerritories()) {
             Territory adjacentTerr = gameBoard.findTerritory(adjacent);
-            if (adjacentTerr.isValid()){
+            if (adjacentTerr.isValid()) {
                 builder.append(adjacentTerr.getTerritoryName()).append("(")
                         .append(adjacentTerr.getTerritoryId()).append("), ");
             }
@@ -74,11 +74,13 @@ public class TextDisplayer implements Displayable {
             }
         }
 
+        builder.append("(Ready to attack units: ");
+
         //virtual units for clients
         for (Map.Entry<UnitType, Integer> mapUnit : territory.getVirtualUnitsMap().entrySet()) {
-            builder.append("(Ready to attack units: ")
-                    .append(mapUnit.getValue()).append(" ").append(mapUnit.getKey()).append(")");
+            builder.append(mapUnit.getValue()).append(" ").append(mapUnit.getKey());
         }
+        builder.append(")");
         return builder.toString();
     }
 
