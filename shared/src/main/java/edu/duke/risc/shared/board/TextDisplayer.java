@@ -49,6 +49,9 @@ public class TextDisplayer implements Displayable {
         }
         builder.append(System.lineSeparator());
 
+        //print size (move costs)
+        builder.append("    Size (move costs): ").append(territory.getSize()).append(System.lineSeparator());
+
         //print neighbors
         builder.append("    Next to: ");
         for (Integer adjacent : territory.getAdjacentTerritories()) {

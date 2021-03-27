@@ -69,7 +69,7 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
         if (sourceTerritory.getUnitsMap().get(unitType) < number) {
             return "The source territory does not contain enough unit type.";
         }
-        if (!board.isReachable(sourceTerritoryId, destinationId, playerId)) {
+        if (board.calculateMoveCost(sourceTerritoryId, destinationId, playerId) == Integer.MAX_VALUE) {
             return "Not reachable from source " + sourceTerritory + " to destination" + destTerritory;
         }
         return null;

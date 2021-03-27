@@ -5,11 +5,16 @@ import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.users.Player;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
-import java.util.Stack;
 
 /**
  * Represents the game board, including all players, territories, game stage.
@@ -185,37 +190,48 @@ public class GameBoard implements Serializable {
      * Whether we can reach from source to the destination.
      * For places that are owned by the current player or empty place, we accept.
      * We are able to reach first adjacent enemy's territory
+     * Note: Integer.MAX_VALUE distance means that destination is unreachable
      *
      * @param sourceId sourceId
      * @param destId   destId
      * @param playerId playerId
      * @return Whether we can reach from source to the destination.
      */
-    public boolean isReachable(int sourceId, int destId, int playerId) {
-        Stack<Integer> stack = new Stack<>();
+    public int calculateMoveCost(int sourceId, int destId, int playerId) {
+        //initialization
+        int totalNumber = territoryFactory.territoryNum();
+        List<Integer> shortestPath = new ArrayList<>();
+        for (int i = 0; i < totalNumber; i++) {
+            shortestPath.add(Integer.MAX_VALUE);
+        }
+        PriorityQueue<Integer> queue = new PriorityQueue<>((o1, o2) -> shortestPath.get(o2) - shortestPath.get(o1));
         Set<Integer> visited = new HashSet<>();
         Player player = this.findPlayer(playerId);
 
+        //before searching
         if (destId == sourceId) {
-            return true;
+            return 0;
         }
         visited.add(sourceId);
-        stack.push(sourceId);
-        while (!stack.isEmpty()) {
-            Integer current = stack.pop();
-            Territory currentTerritory = this.findTerritory(current);
+        queue.add(sourceId);
+        shortestPath.set(sourceId, 0);
+
+        //start searching
+        while (!queue.isEmpty()) {
+            Integer current = queue.remove();
+            Territory currentTerritory = findTerritory(current);
             for (Integer neighbor : currentTerritory.getAdjacentTerritories()) {
-                if (destId == neighbor) {
-                    return true;
-                }
                 //area not visited and ( or territory is empty -- not owned by anyone)
-                if (!visited.contains(neighbor) && player.ownsTerritory(neighbor)) {
+                if (!visited.contains(neighbor) && findTerritory(neighbor).isValid()
+                        && player.ownsTerritory(neighbor)) {
                     visited.add(neighbor);
-                    stack.push(neighbor);
+                    queue.add(neighbor);
+                    shortestPath.set(neighbor, shortestPath.get(neighbor) == Integer.MAX_VALUE ?
+                            currentTerritory.getSize() : currentTerritory.getSize() + shortestPath.get(neighbor));
                 }
             }
         }
-        return false;
+        return shortestPath.get(destId);
     }
 
     /**
