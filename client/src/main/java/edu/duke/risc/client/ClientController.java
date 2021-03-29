@@ -288,7 +288,7 @@ public class ClientController {
             action = this.readAttackOrMoveAction(moveInput, this.gameBoard, playerId, actionType);
             action.simulateApply(this.gameBoard);
             actions.add(action);
-        } catch (InvalidInputException | InvalidActionException e) {
+        } catch (InvalidInputException | InvalidActionException | NumberFormatException e) {
             System.out.println(e.getMessage());
         }
     }
@@ -487,7 +487,7 @@ public class ClientController {
      * @throws InvalidInputException when input is invalid
      */
     private Action readAttackOrMoveAction(String input, GameBoard board, Integer playerId, int actionType)
-            throws InvalidInputException {
+            throws InvalidInputException, NumberFormatException {
         List<String> actionInputs = new ArrayList<>(Arrays.asList(input.split(";")));
         if (actionInputs.size() < 2) {
             throw new InvalidInputException("Invalid input size");

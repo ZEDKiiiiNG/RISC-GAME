@@ -160,9 +160,15 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
             builder.append(" with ").append(number).append(" ").append(unitType);
         }
         builder.append(System.lineSeparator()).append(", Defender: PLAYER ")
-                .append(defenderPlayer.getColor()).append(" PLAYER")
+                .append(defenderPlayer.getColor())
                 .append(" from place ").append(sourceTerritory.getBasicInfo()).append(" to place ")
-                .append(desTerritory.getBasicInfo()).append(" }");
+                .append(desTerritory.getBasicInfo());
+        for (Map.Entry<UnitType, Integer> entry : defenderMap.entrySet()) {
+            UnitType unitType = entry.getKey();
+            int number = entry.getValue();
+            builder.append(" with ").append(number).append(" ").append(unitType);
+        }
+        builder.append(" }");
 
         if (!defenderPlayerId.equals(playerId)) {
             Map<UnitType, Integer> attackerLost = new HashMap<>(), defenderLost = new HashMap<>();
@@ -177,7 +183,7 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
                     attackerType = UnitType.getLowestLevelUnitType(attackerMap);
                     defenderType = UnitType.getHighestLevelUnitType(defenderMap);
                 }
-                System.out.println("Attacker: " + attackerType + " V.S Defender" + defenderType);
+                System.out.println("Attacker: " + attackerType + " V.S Defender: " + defenderType);
                 assert attackerType != null;
                 assert defenderType != null;
                 Integer random = randomWin(attackerType, defenderType);
@@ -201,7 +207,7 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
             for (Map.Entry<UnitType, Integer> entry : attackerLost.entrySet()) {
                 builder.append(entry.getValue()).append(" ").append(entry.getKey());
             }
-            builder.append(" defender lost ").append(defenderLost).append(" : ");
+            builder.append(" defender lost: ");
             for (Map.Entry<UnitType, Integer> entry : defenderLost.entrySet()) {
                 builder.append(entry.getValue()).append(" ").append(entry.getKey());
             }
@@ -212,6 +218,10 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
             } else {
                 attackerPlayer.getOwnedTerritories().add(destinationId);
                 defenderPlayer.removeOwnedTerritory(destinationId);
+                //attacker puts units into this territory when win
+                for (Map.Entry<UnitType, Integer> entry : attackerMap.entrySet()) {
+                    desTerritory.updateUnitsMap(entry.getKey(), entry.getValue());
+                }
                 builder.append("defender lost territory ").append(board.findTerritory(destinationId).getTerritoryName());
             }
         } else {
