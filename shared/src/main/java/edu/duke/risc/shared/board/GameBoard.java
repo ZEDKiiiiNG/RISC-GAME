@@ -6,14 +6,11 @@ import edu.duke.risc.shared.users.Player;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -167,14 +164,16 @@ public class GameBoard implements Serializable {
     /**
      * Pretend to move certain number of units from one place to another, only for the client-side pre-check.
      *
-     * @param playerId          id of the player
      * @param sourceTerritoryId id of the source territory
-     * @param unitType          unit type
-     * @param number            number of the units
+     * @param unitMap units map
      */
-    public void playerMoveFromTerritory(int playerId, int sourceTerritoryId, UnitType unitType, int number) {
+    public void playerMoveFromTerritory(int sourceTerritoryId, Map<UnitType, Integer> unitMap) {
         Territory sourceTerritory = this.getTerritories().get(sourceTerritoryId);
-        sourceTerritory.updateUnitsMap(unitType, -number);
+        for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
+            UnitType unitType = entry.getKey();
+            int number = entry.getValue();
+            sourceTerritory.updateUnitsMap(unitType, -number);
+        }
     }
 
     /**
@@ -182,8 +181,8 @@ public class GameBoard implements Serializable {
      *
      * @return total size of territories
      */
-    public int getTerritoriesSize() {
-        return this.territories.size();
+    public int getValidTerritoriesSize() {
+        return this.territoryFactory.territoryNum();
     }
 
     /**
@@ -221,6 +220,11 @@ public class GameBoard implements Serializable {
             Integer current = queue.remove();
             Territory currentTerritory = findTerritory(current);
             for (Integer neighbor : currentTerritory.getAdjacentTerritories()) {
+                if (neighbor == destId) {
+                    shortestPath.set(neighbor, shortestPath.get(neighbor) == Integer.MAX_VALUE ?
+                            currentTerritory.getSize() : currentTerritory.getSize() + shortestPath.get(neighbor));
+                    return shortestPath.get(destId);
+                }
                 //area not visited and ( or territory is empty -- not owned by anyone)
                 if (!visited.contains(neighbor) && findTerritory(neighbor).isValid()
                         && player.ownsTerritory(neighbor)) {

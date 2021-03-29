@@ -1,6 +1,6 @@
 package edu.duke.risc.shared.commons;
 
-import edu.duke.risc.shared.exceptions.InvalidActionException;
+import org.checkerframework.checker.units.qual.K;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -123,6 +123,7 @@ public enum UnitType implements Serializable {
 
     /**
      * getTechRequiredToUpgrade
+     *
      * @return getTechRequiredToUpgrade
      */
     public static int getTechRequiredToUpgrade(UnitType currentUnit) {
@@ -175,4 +176,53 @@ public enum UnitType implements Serializable {
         return unitTypeMapper;
     }
 
+    public static UnitType getHighestLevelUnitType(Map<UnitType, Integer> map) {
+        for (UnitType entry : map.keySet()) {
+            if (map.containsKey(MASTER)) {
+                return MASTER;
+            } else if (map.containsKey(QUEEN)) {
+                return QUEEN;
+            } else if (map.containsKey(ROOK)) {
+                return ROOK;
+            } else if (map.containsKey(KNIGHT)) {
+                return KNIGHT;
+            } else if (map.containsKey(CAVALRY)) {
+                return CAVALRY;
+            } else if (map.containsKey(INFANTRY)) {
+                return INFANTRY;
+            } else if (map.containsKey(SOLDIER)) {
+                return SOLDIER;
+            } else {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    public static UnitType getLowestLevelUnitType(Map<UnitType, Integer> map) {
+        for (UnitType entry : map.keySet()) {
+            if (map.containsKey(SOLDIER)) {
+                return SOLDIER;
+            } else if (map.containsKey(INFANTRY)) {
+                return INFANTRY;
+            } else if (map.containsKey(CAVALRY)) {
+                return CAVALRY;
+            } else if (map.containsKey(KNIGHT)) {
+                return KNIGHT;
+            } else if (map.containsKey(ROOK)) {
+                return ROOK;
+            } else if (map.containsKey(QUEEN)) {
+                return QUEEN;
+            } else if (map.containsKey(MASTER)) {
+                return MASTER;
+            } else {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    public int getBonus() {
+        return bonus;
+    }
 }
