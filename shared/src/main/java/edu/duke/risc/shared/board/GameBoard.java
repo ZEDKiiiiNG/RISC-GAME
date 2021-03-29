@@ -181,8 +181,8 @@ public class GameBoard implements Serializable {
      *
      * @return total size of territories
      */
-    public int getTerritoriesSize() {
-        return this.territories.size();
+    public int getValidTerritoriesSize() {
+        return this.territoryFactory.territoryNum();
     }
 
     /**

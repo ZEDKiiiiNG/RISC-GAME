@@ -428,7 +428,7 @@ public class GameController {
             Player player = playerEntry.getValue();
             if (player.getOwnedTerritories().size() == 0) {
                 player.markLost();
-            } else if (player.getOwnedTerritories().size() == this.board.getTerritoriesSize()) {
+            } else if (player.getOwnedTerritories().size() == this.board.getValidTerritoriesSize()) {
                 player.markWin();
                 this.board.setGameOver();
                 System.out.println(player.getColor() + " Player with ID " + player.getId() + " wins.");
