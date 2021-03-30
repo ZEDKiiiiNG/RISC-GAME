@@ -8,7 +8,6 @@ import edu.duke.risc.shared.board.Territory;
 import edu.duke.risc.shared.board.TerritoryFactory;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
