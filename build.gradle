@@ -6,7 +6,9 @@
  */
 plugins {
     id 'com.bmuschko.clover' version '2.2.3'
+
 }
+
 clover{
     enabled = true
     report {
