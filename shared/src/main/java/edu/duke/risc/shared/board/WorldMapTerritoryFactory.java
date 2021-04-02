@@ -64,7 +64,7 @@ public class WorldMapTerritoryFactory implements TerritoryFactory {
         //Utah, Wyoming, New Mexico
         colorado.addNeighbor(0, 3, 5);
         //Colorado, Arizona
-        newMexico.addNeighbor(4, 6);
+        newMexico.addNeighbor(0, 4, 6);
         //Utah, Nevada, New Mexico, California
         arizona.addNeighbor(0, 1, 5, 7);
         //Nevada, Arizona, Oregon
