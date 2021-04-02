@@ -26,15 +26,15 @@ public enum UserColor implements Serializable {
     RED("Red"),
 
     /**
-     * Stands for WHITE user
+     * Stands for YELLOW user
      */
-    WHITE("White"),
+    YELLOW("Yellow"),
 
 
     /**
-     * Stands for DARK user
+     * Stands for PURPLE user
      */
-    DARK("Dark");
+    PURPLE("Purple");
 
     /**
      * String representation of the colors
