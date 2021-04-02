@@ -6,7 +6,7 @@
  * User Manual available at https://docs.gradle.org/6.3/userguide/tutorial_java_projects.html
  */
 plugins {
-    // Apply the java plugin to add support for Java
+    // Apply the java plugin to ahttps://duke.zoom.com.cn/j/94090840232dd support for Java
     id 'java'
 
     // Apply the application plugin to add support for building a CLI application.

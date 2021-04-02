@@ -3,7 +3,6 @@
  */
 package edu.duke.risc.server;
 
-import edu.duke.risc.client.App;
 import edu.duke.risc.shared.board.Territory;
 import edu.duke.risc.shared.board.TerritoryFactory;
 import edu.duke.risc.shared.board.WorldMapTerritoryFactory;

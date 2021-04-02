@@ -3,8 +3,6 @@ package edu.duke.risc.client;
 import edu.duke.risc.shared.Configurations;
 import edu.duke.risc.shared.board.GameBoard;
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.ColumnConstraints;
@@ -16,7 +14,7 @@ import javafx.stage.Stage;
 /*
 finish the UI seeting of client
  */
-public class PlayerUI extends Application implements EventHandler<ActionEvent> {
+public class PlayerUI extends Application {
     /**
      * The game board
      */
@@ -87,7 +85,6 @@ public class PlayerUI extends Application implements EventHandler<ActionEvent> {
 
         attack = new Button();
         attack.setText("Attack");
-        attack.setOnAction(this);
         StackPane layout = new StackPane();
         layout.getChildren().add(attack);
         Scene scene = new Scene(layout, 640, 480);
@@ -95,12 +92,7 @@ public class PlayerUI extends Application implements EventHandler<ActionEvent> {
         stage.show();
     }
 
-    @Override
-    public void handle(ActionEvent actionEvent) {
-        if (actionEvent.getSource() == attack) {
-            System.out.println("OK");
-        }
-    }
+
 
     public static void main(String[] args) {
         launch(args);
