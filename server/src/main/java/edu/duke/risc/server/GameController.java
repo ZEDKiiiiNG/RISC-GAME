@@ -391,8 +391,8 @@ public class GameController {
         colors.add(UserColor.BLUE);
         colors.add(UserColor.GREEN);
         colors.add(UserColor.RED);
-        colors.add(UserColor.WHITE);
-        colors.add(UserColor.DARK);
+        colors.add(UserColor.YELLOW);
+        colors.add(UserColor.PURPLE);
     }
 
     /**
