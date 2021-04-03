@@ -70,6 +70,10 @@ public class GameBoard implements Serializable {
         displayer = new TextDisplayer();
     }
 
+    public Displayable getDisplayer(){
+        return this.displayer;
+    }
+
     /**
      * Display the board to the standard output
      */

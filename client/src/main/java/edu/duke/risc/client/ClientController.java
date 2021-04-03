@@ -20,6 +20,7 @@ import edu.duke.risc.shared.exceptions.InvalidPayloadContent;
 import edu.duke.risc.shared.exceptions.ServerRejectException;
 import edu.duke.risc.shared.exceptions.UnmatchedReceiverException;
 import edu.duke.risc.shared.users.Player;
+import javafx.stage.Stage;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -70,7 +71,10 @@ public class ClientController {
      * Thread which reads exit signal
      */
     private ReadExitThread readExitThread;
+    /*
 
+     */
+    private WaitPlayerUI waitPlayerUI;
     /**
      * Constructor
      *
@@ -103,11 +107,15 @@ public class ClientController {
             System.out.println(ClientConfigurations.CONNECT_SUCCESS_MSG);
             //waiting for other users
             this.waitAndReadServerResponse();
-            System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
+            waitPlayerUI.start(new Stage());
+//            System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
+
         } catch (IOException e) {
             e.printStackTrace();
         } catch (UnmatchedReceiverException | InvalidPayloadContent | ServerRejectException e) {
             System.out.println(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
