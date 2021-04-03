@@ -33,6 +33,7 @@ public class App extends Application {
     public void start(Stage primaryStage) throws Exception{
         primaryStage.setTitle("Feng Wang");
         button = new Button();
+
         StackPane layout = new StackPane();
         layout.getChildren().add(button);
 
