@@ -4,10 +4,12 @@
 package edu.duke.risc.client;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -21,23 +23,28 @@ import static javafx.application.Application.launch;
  *
  */
 public class App extends Application {
+    public static ClientController cc;
     public String getGreeting() {
         return "Hello world from client.";
     }
     Button button;
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args){
         //ClientController clientController = new ClientController();
         //clientController.startGame();
+        try {
+            cc = new ClientController();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         launch(args);
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("main.fxml"));
-        primaryStage.setTitle("The very first stage");
+        Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getClassLoader().getResource("main.fxml")));
+        primaryStage.setTitle("Listening from server");
 
-        Scene scene = new Scene(root, 300, 250);
-        primaryStage.setScene(scene);
+        primaryStage.setScene(new Scene(root, 600, 400));
         primaryStage.show();
     }
 }

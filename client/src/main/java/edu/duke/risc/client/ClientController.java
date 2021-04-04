@@ -76,6 +76,9 @@ public class ClientController {
      *
      * @throws IOException IOException
      */
+    Player getMyself(){
+        return this.gameBoard.getPlayers().get(playerId);
+    }
     public ClientController() throws IOException {
         this.consoleReader = new BufferedReader(new InputStreamReader(System.in));
     }
@@ -95,7 +98,7 @@ public class ClientController {
     /**
      * Try to connect with the server and wait for other users
      */
-    private void tryConnectAndWait() {
+    public void tryConnectAndWait() {
         try {
             //try connect to the server
             Socket socket = new Socket(ClientConfigurations.LOCALHOST, Configurations.DEFAULT_SERVER_PORT);
@@ -103,7 +106,7 @@ public class ClientController {
             System.out.println(ClientConfigurations.CONNECT_SUCCESS_MSG);
             //waiting for other users
             this.waitAndReadServerResponse();
-            System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
+            //System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
         } catch (IOException e) {
             e.printStackTrace();
         } catch (UnmatchedReceiverException | InvalidPayloadContent | ServerRejectException e) {
@@ -116,7 +119,7 @@ public class ClientController {
      *
      * @throws IOException IOException
      */
-    private void assignUnits() throws IOException {
+    public void assignUnits() throws IOException {
         while (true) {
             List<Action> actions = new ArrayList<>();
             Player player = this.gameBoard.getPlayers().get(playerId);
@@ -175,7 +178,7 @@ public class ClientController {
      * @param payloadObject payloadObject
      * @throws IOException IOException
      */
-    private void sendMessage(PayloadObject payloadObject) throws IOException {
+    public void sendMessage(PayloadObject payloadObject) throws IOException {
         this.communicator.writeMessage(payloadObject);
     }
 
@@ -184,7 +187,7 @@ public class ClientController {
      *
      * @throws IOException IOException
      */
-    private void moveAndAttack() throws IOException {
+    public void moveAndAttack() throws IOException {
         while (true) {
             if (this.checkUserStatus()) {
                 return;
@@ -257,7 +260,7 @@ public class ClientController {
     /**
      * Entering the observer's mode
      */
-    private void observerMode() {
+    public void observerMode() {
         try {
             System.out.println("You lost the game, entering Observer Mode, you can type exit to quit...");
             this.readExitThread = new ReadExitThread(this.consoleReader, this.communicator, this.playerId);
