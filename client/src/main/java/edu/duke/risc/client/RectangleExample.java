@@ -30,6 +30,13 @@ public class RectangleExample extends Application {
 
     }
 
+
+//    public StackPane
+
+
+
+
+
     public StackPane actionButton(Stage stage, Scene commitScene, Scene moveScene, Scene attackScene, Scene upgradeScene, Scene techScene)throws Exception{
         StackPane pane = new StackPane();
         Button commit  = new Button("commit");

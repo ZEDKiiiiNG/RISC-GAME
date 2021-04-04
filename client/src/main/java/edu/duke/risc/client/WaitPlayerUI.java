@@ -9,12 +9,18 @@ import javafx.scene.text.Text;
 
 
 public class WaitPlayerUI extends Application {
+//    private int playerId;
 
+//    public WaitPlayerUI(int playerId){
+//        this.playerId = playerId;
+//    }
 
     @Override
     public void start(Stage stage) throws Exception {
 
-        Text a = new Text("Please wait other players");
+        //String text = "You are the current the player: "+playerId;
+        String text = "You are the current the player: ";
+        Text a = new Text(text);
         a.setLayoutX(100);
         a.setLayoutY(300);
         Group g= new Group();

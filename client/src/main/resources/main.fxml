@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="edu.duke.risc.client.mainController"
+            prefHeight="400.0" prefWidth="600.0">
+    <Button layoutX="182.0" layoutY="141.0" mnemonicParsing="false" onAction="#changeWindow" text="Go to Second Stage" />
+    <Label layoutX="70.0" layoutY="60.0" text="MainStage" />
+</AnchorPane>

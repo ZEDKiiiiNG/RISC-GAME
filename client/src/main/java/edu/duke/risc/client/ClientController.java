@@ -4,21 +4,12 @@ import edu.duke.risc.shared.Communicable;
 import edu.duke.risc.shared.Configurations;
 import edu.duke.risc.shared.PayloadObject;
 import edu.duke.risc.shared.SocketCommunicator;
-import edu.duke.risc.shared.actions.Action;
-import edu.duke.risc.shared.actions.AttackAction;
-import edu.duke.risc.shared.actions.MoveAction;
-import edu.duke.risc.shared.actions.PlacementAction;
-import edu.duke.risc.shared.actions.UpgradeTechAction;
-import edu.duke.risc.shared.actions.UpgradeUnitAction;
+import edu.duke.risc.shared.actions.*;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.commons.ActionType;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UnitType;
-import edu.duke.risc.shared.exceptions.InvalidActionException;
-import edu.duke.risc.shared.exceptions.InvalidInputException;
-import edu.duke.risc.shared.exceptions.InvalidPayloadContent;
-import edu.duke.risc.shared.exceptions.ServerRejectException;
-import edu.duke.risc.shared.exceptions.UnmatchedReceiverException;
+import edu.duke.risc.shared.exceptions.*;
 import edu.duke.risc.shared.users.Player;
 import javafx.stage.Stage;
 
@@ -26,11 +17,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static edu.duke.risc.shared.Configurations.*;
 
@@ -40,7 +27,7 @@ import static edu.duke.risc.shared.Configurations.*;
  * @author eason
  * @date 2021/3/10 13:58
  */
-public class ClientController {
+public class ClientController extends WaitPlayerUI {
 
     /**
      * The game board
@@ -105,11 +92,13 @@ public class ClientController {
             Socket socket = new Socket(ClientConfigurations.LOCALHOST, Configurations.DEFAULT_SERVER_PORT);
             communicator = new SocketCommunicator(socket);
             System.out.println(ClientConfigurations.CONNECT_SUCCESS_MSG);
+
+
             //waiting for other users
             this.waitAndReadServerResponse();
-            waitPlayerUI.start(new Stage());
-//            System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
 
+            System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
+            waitPlayerUI.start(new Stage());
         } catch (IOException e) {
             e.printStackTrace();
         } catch (UnmatchedReceiverException | InvalidPayloadContent | ServerRejectException e) {
