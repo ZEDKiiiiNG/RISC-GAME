@@ -4,8 +4,10 @@
 package edu.duke.risc.client;
 
 import java.io.IOException;
-import java.util.Objects;
+import java.util.*;
 
+import edu.duke.risc.shared.board.GameBoard;
+import edu.duke.risc.shared.users.Player;
 import javafx.application.Application;
 
 import javafx.event.ActionEvent;
@@ -15,6 +17,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import static javafx.application.Application.launch;
@@ -24,10 +27,42 @@ import static javafx.application.Application.launch;
  */
 public class App extends Application {
     public static ClientController cc;
+    public static ArrayList<TerritoryUI> TerrUIs = new ArrayList<TerritoryUI>();//store UI structure and cache all territory info in a list(subject to change)
+    Button button;
+    /*
+    * initialize territories based on clientController info(must be called after cc's first
+    * update and can only be could once)*/
+    public static void initializeTerritories() {
+        TerrUIs.add(new UtahUI(null));
+        TerrUIs.add(new NevadaUI(null));
+        TerrUIs.add(new IdahoUI(null));
+        TerrUIs.add(new WyomingUI(null));
+        TerrUIs.add(new ColoradoUI(null));
+        TerrUIs.add(new NewMexicoUI(null));
+        TerrUIs.add(new ArizonaUI(null));
+        TerrUIs.add(new CaliforniaUI(null));
+        TerrUIs.add(new OregonUI(null));
+        TerrUIs.add(new WashingtonUI(null));
+        assert(TerrUIs.get(2).getId() == 2);//make sure territories are insert in order
+        Map<Integer, Color> territoryIds = new HashMap<>();//territory IDs and their corresponding colors
+        GameBoard gameBoard = App.cc.getGameBoard();//get gameboard
+        Map<Integer, Player> players = gameBoard.getPlayers();//get active players (2 - 5)
+        //for each active territory, set visible and update its color
+        for (Map.Entry<Integer, Player> entry : players.entrySet()) {
+            Player player = entry.getValue();
+            for (Integer territoryId : player.getOwnedTerritories()) {
+                //get Territory
+                TerritoryUI currTerr = TerrUIs.get(territoryId);//again, indexes are corresponding
+                //set visible and update color
+                currTerr.setVisible();
+                currTerr.setTerritoryColor(Color.web(player.getColor().name()));
+            }
+        }
+    }
+
     public String getGreeting() {
         return "Hello world from client.";
     }
-    Button button;
     public static void main(String[] args){
         //ClientController clientController = new ClientController();
         //clientController.startGame();
@@ -42,9 +77,10 @@ public class App extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
 
-        Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getClassLoader().getResource("main.fxml")));
+        FXMLLoader fxmlLoder = new FXMLLoader(Objects.requireNonNull(getClass().getClassLoader().getResource("main.fxml")));
+        Parent root = fxmlLoder.load();
         primaryStage.setTitle("Listening from server");
-
+        ((mainController)fxmlLoder.getController()).setStage(primaryStage);
         primaryStage.setScene(new Scene(root, 600, 400));
         primaryStage.show();
     }
