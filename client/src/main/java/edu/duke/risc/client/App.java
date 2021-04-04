@@ -8,6 +8,8 @@ import java.io.IOException;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
@@ -31,12 +33,10 @@ public class App extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        primaryStage.setTitle("Feng Wang");
-        button = new Button("test UI- Feng Wang");
-        StackPane layout = new StackPane();
-        layout.getChildren().add(button);
+        Parent root = FXMLLoader.load(getClass().getResource("main.fxml"));
+        primaryStage.setTitle("The very first stage");
 
-        Scene scene = new Scene(layout, 300, 250);
+        Scene scene = new Scene(root, 300, 250);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
