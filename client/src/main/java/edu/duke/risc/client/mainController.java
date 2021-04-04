@@ -22,5 +22,8 @@ public class mainController implements Initializable{
         App.cc.tryConnectAndWait();
         placement wait = new placement();
         wait.showWindow();
+        actionChoose act = new actionChoose();
+        act.showWindow();
     }
+
 }
