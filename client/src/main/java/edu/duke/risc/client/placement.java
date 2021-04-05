@@ -5,8 +5,6 @@ import edu.duke.risc.shared.board.Territory;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.users.Player;
 import javafx.application.Application;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.ChoiceBox;
@@ -16,24 +14,15 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import java.awt.*;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.ResourceBundle;
 
-public class placement extends Application implements Initializable {
+public class placement extends Application{
     Stage stage=new Stage();
-    @FXML
-    private Label whoami;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
         Enum myColor = App.cc.getMyself().getColor();
-        //setWhoami("Your are the " + myColor + " player, please place your units");
-
-
-        //Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getClassLoader().getResource("placement.fxml")));
         Map<Integer, Color> territoryIds = new HashMap<>();
         Player self = App.cc.getMyself();
         GameBoard gameBoard = App.cc.getGameBoard();
@@ -185,7 +174,7 @@ public class placement extends Application implements Initializable {
     public void getPlacements(ChoiceBox<String> terr, ChoiceBox<Integer> num){
         String terr_name = terr.getValue();
         int i = terr_name.indexOf("(");
-        String terr_id = terr_name.substring(i, i+1);
+        String terr_id = terr_name.substring(i+1, i+2);
         System.out.println(terr_id+",S,"+num.getValue());
     }
 
@@ -218,15 +207,4 @@ public class placement extends Application implements Initializable {
         start(stage);
     }
 
-    public void setWhoami(String data){
-        whoami = new Label(data);
-        whoami.setText(data);
-    }
-
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        whoami = new Label();
-        whoami.setText("Your are the \" + myColor + \" player, please place your units");
-    }
 }
