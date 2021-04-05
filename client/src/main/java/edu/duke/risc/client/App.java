@@ -4,18 +4,20 @@
 package edu.duke.risc.client;
 
 import java.io.IOException;
+import java.util.*;
 
+import edu.duke.risc.shared.board.GameBoard;
+import edu.duke.risc.shared.users.Player;
 import javafx.application.Application;
-import javafx.collections.FXCollections;
+
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Slider;
-import javafx.scene.control.Tooltip;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import static javafx.application.Application.launch;
@@ -24,32 +26,85 @@ import static javafx.application.Application.launch;
  *
  */
 public class App extends Application {
+    //cc will hold all info, will be updated when payload object is passed in
+    public static ClientController cc;
+    //store UI structure and cache all territory DISPLAY info in a list(subject to change)
+    public static ArrayList<TerritoryUI> TerrUIs = new ArrayList<TerritoryUI>();
+    Button button;
+    /*
+    * initialize territories based on clientController info(must be called after cc's first
+    * update and can only be could once)*/
+    public static void initializeTerritories() {
+        //instantiate all territories
+        TerrUIs.add(new UtahUI(null));
+        TerrUIs.add(new NevadaUI(null));
+        TerrUIs.add(new IdahoUI(null));
+        TerrUIs.add(new WyomingUI(null));
+        TerrUIs.add(new ColoradoUI(null));
+        TerrUIs.add(new NewMexicoUI(null));
+        TerrUIs.add(new ArizonaUI(null));
+        TerrUIs.add(new CaliforniaUI(null));
+        TerrUIs.add(new OregonUI(null));
+        TerrUIs.add(new WashingtonUI(null));
+        //assert(TerrUIs.get(2).getId() == 2);//make sure territories are insert in order
+        GameBoard gameBoard = App.cc.getGameBoard();//get gameboard
+        Map<Integer, Player> players = gameBoard.getPlayers();//get active players (ids may between 2 - 5)
+        //for each active territory(belong to one of players), set visible and update its color
+        for (Map.Entry<Integer, Player> entry : players.entrySet()) {
+            Player player = entry.getValue();
+            for (Integer territoryId : player.getOwnedTerritories()) {
+                //get Territory
+                TerritoryUI currTerr = TerrUIs.get(territoryId);//again, indexes are corresponding
+                //set visible and update color
+                currTerr.setVisible();
+                currTerr.setTerritoryColor(Color.web(player.getColor().name()));
+            }
+        }
+    }
+
+    /*
+     * should be called every time clientController is updated
+     * update every territoryUI info(color)
+     */
+    public static void updateTerritories(){
+        GameBoard gameBoard = App.cc.getGameBoard();//get gameboard
+        Map<Integer, Player> players = gameBoard.getPlayers();//get active players (ids may between 2 - 5)
+        //for each active territory(belong to one of players), set visible and update its color
+        for (Map.Entry<Integer, Player> entry : players.entrySet()) {
+            Player player = entry.getValue();
+            for (Integer territoryId : player.getOwnedTerritories()) {
+                //get Territory
+                TerritoryUI currTerr = TerrUIs.get(territoryId);//again, indexes are corresponding
+                assert(currTerr.isVisible());//if belongs to a player, should be setVisible when initialized
+                //update color
+                currTerr.setTerritoryColor(Color.web(player.getColor().name()));
+            }
+        }
+    }
+
     public String getGreeting() {
         return "Hello world from client.";
     }
-    Button button;
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args){
         //ClientController clientController = new ClientController();
         //clientController.startGame();
+        try {
+            cc = new ClientController();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         launch(args);
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        primaryStage.setTitle("Now test javafx slider/choiceBox");
-        button = new Button();
-        Slider mySlider = new Slider(0, 3, 0);//min, max and initial value
-        ChoiceBox<String> cb = new ChoiceBox<String>(FXCollections.observableArrayList("California", "Ohio", "New Mexico", "Colorado", "Arizona"));
-        cb.setTooltip(new Tooltip("Choose target territory"));
 
-
-        VBox myVBox = new VBox(mySlider);
-        StackPane layout = new StackPane();
-        layout.getChildren().add(button);
-        layout.getChildren().add(myVBox);
-        layout.getChildren().add(cb);
-        Scene scene = new Scene(layout, 300, 250);
-        primaryStage.setScene(scene);
+        FXMLLoader fxmlLoder = new FXMLLoader(Objects.requireNonNull(getClass().getClassLoader().getResource("main.fxml")));
+        Parent root = fxmlLoder.load();
+        primaryStage.setTitle("Listening from server");
+        ((mainController)fxmlLoder.getController()).setStage(primaryStage);
+        primaryStage.setScene(new Scene(root, 600, 400));
         primaryStage.show();
     }
 }
+

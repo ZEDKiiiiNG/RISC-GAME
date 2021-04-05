@@ -35,7 +35,7 @@ public class TextDisplayer implements Displayable {
         }
     }
 
-    private String displaySingleTerritory(GameBoard gameBoard, Territory territory) {
+    public String displaySingleTerritory(GameBoard gameBoard, Territory territory) {
         StringBuilder builder = new StringBuilder();
 
         //print territory info

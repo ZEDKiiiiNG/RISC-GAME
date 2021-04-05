@@ -4,32 +4,19 @@ import edu.duke.risc.shared.Communicable;
 import edu.duke.risc.shared.Configurations;
 import edu.duke.risc.shared.PayloadObject;
 import edu.duke.risc.shared.SocketCommunicator;
-import edu.duke.risc.shared.actions.Action;
-import edu.duke.risc.shared.actions.AttackAction;
-import edu.duke.risc.shared.actions.MoveAction;
-import edu.duke.risc.shared.actions.PlacementAction;
-import edu.duke.risc.shared.actions.UpgradeTechAction;
-import edu.duke.risc.shared.actions.UpgradeUnitAction;
+import edu.duke.risc.shared.actions.*;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.commons.ActionType;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UnitType;
-import edu.duke.risc.shared.exceptions.InvalidActionException;
-import edu.duke.risc.shared.exceptions.InvalidInputException;
-import edu.duke.risc.shared.exceptions.InvalidPayloadContent;
-import edu.duke.risc.shared.exceptions.ServerRejectException;
-import edu.duke.risc.shared.exceptions.UnmatchedReceiverException;
+import edu.duke.risc.shared.exceptions.*;
 import edu.duke.risc.shared.users.Player;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static edu.duke.risc.shared.Configurations.*;
 
@@ -39,7 +26,7 @@ import static edu.duke.risc.shared.Configurations.*;
  * @author eason
  * @date 2021/3/10 13:58
  */
-public class ClientController {
+public class ClientController extends WaitPlayerUI {
 
     /**
      * The game board
@@ -70,7 +57,10 @@ public class ClientController {
      * Thread which reads exit signal
      */
     private ReadExitThread readExitThread;
+    /*
 
+     */
+    private WaitPlayerUI waitPlayerUI;
     /**
      * stage of the client
      */
@@ -81,6 +71,20 @@ public class ClientController {
      *
      * @throws IOException IOException
      */
+    public Player getMyself(){
+
+        return this.gameBoard.getPlayers().get(playerId);
+
+    }
+
+    public GameBoard getGameBoard(){
+        return this.gameBoard;
+    }
+
+    public Integer getPlayerId(){
+        return this.playerId;
+    }
+
     public ClientController() throws IOException {
         this.consoleReader = new BufferedReader(new InputStreamReader(System.in));
     }
@@ -92,18 +96,15 @@ public class ClientController {
      */
     public void startGame() throws IOException {
         tryConnectAndWait();
-
-        assignUnits();
-
-        moveAndAttack();
-
+        //assignUnits();
+        //moveAndAttack();
         observerMode();
     }
 
     /**
      * Try to connect with the server and wait for other users
      */
-    private void tryConnectAndWait() {
+    public void tryConnectAndWait() {
         try {
             //try connect to the server
             Socket socket = new Socket(ClientConfigurations.LOCALHOST, Configurations.DEFAULT_SERVER_PORT);
@@ -115,14 +116,20 @@ public class ClientController {
                 return;
             }
             System.out.println(ClientConfigurations.CONNECT_SUCCESS_MSG);
+
+
             //waiting for other users
             this.waitAndReadServerResponse();
+
             System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
-            stage = STAGE_ASSIGN;
-        } catch (IOException | ClassNotFoundException e) {
+            //waitPlayerUI.start(new Stage());
+            //System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
+        } catch (IOException e) {
             e.printStackTrace();
         } catch (UnmatchedReceiverException | InvalidPayloadContent | ServerRejectException e) {
             System.out.println(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -242,37 +249,52 @@ public class ClientController {
      *
      * @throws IOException IOException
      */
-    private void assignUnits() throws IOException {
-        if(!stage.equals(STAGE_ASSIGN)) return;
+
+    public void clientAssignUnits(List<Action> actions, String input){
+        Action action = null;
+        try {
+            action = this.validateInputAndGeneratePlacementAction(input, this.gameBoard, playerId);
+            action.simulateApply(this.gameBoard);
+            actions.add(action);
+        } catch (InvalidInputException | InvalidActionException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+
+
+
+
+    public void assignUnits(List<Action> actions) throws IOException {
         while (true) {
-            List<Action> actions = new ArrayList<>();
-            Player player = this.gameBoard.getPlayers().get(playerId);
+//            List<Action> actions = new ArrayList<>();
+//            Player player = this.gameBoard.getPlayers().get(playerId);
 
-            while (!player.getInitUnitsMap().isEmpty()) {
-                this.gameBoard.displayBoard();
-                //print basic information
-                System.out.println("You are the " + player.getColor() + " player: ");
-
-                //print resource and technology information
-                System.out.println();
-
-                //asking target territory
-                System.out.println("You are assigned " + gameBoard.getPlayerAssignedTerritoryInfo(playerId));
-                System.out.println("You still have " + player.getUnitsInfo(player.getInitUnitsMap()) + " available");
-                System.out.println("Please enter your placement will in the format of " +
-                        "<target territory>,<unit type>,<unit number> for example 1,S,5");
-
-                String input = this.consoleReader.readLine();
-                Action action = null;
-                try {
-                    action = this.validateInputAndGeneratePlacementAction(input, this.gameBoard, playerId);
-                    action.simulateApply(this.gameBoard);
-                    actions.add(action);
-                } catch (InvalidInputException | InvalidActionException e) {
-                    System.out.println(e.getMessage());
-                    continue;
-                }
-            }
+//            while (!player.getInitUnitsMap().isEmpty()) {
+////                this.gameBoard.displayBoard();
+////                //print basic information
+////                System.out.println("You are the " + player.getColor() + " player: ");
+////
+////                //print resource and technology information
+////                System.out.println();
+////
+////                //asking target territory
+////                System.out.println("You are assigned " + gameBoard.getPlayerAssignedTerritoryInfo(playerId));
+////                System.out.println("You still have " + player.getUnitsInfo(player.getInitUnitsMap()) + " available");
+////                System.out.println("Please enter your placement will in the format of " +
+////                        "<target territory>,<unit type>,<unit number> for example 1,S,5");
+//
+//                //String input = this.consoleReader.readLine();
+//                Action action = null;
+//                try {
+//                    action = this.validateInputAndGeneratePlacementAction(input, this.gameBoard, playerId);
+//                    action.simulateApply(this.gameBoard);
+//                    actions.add(action);
+//                } catch (InvalidInputException | InvalidActionException e) {
+//                    System.out.println(e.getMessage());
+//                    continue;
+//                }
+//            }
 
             //sending to the server
             //constructing payload objects
@@ -284,8 +306,8 @@ public class ClientController {
                 this.sendMessage(request);
                 System.out.println("Actions sent, please wait other players finish placing");
                 this.waitAndReadServerResponse();
-                System.out.println(this.loggerInfo);
-                this.gameBoard.displayBoard();
+                //System.out.println(this.loggerInfo);
+                //this.gameBoard.displayBoard();
             } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
                 //if server returns failed, re-do the actions again
                 exception.printStackTrace();
@@ -303,7 +325,7 @@ public class ClientController {
      * @param payloadObject payloadObject
      * @throws IOException IOException
      */
-    private void sendMessage(PayloadObject payloadObject) throws IOException {
+    public void sendMessage(PayloadObject payloadObject) throws IOException {
         this.communicator.writeMessage(payloadObject);
     }
 
@@ -312,8 +334,8 @@ public class ClientController {
      *
      * @throws IOException IOException
      */
-    private void moveAndAttack() throws IOException {
-        if(!stage.equals(STAGE_MOVE)) return;
+    public void moveAndAttack(List<Action> moveActions, List<Action> attackActions,
+                              List<Action> upgradeTechActions, List<Action> upgradeUnitsActions) throws IOException {
         while (true) {
             if (this.checkUserStatus()) {
                 stage = STAGE_OBSERVE;
@@ -321,46 +343,46 @@ public class ClientController {
             }
             Player player = this.gameBoard.getPlayers().get(playerId);
             boolean isFinished = false;
-            List<Action> moveActions = new ArrayList<>();
-            List<Action> attackActions = new ArrayList<>();
-            List<Action> upgradeUnitsActions = new ArrayList<>();
-            List<Action> upgradeTechActions = new ArrayList<>();
-            while (!isFinished) {
-                this.gameBoard.displayBoard();
-                System.out.println(player.getPlayerInfo());
-                System.out.println("What would you like to do?");
-                System.out.println("(M)ove");
-                System.out.println("(A)ttack");
-                System.out.println("(U)nits upgrade");
-                System.out.println("(T)echnology upgrade");
-                System.out.println("(D)one");
-                String input = this.consoleReader.readLine();
-                switch (input) {
-                    case "M":
-                        conductMoveOrAttack(moveActions, 0);
-                        break;
-                    case "A":
-                        conductMoveOrAttack(attackActions, 1);
-                        break;
-                    case "U":
-                        conductUpgradeUnits(upgradeUnitsActions);
-                        break;
-                    case "T":
-                        if (player.isAlreadyUpgradeTechInTurn()) {
-                            System.out.println("Already upgraded in this turn");
-                        } else {
-                            conductUpgradeTechLevel(upgradeTechActions);
-                        }
-                        break;
-                    case "D":
-                        System.out.println("You have finished your actions, submitting...");
-                        isFinished = true;
-                        break;
-                    default:
-                        System.out.println("Invalid input, please input again");
-                        break;
-                }
-            }
+//            List<Action> moveActions = new ArrayList<>();
+//            List<Action> attackActions = new ArrayList<>();
+//            List<Action> upgradeUnitsActions = new ArrayList<>();
+//            List<Action> upgradeTechActions = new ArrayList<>();
+//            while (!isFinished) {
+//                this.gameBoard.displayBoard();
+//                System.out.println(player.getPlayerInfo());
+//                System.out.println("What would you like to do?");
+//                System.out.println("(M)ove");
+//                System.out.println("(A)ttack");
+//                System.out.println("(U)nits upgrade");
+//                System.out.println("(T)echnology upgrade");
+//                System.out.println("(D)one");
+//                String input = this.consoleReader.readLine();
+//                switch (input) {
+//                    case "M":
+//                        conductMoveOrAttack(moveActions, 0);
+//                        break;
+//                    case "A":
+//                        conductMoveOrAttack(attackActions, 1);
+//                        break;
+//                    case "U":
+//                        conductUpgradeUnits(upgradeUnitsActions);
+//                        break;
+//                    case "T":
+//                        if (player.isAlreadyUpgradeTechInTurn()) {
+//                            System.out.println("Already upgraded in this turn");
+//                        } else {
+//                            conductUpgradeTechLevel(upgradeTechActions);
+//                        }
+//                        break;
+//                    case "D":
+//                        System.out.println("You have finished your actions, submitting...");
+//                        isFinished = true;
+//                        break;
+//                    default:
+//                        System.out.println("Invalid input, please input again");
+//                        break;
+//                }
+//            }
 
             //sending to the server
             //constructing payload objects
@@ -387,7 +409,7 @@ public class ClientController {
     /**
      * Entering the observer's mode
      */
-    private void observerMode() {
+    public void observerMode() {
         try {
             System.out.println("You lost the game, entering Observer Mode, you can type exit to quit...");
             this.readExitThread = new ReadExitThread(this.consoleReader, this.communicator, this.playerId);
@@ -409,18 +431,17 @@ public class ClientController {
      * @param actionType 0 for move and 1 for attack
      * @throws IOException
      */
-    private void conductMoveOrAttack(List<Action> actions, int actionType) throws IOException {
-        System.out.println("Please enter instruction in the following format: " +
-                "<sourceTerritoryId>,<destinationId>;<UnitType1>,<amount1>;<UnitType2>,<amount2>");
-        String moveInput = this.consoleReader.readLine();
+    public void conductMoveOrAttack(List<Action> actions, int actionType, String moveInput)
+            throws IOException, InvalidInputException, InvalidActionException {
+//        System.out.println("Please enter instruction in the following format: " +
+//                "<sourceTerritoryId>,<destinationId>;<UnitType1>,<amount1>;<UnitType2>,<amount2>");
+//        String moveInput = this.consoleReader.readLine();
         Action action;
-        try {
-            action = this.readAttackOrMoveAction(moveInput, this.gameBoard, playerId, actionType);
-            action.simulateApply(this.gameBoard);
-            actions.add(action);
-        } catch (InvalidInputException | InvalidActionException | NumberFormatException e) {
-            System.out.println(e.getMessage());
-        }
+
+        action = this.readAttackOrMoveAction(moveInput, this.gameBoard, playerId, actionType);
+        action.simulateApply(this.gameBoard);
+        actions.add(action);
+
     }
 
     /**
@@ -428,15 +449,13 @@ public class ClientController {
      *
      * @param actions action
      */
-    private void conductUpgradeTechLevel(List<Action> actions) {
+    public void conductUpgradeTechLevel(List<Action> actions) throws InvalidActionException {
         Action action;
-        try {
-            action = new UpgradeTechAction(playerId, ActionType.UPGRADE_TECH);
-            action.simulateApply(this.gameBoard);
-            actions.add(action);
-        } catch (InvalidActionException e) {
-            System.out.println(e.getMessage());
-        }
+
+        action = new UpgradeTechAction(playerId, ActionType.UPGRADE_TECH);
+        action.simulateApply(this.gameBoard);
+        actions.add(action);
+
     }
 
     /**
@@ -445,18 +464,16 @@ public class ClientController {
      * @param actions action
      * @throws IOException IOException
      */
-    private void conductUpgradeUnits(List<Action> actions) throws IOException {
-        System.out.println("Please enter instruction in the following format: " +
-                "<targetTerritoryId>,<UnitType>,<amount>");
-        String upgradeUnitInput = this.consoleReader.readLine();
+    public void conductUpgradeUnits(List<Action> actions, String upgradeUnitInput) throws IOException, InvalidInputException, InvalidActionException {
+//        System.out.println("Please enter instruction in the following format: " +
+//                "<targetTerritoryId>,<UnitType>,<amount>");
+//        String upgradeUnitInput = this.consoleReader.readLine();
         Action action;
-        try {
-            action = this.readUpgradeUnitAction(upgradeUnitInput, this.gameBoard, playerId);
-            action.simulateApply(this.gameBoard);
-            actions.add(action);
-        } catch (InvalidInputException | InvalidActionException e) {
-            System.out.println(e.getMessage());
-        }
+
+        action = this.readUpgradeUnitAction(upgradeUnitInput, this.gameBoard, playerId);
+        action.simulateApply(this.gameBoard);
+        actions.add(action);
+
     }
 
     /**
