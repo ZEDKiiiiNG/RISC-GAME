@@ -12,7 +12,7 @@
             prefHeight="400.0" prefWidth="600.0">
     <children>
         <Button layoutX="150.0" layoutY="100.0" mnemonicParsing="false" onAction="#connectToServer" text="Try connect to sever" />
-        <!--<Button layoutX="182.0" layoutY="141.0" mnemonicParsing="false" onAction="#" text="Go to Second Stage" />-->
         <Label layoutX="70.0" layoutY="60.0" text="MainStage" />
+
     </children>
 </AnchorPane>
