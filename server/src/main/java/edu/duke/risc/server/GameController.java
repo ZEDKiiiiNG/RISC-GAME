@@ -1,10 +1,6 @@
 package edu.duke.risc.server;
 
-import edu.duke.risc.shared.Configurations;
-import edu.duke.risc.shared.PayloadObject;
-import edu.duke.risc.shared.PlayerHandler;
-import edu.duke.risc.shared.SocketCommunicator;
-import edu.duke.risc.shared.ThreadBarrier;
+import edu.duke.risc.shared.*;
 import edu.duke.risc.shared.actions.Action;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.commons.PayloadType;
@@ -28,6 +24,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static edu.duke.risc.shared.Configurations.*;
+import static java.lang.Thread.sleep;
 
 /**
  * Represent the main game logic and process controller.
@@ -52,10 +49,10 @@ public class GameController {
      */
     private final List<UserColor> colors = new ArrayList<>();
 
-    /**
-     * Socket connection with the server
-     */
-    private ServerSocket serverSocket;
+//    /**
+//     * Socket connection with the server
+//     */
+//    private ServerSocket serverSocket;
 
     /**
      * Player connections
@@ -72,24 +69,60 @@ public class GameController {
      */
     private final BufferedReader reader;
 
+
     /**
      * Maximum number of players
      */
     private int maxPlayer;
 
     /**
+     * id with corresponding communicator
+     */
+    private final Map<String, SocketCommunicator> userConnections;;
+
+    /**
+     * id with corresponding player
+     */
+    private Map<String, Player> idMap;
+
+
+    /**
+     * id  of gamecontroller
+     */
+    private int gameId;
+
+
+
+    /**
+     * stage of the controller
+     */
+    private String stage;
+
+    /**
      * Constructor
      */
-    public GameController() {
+    public GameController(int gameId, int maxPlayer) {
         barrier = new ThreadBarrier(maxPlayer);
         root = new Master();
         playerConnections = new HashMap<>();
+        idMap = new HashMap<>();
+        userConnections = new HashMap<>();
         this.reader = new BufferedReader(new InputStreamReader(System.in));
-
+        this.gameId = gameId;
+        this.maxPlayer = maxPlayer;
         this.addColors();
+        this.stage = STAGE_CREATE;
+//        try {
+//            serverSocket = new ServerSocket(Configurations.DEFAULT_SERVER_PORT);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+    }
+    public void run() {
         try {
-            serverSocket = new ServerSocket(Configurations.DEFAULT_SERVER_PORT);
-        } catch (IOException e) {
+            this.startGame();
+        }
+        catch(IOException | InterruptedException e){
             e.printStackTrace();
         }
     }
@@ -99,34 +132,37 @@ public class GameController {
      *
      * @throws IOException IOException
      */
-    public void startGame() throws IOException {
+    public void startGame() throws IOException, InterruptedException {
         this.initWorld();
         this.waitPlayers();
+        this.stage = STAGE_ASSIGN;
         this.placementPhase();
+        this.stage = STAGE_MOVE;
         this.moveAttackPhase();
+        this.stage = GAMEFINISHED;
     }
 
     /**
      * Read the user input and initialize the world according to number of players
      */
     private void initWorld() {
-        while (true) {
-            System.out.println("Please enter number of players (2-5)");
-            try {
-                String input = this.reader.readLine();
-                int numPlayer = Integer.parseInt(input);
-                if (numPlayer >= 2 && numPlayer <= 5) {
-                    this.maxPlayer = numPlayer;
-                    break;
-                } else {
-                    System.out.println("Should only be number 2,3,4,5");
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input");
-            }
-        }
+//        while (true) {
+//            System.out.println("Please enter number of players (2-5)");
+//            try {
+//                String input = this.reader.readLine();
+//                int numPlayer = Integer.parseInt(input);
+//                if (numPlayer >= 2 && numPlayer <= 5) {
+//                    this.maxPlayer = numPlayer;
+//                    break;
+//                } else {
+//                    System.out.println("Should only be number 2,3,4,5");
+//                }
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            } catch (NumberFormatException e) {
+//                System.out.println("Invalid input");
+//            }
+//        }
         board = new GameBoard(maxPlayer);
     }
 
@@ -288,6 +324,7 @@ public class GameController {
 
             if (this.checkAndUpdatePlayerStatus()) {
                 this.terminateProcess(logger.toString());
+                return;
             } else {
                 broadcastUpdatedMaps(logger.toString(), PayloadType.UPDATE);
             }
@@ -331,26 +368,61 @@ public class GameController {
      *
      * @throws IOException IOException
      */
-    private void waitPlayers() throws IOException {
-        while (this.board.getPlayers().size() < maxPlayer) {
-            int playerIndex = playerConnections.size();
-            System.out.println("Waiting for " + (maxPlayer - playerIndex)
-                    + " players to join the game.");
-            Socket clientSocket = serverSocket.accept();
-            SocketCommunicator communicator = new SocketCommunicator(clientSocket);
+    private void waitPlayers() throws IOException, InterruptedException {
+//        while (this.board.getPlayers().size() < maxPlayer) {
+//            int playerIndex = playerConnections.size();
+//            System.out.println("Waiting for " + (maxPlayer - playerIndex)
+//                    + " players to join the game.");
+//            Socket clientSocket = serverSocket.accept();
+//            SocketCommunicator communicator = new SocketCommunicator(clientSocket);
+        int playerIndex = 0;
+
+        for(Map.Entry<String, SocketCommunicator> entry : userConnections.entrySet()){
             Player player = new Player(playerIndex + 1, this.colors.get(playerIndex));
             //assign territories
             this.assignTerritories(player, this.board);
+            // validate
+            SocketCommunicator communicator  = entry.getValue();
             playerConnections.put(player, communicator);
+            idMap.put(entry.getKey(),player);
             System.out.println("Successfully connect with player " + player);
-            PlayerHandler handler = new PlayerHandler(communicator, barrier);
+            PlayerHandler handler = new PlayerHandler(communicator, barrier/*, serverSocket,playerConnections, player*/);
             handler.start();
+            playerIndex++;
         }
         System.out.println("All player are ready");
         this.board.forwardPlacementPhase();
         //share game map with every player
         broadcastUpdatedMaps("", PayloadType.UPDATE);
     }
+
+
+    /**
+     * add user connections
+     *
+     * @param id     the id of user
+     * @param socketCommunicator the communicator of the id
+     */
+
+    public void addUserConnections(String id, SocketCommunicator socketCommunicator){
+        this.userConnections.put(id,socketCommunicator);
+    }
+
+    /**
+     * update user connections
+     */
+
+    public void updateConnections(){
+        for(Map.Entry<String, SocketCommunicator> entry : userConnections.entrySet()){
+            String id = entry.getKey();
+            SocketCommunicator socketCommunicator = entry.getValue();
+            Player player = idMap.get(id);
+
+            playerConnections.put(player, socketCommunicator);
+        }
+    }
+
+
 
     /**
      * Broadcast messages to all (alive) clients
@@ -469,9 +541,26 @@ public class GameController {
         for (Map.Entry<Player, SocketCommunicator> socketCommunicatorEntry : this.playerConnections.entrySet()) {
             socketCommunicatorEntry.getValue().terminate();
         }
-        this.serverSocket.close();
-        System.out.println("Connection resources closed");
-        System.exit(0);
+        //this.serverSocket.close();
+
+//        System.out.println("Connection resources closed");
+//        System.exit(0);
     }
 
+    public String getStage() {
+        return stage;
+    }
+    public GameBoard getBoard() {
+        return board;
+    }
+    public Map<String, Player> getIdMap() {
+        return idMap;
+    }
+    public int getMaxPlayer() {
+        return maxPlayer;
+    }
+
+    public Map<String, SocketCommunicator> getUserConnections() {
+        return userConnections;
+    }
 }
