@@ -1,6 +1,9 @@
 package edu.duke.risc.client;
 
 import javafx.fxml.Initializable;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.net.URL;
@@ -23,12 +26,23 @@ public class mainController implements Initializable{
     }
 
     public void connectToServer() throws Exception {
+        showConnectingScene();
         App.cc.tryConnectAndWait();
         App.initializeTerritories();
         placementPage = new placement();
         placementPage.showWindow();
         mainStage.close();//close the first window after connect
 
+    }
+
+    private void showConnectingScene() {
+        Text msg = new Text("Successfully connected to server, now wait for other players...");
+        msg.setLayoutX(50);
+        msg.setLayoutY(100);
+        Group g= new Group();
+        g.getChildren().add(msg);
+        Scene waitOthers = new Scene(g, 400, 300);
+        this.mainStage.setScene(waitOthers);
     }
 
 
