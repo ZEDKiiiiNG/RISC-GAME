@@ -13,9 +13,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -27,6 +25,7 @@ import java.util.Map;
 
 public class actionChoose extends Application  {
     Stage stage=new Stage();
+    private obeservarUI obeserver;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -68,8 +67,8 @@ public class actionChoose extends Application  {
             introduce += i+", ";
         }
         Text a = new Text(introduce);
-        a.setLayoutX(50);
-        a.setLayoutY(100);
+        a.setLayoutX(650);
+        a.setLayoutY(10);
         g.getChildren().add(a);
 
         //commit button
@@ -80,6 +79,8 @@ public class actionChoose extends Application  {
             try {
                 finishThisRoll(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions);
             } catch (IOException ioException) {
+                showSecondWindow("send actions to server failed");
+            } catch (Exception exception) {
                 showSecondWindow("send actions to server failed");
             }
         });
@@ -120,8 +121,16 @@ public class actionChoose extends Application  {
     }
 
     public void finishThisRoll(List<Action> moveActions, List<Action> attackActions,
-                               List<Action> upgradeTechActions, List<Action> upgradeUnitsActions) throws IOException {
-        App.cc.moveAndAttack(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions);
+                               List<Action> upgradeTechActions, List<Action> upgradeUnitsActions) throws Exception {
+        String log = App.cc.moveAndAttack(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions);
+        App.updateTerritories();
+        showSecondWindow(log);
+        if (App.cc.checkUserStatus()) {
+            this.stage.close();
+            obeserver = new obeservarUI();
+            obeserver.showWindow();
+        }
+        this.showWindow();
     }
 
     public void actMove(Player player, List<Action> moveActions){
@@ -203,6 +212,9 @@ public class actionChoose extends Application  {
         String output = "";
         output += source.getText()+","+dest.getText();
         for(UnitType i:unitNums.keySet()){
+            if(unitNums.get(i).getText()==null){
+                continue;
+            }
             output += ";";
             output += i.toString().substring(1, 2)+","+unitNums.get(i).getText();
         }
@@ -226,6 +238,9 @@ public class actionChoose extends Application  {
         String output = "";
         output += source.getText()+","+dest.getText();
         for(UnitType i:unitNums.keySet()){
+            if(unitNums.get(i).getText()==null){
+                continue;
+            }
             output += ";";
             output += i.toString().substring(1, 2)+","+unitNums.get(i).getText();
         }
@@ -265,7 +280,8 @@ public class actionChoose extends Application  {
         Text t2 = new Text("unit number");
         t2.setLayoutX(30);
         t2.setLayoutY(220);
-        ChoiceBox<Integer> unit_num= new ChoiceBox<>();
+        //ChoiceBox<Integer> unit_num= new ChoiceBox<>();
+        TextField unit_num = new TextField();
         unit_num.setLayoutX(150);
         unit_num.setLayoutY(220);
 
@@ -288,7 +304,6 @@ public class actionChoose extends Application  {
         }
         for(UnitType i : unitMap.keySet()){
             unit_id.getItems().add(i.toString());
-            unit_num.getItems().add(unitMap.get(i));
         }
         g.getChildren().addAll(t, t1, t2, terr_id, unit_id, unit_num, b);
         Scene upgardeScene = new Scene(g, 300, 350);
@@ -297,11 +312,12 @@ public class actionChoose extends Application  {
         secondStage.show();
     }
 
-    public void doUpgrade(ChoiceBox<Integer> terr_id, ChoiceBox<String> unit_id, ChoiceBox<Integer> unit_num,
+    public void doUpgrade(ChoiceBox<Integer> terr_id, ChoiceBox<String> unit_id, TextField unit_num,
                           Stage secondStage, List<Action> upgradeUnitsActions) throws Exception {
+
         String output = "";
         String unitType = unit_id.getValue().substring(1, 2);
-        output += terr_id.getValue()+","+unitType+","+unit_num.getValue();
+        output += terr_id.getValue()+","+unitType+","+unit_num.getText();
         System.out.println(output);
         secondStage.close();
         this.showWindow();
@@ -342,6 +358,7 @@ public class actionChoose extends Application  {
             g.getChildren().add(t);
             g.getChildren().add(num);
             nums.put(i, num);
+            location++;
         }
         return nums;
     }
@@ -370,14 +387,7 @@ public class actionChoose extends Application  {
         secondStage.show();
     }
 
-    public void displayTerritory(Rectangle rect, StackPane pane, javafx.scene.control.Button b, Group g, Color color, GameBoard gameBoard, Territory territory){
-        rect.setStyle("-fx-stroke: black; -fx-stroke-width: 3;");
-        pane.getChildren().addAll(rect, b);
-        rect.setFill(color);
-        b.setOnAction(e->territoryInfoScene(gameBoard,territory));
-        g.getChildren().add(pane);
 
-    }
     public static void main(String[] args) {
         launch(args);
     }

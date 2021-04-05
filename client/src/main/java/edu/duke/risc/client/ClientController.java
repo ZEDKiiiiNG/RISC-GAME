@@ -211,75 +211,31 @@ public class ClientController extends WaitPlayerUI {
      *
      * @throws IOException IOException
      */
-    public void moveAndAttack(List<Action> moveActions, List<Action> attackActions,
+    public String moveAndAttack(List<Action> moveActions, List<Action> attackActions,
                               List<Action> upgradeTechActions, List<Action> upgradeUnitsActions) throws IOException {
-        while (true) {
-            if (this.checkUserStatus()) {
-                return;
-            }
-            Player player = this.gameBoard.getPlayers().get(playerId);
-            boolean isFinished = false;
-//            List<Action> moveActions = new ArrayList<>();
-//            List<Action> attackActions = new ArrayList<>();
-//            List<Action> upgradeUnitsActions = new ArrayList<>();
-//            List<Action> upgradeTechActions = new ArrayList<>();
-//            while (!isFinished) {
-//                this.gameBoard.displayBoard();
-//                System.out.println(player.getPlayerInfo());
-//                System.out.println("What would you like to do?");
-//                System.out.println("(M)ove");
-//                System.out.println("(A)ttack");
-//                System.out.println("(U)nits upgrade");
-//                System.out.println("(T)echnology upgrade");
-//                System.out.println("(D)one");
-//                String input = this.consoleReader.readLine();
-//                switch (input) {
-//                    case "M":
-//                        conductMoveOrAttack(moveActions, 0);
-//                        break;
-//                    case "A":
-//                        conductMoveOrAttack(attackActions, 1);
-//                        break;
-//                    case "U":
-//                        conductUpgradeUnits(upgradeUnitsActions);
-//                        break;
-//                    case "T":
-//                        if (player.isAlreadyUpgradeTechInTurn()) {
-//                            System.out.println("Already upgraded in this turn");
-//                        } else {
-//                            conductUpgradeTechLevel(upgradeTechActions);
-//                        }
-//                        break;
-//                    case "D":
-//                        System.out.println("You have finished your actions, submitting...");
-//                        isFinished = true;
-//                        break;
-//                    default:
-//                        System.out.println("Invalid input, please input again");
-//                        break;
-//                }
-//            }
-
-            //sending to the server
-            //constructing payload objects
-            Map<String, Object> content = new HashMap<>(3);
-            content.put(Configurations.REQUEST_MOVE_ACTIONS, moveActions);
-            content.put(Configurations.REQUEST_ATTACK_ACTIONS, attackActions);
-            content.put(Configurations.REQUEST_UPGRADE_UNITS_ACTIONS, upgradeUnitsActions);
-            content.put(Configurations.REQUEST_UPGRADE_TECH_ACTIONS, upgradeTechActions);
-            PayloadObject request = new PayloadObject(this.playerId,
-                    Configurations.MASTER_ID, PayloadType.REQUEST, content);
-            try {
-                this.sendMessage(request);
-                System.out.println("Actions sent, please wait other players finish placing");
-                this.waitAndReadServerResponse();
-                System.out.println(this.loggerInfo);
-            } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
-                //if server returns failed, re-do the actions again
-                exception.printStackTrace();
-                continue;
-            }
+    while(true) {
+        //sending to the server
+        //constructing payload objects
+        Map<String, Object> content = new HashMap<>(3);
+        content.put(Configurations.REQUEST_MOVE_ACTIONS, moveActions);
+        content.put(Configurations.REQUEST_ATTACK_ACTIONS, attackActions);
+        content.put(Configurations.REQUEST_UPGRADE_UNITS_ACTIONS, upgradeUnitsActions);
+        content.put(Configurations.REQUEST_UPGRADE_TECH_ACTIONS, upgradeTechActions);
+        PayloadObject request = new PayloadObject(this.playerId,
+                Configurations.MASTER_ID, PayloadType.REQUEST, content);
+        try {
+            this.sendMessage(request);
+            System.out.println("Actions sent, please wait other players finish placing");
+            this.waitAndReadServerResponse();
+            System.out.println(this.loggerInfo);
+            return this.loggerInfo;
+        } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
+            //if server returns failed, re-do the actions again
+            exception.printStackTrace();
+            continue;
         }
+    }
+
     }
 
     /**
@@ -559,7 +515,7 @@ public class ClientController extends WaitPlayerUI {
      *
      * @return whether the user is win or lost
      */
-    private boolean checkUserStatus() {
+    boolean checkUserStatus() {
         return isLost() || isWin();
     }
 
