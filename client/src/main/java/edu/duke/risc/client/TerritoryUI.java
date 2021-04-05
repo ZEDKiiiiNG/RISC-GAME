@@ -7,12 +7,12 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 public abstract class TerritoryUI {
-    private int id;
+    private int id;//no more change after initialized
     private  Rectangle rect;
     private  StackPane pane;
     private  javafx.scene.control.Button button;
     private Color TerritoryColor;
-    private boolean visible = false;
+    private boolean visible = false;//no more change after initialized
 
     public void setId(int id) {
         this.id = id;
