@@ -11,6 +11,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -62,13 +63,13 @@ public class placement extends Application implements Initializable {
         num_choice.setLayoutX(610);
         num_choice.setLayoutY(180);
         ChoiceBox<Integer> num_choice_box = new ChoiceBox<>();
-        int max_num = 0;
+        int max_num = 1;
         for (UnitType i:self.getInitUnitsMap().keySet()) {
             if(self.getInitUnitsMap().get(i)!=0){
                 max_num = self.getInitUnitsMap().get(i);
             }
         }
-        for(int i = 0;i<=max_num;i++){
+        for(int i = 1;i<=max_num;i++){
             num_choice_box.getItems().add(i);
         }
         num_choice_box.setLayoutX(610);
@@ -114,6 +115,8 @@ public class placement extends Application implements Initializable {
         }
         else{
             String terr_name = terr.getValue();
+            Integer numOfUnits = num.getValue();
+            if(terr_name == null|| numOfUnits == null){showNullPlacementAlert("Please do placement before commit!");this.showWindow();return;}
             int i = terr_name.indexOf("(");
             String terr_id = terr_name.substring(i+1, i+2);
             System.out.println(terr_id+",S,"+num.getValue());//now sys.out, to be continue-------------------------------
@@ -125,17 +128,42 @@ public class placement extends Application implements Initializable {
             //redisplay this page
             this.showWindow();
         }else{
-            this.showWindow();
+            showWaitingSence();
             App.cc.assignUnits(actions);
-
+            //close placement window and go to new window
+            this.stage.close();
             actionChoosePage = new actionChoose();
             actionChoosePage.showWindow();
-
             //turn to page action choose
 
         }
 
 
+    }
+    public void showWaitingSence(){
+        Text msg = new Text("You have commit you placement\n please waite for other users finishing their placement...");
+        msg.setLayoutX(50);
+        msg.setLayoutY(100);
+        Group g= new Group();
+        g.getChildren().add(msg);
+        Scene waitOthers = new Scene(g, 400, 300);
+        this.stage.setScene(waitOthers);
+    }
+    public void showNullPlacementAlert(String prompt){
+        Text a = new Text(prompt);
+        javafx.scene.control.Button exitButton = new javafx.scene.control.Button("OK");
+        exitButton.setLayoutX(50);
+        exitButton.setLayoutY(200);
+        a.setLayoutX(50);
+        a.setLayoutY(100);
+        Group g= new Group();
+        g.getChildren().add(a);
+        g.getChildren().add(exitButton);
+        Stage secondStage = new Stage();
+        Scene techScene = new Scene(g, 400, 300);
+        secondStage.setScene(techScene);
+        exitButton.setOnAction(e ->{secondStage.close();});
+        secondStage.showAndWait();//用户必须首先处理新的弹窗
     }
 
     public void territoryInfoScene(GameBoard gameBoard, Territory territory){

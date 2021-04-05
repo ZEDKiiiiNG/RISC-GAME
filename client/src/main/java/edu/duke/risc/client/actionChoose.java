@@ -355,7 +355,7 @@ public class actionChoose extends Application  {
         Stage secondStage = new Stage();
         Scene techScene = new Scene(g, 400, 300);
         secondStage.setScene(techScene);
-        secondStage.show();
+        secondStage.showAndWait();//用户必须首先处理新的弹窗
     }
     public void territoryInfoScene(GameBoard gameBoard, Territory territory){
         String terrInfo = gameBoard.getDisplayer().displaySingleTerritory(gameBoard, territory);
