@@ -1,5 +1,6 @@
 package edu.duke.risc.client;
 
+import edu.duke.risc.shared.actions.Action;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.board.Territory;
 import edu.duke.risc.shared.commons.UnitType;
@@ -10,20 +11,21 @@ import javafx.fxml.Initializable;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.awt.*;
+import java.io.IOException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class placement extends Application implements Initializable {
     Stage stage=new Stage();
+    private String place ="";
+    private actionChoose actionChoosePage;
+
     @FXML
     private Label whoami;
 
@@ -65,7 +67,6 @@ public class placement extends Application implements Initializable {
             if(self.getInitUnitsMap().get(i)!=0){
                 max_num = self.getInitUnitsMap().get(i);
             }
-
         }
         for(int i = 0;i<=max_num;i++){
             num_choice_box.getItems().add(i);
@@ -79,7 +80,15 @@ public class placement extends Application implements Initializable {
         javafx.scene.control.Button commit = new javafx.scene.control.Button("commit");
         commit.setLayoutX(750);
         commit.setLayoutY(550);
-        commit.setOnAction(e->getPlacements(terr_choice_box, num_choice_box));
+        commit.setOnAction(e-> {
+            try {
+                getPlacements(terr_choice_box, num_choice_box, self);
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        });
         g.getChildren().add(commit);
 
         //add territories
@@ -97,11 +106,36 @@ public class placement extends Application implements Initializable {
         primaryStage.show();
     }
 
-    public void getPlacements(ChoiceBox<String> terr, ChoiceBox<Integer> num){
-        String terr_name = terr.getValue();
-        int i = terr_name.indexOf("(");
-        String terr_id = terr_name.substring(i, i+1);
-        System.out.println(terr_id+",S,"+num.getValue());//now sys.out, to be continue-------------------------------
+    public void getPlacements(ChoiceBox<String> terr, ChoiceBox<Integer> num, Player player) throws Exception {
+        List<Action> actions = new ArrayList<>();
+        String action = "";
+        if(terr.getItems()==null){
+            action = "0,S,0";
+        }
+        else{
+            String terr_name = terr.getValue();
+            int i = terr_name.indexOf("(");
+            String terr_id = terr_name.substring(i+1, i+2);
+            System.out.println(terr_id+",S,"+num.getValue());//now sys.out, to be continue-------------------------------
+            place = terr_id+",S,"+num.getValue();
+            action = this.getPlaceInfo();
+        }
+        App.cc.clientAssignUnits(actions, action);
+        if (!player.getInitUnitsMap().isEmpty()) {
+            //redisplay this page
+            this.showWindow();
+        }else{
+            this.showWindow();
+            App.cc.assignUnits(actions);
+
+            actionChoosePage = new actionChoose();
+            actionChoosePage.showWindow();
+
+            //turn to page action choose
+
+        }
+
+
     }
 
     public void territoryInfoScene(GameBoard gameBoard, Territory territory){
@@ -117,7 +151,9 @@ public class placement extends Application implements Initializable {
         secondStage.show();
     }
 
-
+    public String getPlaceInfo(){
+        return this.place;
+    }
     public static void main(String[] args) {
         launch(args);
     }
@@ -125,6 +161,7 @@ public class placement extends Application implements Initializable {
     public void  showWindow() throws Exception {
         start(stage);
     }
+
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {

@@ -1,6 +1,5 @@
 package edu.duke.risc.client;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.stage.Stage;
 
@@ -9,6 +8,8 @@ import java.util.ResourceBundle;
 
 public class mainController implements Initializable{
     public Stage mainStage;//to be closed
+    private placement placementPage;
+    private actionChoose actionChoosePage;
 
     public mainController() {
         //auto generated
@@ -21,13 +22,22 @@ public class mainController implements Initializable{
         //ignore
     }
 
-    public void connectToServer(ActionEvent actionEvent) throws Exception {
+    public void connectToServer() throws Exception {
         App.cc.tryConnectAndWait();
         App.initializeTerritories();
-        placement placementPage = new placement();
+        placementPage = new placement();
         placementPage.showWindow();
         mainStage.close();//close the first window after connect
+
     }
+
+
+    public void startGame() throws Exception {
+        connectToServer();
+
+        //placementPage.close();
+    }
+
 
 
     public void setStage(Stage primaryStage) {

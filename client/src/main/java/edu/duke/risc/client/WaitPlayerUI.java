@@ -1,5 +1,6 @@
 package edu.duke.risc.client;
 
+import edu.duke.risc.shared.users.Player;
 import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -9,17 +10,11 @@ import javafx.scene.text.Text;
 
 
 public class WaitPlayerUI extends Application {
-//    private int playerId;
-
-//    public WaitPlayerUI(int playerId){
-//        this.playerId = playerId;
-//    }
 
     @Override
     public void start(Stage stage) throws Exception {
-
-        //String text = "You are the current the player: "+playerId;
-        String text = "You are the current the player: ";
+        Player self = App.cc.getMyself();
+        String text = "You are the current the player: "+ self.toString();
         Text a = new Text(text);
         a.setLayoutX(100);
         a.setLayoutY(300);
@@ -41,4 +36,5 @@ public class WaitPlayerUI extends Application {
     public static void main(String args[]){
         launch(args);
     }
+
 }
