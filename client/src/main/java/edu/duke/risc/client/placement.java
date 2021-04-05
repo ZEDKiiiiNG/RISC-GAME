@@ -62,13 +62,13 @@ public class placement extends Application implements Initializable {
         num_choice.setLayoutX(610);
         num_choice.setLayoutY(180);
         ChoiceBox<Integer> num_choice_box = new ChoiceBox<>();
-        int max_num = 0;
+        int max_num = 1;
         for (UnitType i:self.getInitUnitsMap().keySet()) {
             if(self.getInitUnitsMap().get(i)!=0){
                 max_num = self.getInitUnitsMap().get(i);
             }
         }
-        for(int i = 0;i<=max_num;i++){
+        for(int i = 1;i<=max_num;i++){
             num_choice_box.getItems().add(i);
         }
         num_choice_box.setLayoutX(610);
@@ -110,6 +110,7 @@ public class placement extends Application implements Initializable {
         List<Action> actions = new ArrayList<>();
         String action = "";
         if(terr.getItems()==null){
+            showNullPlacementAlert("Please choose place");
             action = "0,S,0";
         }
         else{
@@ -136,6 +137,17 @@ public class placement extends Application implements Initializable {
         }
 
 
+    }
+    public void showNullPlacementAlert(String prompt){
+        Text a = new Text(prompt);
+        a.setLayoutX(50);
+        a.setLayoutY(100);
+        Group g= new Group();
+        g.getChildren().add(a);
+        Stage secondStage = new Stage();
+        Scene techScene = new Scene(g, 400, 300);
+        secondStage.setScene(techScene);
+        secondStage.showAndWait();//用户必须首先处理新的弹窗
     }
 
     public void territoryInfoScene(GameBoard gameBoard, Territory territory){
