@@ -72,6 +72,11 @@ public class ClientController {
     private ReadExitThread readExitThread;
 
     /**
+     * stage of the client
+     */
+    private String stage;
+
+    /**
      * Constructor
      *
      * @throws IOException IOException
@@ -87,8 +92,11 @@ public class ClientController {
      */
     public void startGame() throws IOException {
         tryConnectAndWait();
+
         assignUnits();
+
         moveAndAttack();
+
         observerMode();
     }
 
@@ -100,14 +108,131 @@ public class ClientController {
             //try connect to the server
             Socket socket = new Socket(ClientConfigurations.LOCALHOST, Configurations.DEFAULT_SERVER_PORT);
             communicator = new SocketCommunicator(socket);
+            logInValidate();
+            gameChoose();
+            if(!stage.equals(STAGE_CREATE)){
+                System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
+                return;
+            }
             System.out.println(ClientConfigurations.CONNECT_SUCCESS_MSG);
             //waiting for other users
             this.waitAndReadServerResponse();
             System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
-        } catch (IOException e) {
+            stage = STAGE_ASSIGN;
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         } catch (UnmatchedReceiverException | InvalidPayloadContent | ServerRejectException e) {
             System.out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * Log in server and wait response
+     *
+     * @return PayloadObject as response
+     * @throws IOException            IOException
+     * @throws ClassNotFoundException ClassNotFoundException
+     */
+    private void logInValidate() throws IOException, ClassNotFoundException {
+        while (true) {
+            PayloadObject readObject = null;
+            System.out.println("Please choose (S)ign up or (L)og in");
+            String choose = this.consoleReader.readLine();
+            System.out.println("Please enter your id which consist of characters and numbers only ");
+            String id = this.consoleReader.readLine();
+            System.out.println("Please enter your password which consist of characters and numbers only ");
+            String pwd = this.consoleReader.readLine();
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("ID",id);
+            userInfo.put("PWD",pwd);
+            PayloadObject writeObject = choose.equals("L") ? new PayloadObject(DEFAULT_PLAYER_ID , MASTER_ID , PayloadType.LOGIN, userInfo) :new PayloadObject(DEFAULT_PLAYER_ID , MASTER_ID , PayloadType.SIGNUP, userInfo) ;
+            communicator.writeMessage(writeObject);
+            readObject = communicator.receiveMessage();
+            if ((readObject.getContents().containsKey(SUCCESS_LOG))){
+                return;
+            }
+            else if((readObject.getContents().containsKey(OCCUPIED_LOG))){
+                System.out.println("The user Id is occupied ");
+            }
+            else{
+                System.out.println("Cannot find corresponding id or password is wrong");
+            }
+        }
+    }
+
+    /**
+     * Log in server and wait response
+     *
+     * @return PayloadObject as response
+     * @throws IOException            IOException
+     * @throws ClassNotFoundException ClassNotFoundException
+     */
+    private void gameChoose() throws IOException, ClassNotFoundException, UnmatchedReceiverException, InvalidPayloadContent {
+        while (true) {
+            PayloadObject readObject = null;
+            System.out.println("Please choose (N)ew Game or (E)xist game in");
+            String choose = this.consoleReader.readLine();
+
+            int gameId = -1;
+            if(choose.equals("E")) {
+                System.out.println("Please enter your game id you want to join ");
+                gameId = Integer.parseInt(this.consoleReader.readLine());
+            }
+            else if(choose.equals("N")) {
+                System.out.println("Please enter how many players new game should have between(2-5) ");
+                gameId = Integer.parseInt(this.consoleReader.readLine());
+                if (gameId < 2 || gameId > 5){
+                    System.out.println("the game numbers should be in range 2 to 5 ");
+                    continue;
+                }
+            }
+            else{
+                System.out.println("Choose should only be N or E");
+                continue;
+            }
+
+            Map<String, Object> gameInfo = new HashMap<>();
+            gameInfo.put("CHOOSE",choose);
+            gameInfo.put("ID",gameId);
+            PayloadObject writeObject = new PayloadObject(DEFAULT_PLAYER_ID , MASTER_ID , PayloadType.LOGIN, gameInfo);
+            communicator.writeMessage(writeObject);
+            //read the response
+            readObject = communicator.receiveMessage();
+            if ((readObject.getContents().containsKey(SUCCESSFOUND))){
+                //create stage just join
+                if(readObject.getContents().get("STAGE").equals(STAGE_CREATE)){
+                    stage = STAGE_CREATE;
+                    return;
+                }
+                else{
+                    // other stage update the info and move foward
+                    stage = (String) readObject.getContents().get("STAGE");
+
+                    if (playerId == Configurations.DEFAULT_PLAYER_ID) {
+                        playerId = readObject.getReceiver();
+                    } else if (!readObject.getReceiver().equals(playerId)) {
+                        throw new UnmatchedReceiverException("the " + playerId + "is not matched with " + readObject.getReceiver());
+                    }
+                    //unpack message
+                    Map<String, Object> contents = readObject.getContents();
+                    if (contents.containsKey(GAME_BOARD_STRING)
+                            && contents.containsKey(PLAYER_STRING)) {
+                        this.gameBoard = (GameBoard) contents.get(GAME_BOARD_STRING);
+                        this.playerId = (Integer) contents.get(PLAYER_STRING);
+                        this.loggerInfo = (String) contents.get(LOGGER_STRING);
+                    } else {
+                        throw new InvalidPayloadContent("do not contain gameBoard object");
+                    }
+                    System.out.println("Successfully reconnect");
+                    return;
+                }
+            }
+            else if((readObject.getContents().containsKey(USERNOTFOUND))){
+                System.out.println("The user Id is not in the game ");
+            }
+            else{
+                System.out.println("Cannot find corresponding game");
+            }
         }
     }
 
@@ -117,6 +242,7 @@ public class ClientController {
      * @throws IOException IOException
      */
     private void assignUnits() throws IOException {
+        if(!stage.equals(STAGE_ASSIGN)) return;
         while (true) {
             List<Action> actions = new ArrayList<>();
             Player player = this.gameBoard.getPlayers().get(playerId);
@@ -167,6 +293,7 @@ public class ClientController {
             System.out.println("Successfully finished placement phase");
             break;
         }
+        stage = STAGE_MOVE;
     }
 
     /**
@@ -185,8 +312,10 @@ public class ClientController {
      * @throws IOException IOException
      */
     private void moveAndAttack() throws IOException {
+        if(!stage.equals(STAGE_MOVE)) return;
         while (true) {
             if (this.checkUserStatus()) {
+                stage = STAGE_OBSERVE;
                 return;
             }
             Player player = this.gameBoard.getPlayers().get(playerId);

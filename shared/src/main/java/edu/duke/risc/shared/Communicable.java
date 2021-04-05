@@ -1,5 +1,7 @@
 package edu.duke.risc.shared;
 
+
+
 import java.io.IOException;
 
 /**
@@ -32,4 +34,5 @@ public interface Communicable {
      */
     public void terminate() throws IOException;
 
+    public void sendUrgentData() throws  IOException;
 }
