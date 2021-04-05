@@ -303,6 +303,7 @@ public class GameController {
                 } catch (InvalidActionException e) {
                     //simply ignore this
                     logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
+                    validAttackList.remove(action);
                 }
             }
             for (Action action : validAttackList) {
@@ -462,8 +463,8 @@ public class GameController {
         colors.add(UserColor.BLUE);
         colors.add(UserColor.GREEN);
         colors.add(UserColor.RED);
-        colors.add(UserColor.WHITE);
-        colors.add(UserColor.DARK);
+        colors.add(UserColor.YELLOW);
+        colors.add(UserColor.PURPLE);
     }
 
     /**
@@ -499,7 +500,7 @@ public class GameController {
             Player player = playerEntry.getValue();
             if (player.getOwnedTerritories().size() == 0) {
                 player.markLost();
-            } else if (player.getOwnedTerritories().size() == this.board.getTerritoriesSize()) {
+            } else if (player.getOwnedTerritories().size() == this.board.getValidTerritoriesSize()) {
                 player.markWin();
                 this.board.setGameOver();
                 System.out.println(player.getColor() + " Player with ID " + player.getId() + " wins.");

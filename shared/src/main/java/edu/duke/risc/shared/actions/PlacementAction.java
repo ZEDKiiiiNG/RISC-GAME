@@ -7,6 +7,9 @@ import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
 import edu.duke.risc.shared.users.Player;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Place units on the board
  *
@@ -19,18 +22,19 @@ public class PlacementAction extends AbstractAction {
      * Constructor
      *
      * @param territoryId territoryId
-     * @param unitType    unitType
-     * @param number      number
+     * @param unitMap unit map
      * @param player      player
      */
-    public PlacementAction(Integer territoryId, UnitType unitType, Integer number, Integer player) {
-        super(player, ActionType.PLACEMENT, territoryId, unitType, number);
+    public PlacementAction(Integer territoryId, Map<UnitType, Integer> unitMap, Integer player) {
+        super(player, ActionType.PLACEMENT, territoryId, unitMap);
     }
 
     @Override
     public String isValid(GameBoard board) {
-        if (number <= 0) {
-            return "Number of units should be larger than 0";
+        for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
+            if (entry.getValue() <= 0) {
+                return "Invalid number " + entry.getValue() + " for unit type " + entry.getKey();
+            }
         }
         if (!board.getPlayers().containsKey(super.playerId)) {
             return "Does not contain user: " + playerId;
@@ -41,9 +45,14 @@ public class PlacementAction extends AbstractAction {
             return "You are not assigned territory with id = " + destinationId;
         }
 
-        if (!player.getInitUnitsMap().containsKey(unitType)
-                || player.getInitUnitsMap().get(unitType) < number) {
-            return "Does not contain unit type or number of unit type exceed available.";
+        for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
+            UnitType unitType = entry.getKey();
+            int number = entry.getValue();
+            if (!player.getInitUnitsMap().containsKey(unitType)
+                    || player.getInitUnitsMap().get(unitType) < number) {
+                return "Does not contain " + unitType + " or number of unit type " + number +
+                        " exceed available " + player.getInitUnitsMap().get(unitType);
+            }
         }
         return null;
     }
@@ -57,11 +66,15 @@ public class PlacementAction extends AbstractAction {
             throw new InvalidActionException(error);
         }
         Player player = board.getPlayers().get(super.playerId);
-        player.updateTotalUnitMap(unitType, number);
-        player.updateInitUnitMap(unitType, -number);
-        Territory territory = board.getTerritories().get(destinationId);
-        territory.updateUnitsMap(unitType, number);
-        player.addOwnedTerritory(destinationId);
+
+        for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
+            UnitType unitType = entry.getKey();
+            int number = entry.getValue();
+            player.updateTotalUnitMap(unitType, number);
+            player.updateInitUnitMap(unitType, -number);
+            Territory territory = board.getTerritories().get(destinationId);
+            territory.updateUnitsMap(unitType, number);
+        }
 
         return builder.toString();
     }

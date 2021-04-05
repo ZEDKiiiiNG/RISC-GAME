@@ -9,6 +9,7 @@ import edu.duke.risc.shared.exceptions.InvalidActionException;
 import edu.duke.risc.shared.users.Player;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -22,15 +23,21 @@ public class MoveAction extends AbstractSourceAction {
      * Constructor
      *
      * @param sourceTerritoryId sourceTerritoryId
-     * @param destinationId destinationId
-     * @param unitType unitType
-     * @param number number
-     * @param player player
+     * @param destinationId     destinationId
+     * @param unitMap           map of units
+     * @param player            player
      */
-    public MoveAction(Integer sourceTerritoryId, Integer destinationId, UnitType unitType, Integer number, Integer player) {
-        super(player, ActionType.MOVE, destinationId, unitType, number, sourceTerritoryId);
+    public MoveAction(Integer sourceTerritoryId, Integer destinationId,
+                      Map<UnitType, Integer> unitMap, Integer player) {
+        super(player, ActionType.MOVE, destinationId, unitMap, sourceTerritoryId);
     }
 
+    /**
+     * getPlayerTerritory
+     *
+     * @param board board
+     * @return set of territories
+     */
     public Set<Territory> getPlayerTerritory(GameBoard board) {
         Set<Territory> ans = new HashSet<>();
         Player player = board.getPlayers().get(super.playerId);
@@ -43,40 +50,65 @@ public class MoveAction extends AbstractSourceAction {
 
     @Override
     public String isValid(GameBoard board) {
-        if (number <= 0) {
-            return "Invalid or unnecessary number " + number;
+        //check whether input has valid number
+        for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
+            if (entry.getValue() <= 0) {
+                return "Invalid number " + entry.getValue() + " for unit type " + entry.getKey();
+            }
         }
         if (!board.getPlayers().containsKey(super.playerId)) {
             return "Does not contain user: " + playerId;
         }
         Player player = board.getPlayers().get(super.playerId);
         Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
-
         if (!player.ownsTerritory(sourceTerritoryId)) {
             return "The player does not own the source territory " + board.findTerritory(sourceTerritoryId);
         }
         if (!player.ownsTerritory(destinationId)) {
             return "The player does not own the destination territory " + board.findTerritory(destinationId);
         }
-        if (!sourceTerritory.getUnitsMap().containsKey(unitType)) {
-            return "The source territory does not contain the unit type " + unitType;
+
+        for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
+            UnitType unitType = entry.getKey();
+            int number = entry.getValue();
+            if (!sourceTerritory.containsUnitType(unitType)) {
+                return "The source territory does not contain the unit type " + unitType;
+            }
+            if (sourceTerritory.numberOfUnits(unitType) < number) {
+                return "The source territory does not have enough unit number: "
+                        + sourceTerritory.getUnitsMap().get(unitType) + " < " + number;
+            }
         }
-        if (sourceTerritory.getUnitsMap().get(unitType) < number) {
-            return "The source territory does not have enough unit number: "
-                    + sourceTerritory.getUnitsMap().get(unitType) + " < " + number;
-        }
-        int moveCost;
-        if ((moveCost = board.calculateMoveCost(sourceTerritoryId, destinationId, playerId)) == Integer.MAX_VALUE) {
+
+        int moveCostPerUnit;
+        if ((moveCostPerUnit = board.calculateMoveCost(sourceTerritoryId, destinationId, playerId)) == Integer.MAX_VALUE) {
             return "The destination territory is not reachable";
         }
 
+        int totalCost = getResourceRequired(moveCostPerUnit);
+
         //whether current player has enough resource to move units
         String error;
-        if ((error = player.hasEnoughResources(ResourceType.FOOD, moveCost)) != null){
+        if ((error = player.hasEnoughResources(ResourceType.FOOD, totalCost)) != null) {
             return error;
         }
 
         return null;
+    }
+
+    /**
+     * Get resources required for moving
+     *
+     * @param moveCostPerUnit moveCostPerUnit
+     * @return resources required for moving
+     */
+    private int getResourceRequired(int moveCostPerUnit) {
+        int totalCost = 0;
+        for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
+            int number = entry.getValue();
+            totalCost += moveCostPerUnit * number;
+        }
+        return totalCost;
     }
 
     @Override
@@ -88,18 +120,25 @@ public class MoveAction extends AbstractSourceAction {
         }
         Player player = board.getPlayers().get(super.playerId);
 
-        //update resource map
+        int totalCost = 0;
         int moveCostPerUnit = board.calculateMoveCost(sourceTerritoryId, destinationId, playerId);
-        int totalCost = moveCostPerUnit * number;
+
+        for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
+            UnitType unitType = entry.getKey();
+            int number = entry.getValue();
+            //update resource map
+            totalCost += moveCostPerUnit * number;
+
+            //update source territory units, if number reduced to 0, this territory should not be
+            //owned by player anymore -- remove from owned territory
+            Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
+            sourceTerritory.updateUnitsMap(unitType, -number);
+            //update destination territory
+            Territory desTerritory = board.getTerritories().get(destinationId);
+            desTerritory.updateUnitsMap(unitType, number);
+        }
         player.updateResourceMap(ResourceType.FOOD, -totalCost);
 
-        //update source territory units, if number reduced to 0, this territory should not be
-        //owned by player anymore -- remove from owned territory
-        Territory sourceTerritory = board.getTerritories().get(sourceTerritoryId);
-        sourceTerritory.updateUnitsMap(unitType, -number);
-        //update destination territory
-        Territory desTerritory = board.getTerritories().get(destinationId);
-        desTerritory.updateUnitsMap(unitType, number);
         builder.append("SUCCESS: ").append(printInfo(totalCost));
         return builder.toString();
     }
@@ -114,10 +153,14 @@ public class MoveAction extends AbstractSourceAction {
         builder.append("MOVE ACTION { ")
                 .append(" conducted by player ").append(playerId)
                 .append(", from ").append(sourceTerritoryId)
-                .append(", to ").append(destinationId)
-                .append(", unit type ").append(unitType)
-                .append(", number of units ").append(number)
-                .append(", costs ").append(costs).append(" ").append(ResourceType.FOOD)
+                .append(", to ").append(destinationId);
+        for (Map.Entry<UnitType, Integer> entry : unitMap.entrySet()) {
+            UnitType unitType = entry.getKey();
+            int number = entry.getValue();
+            builder.append(", unit type ").append(unitType)
+                    .append(", number of units ").append(number);
+        }
+        builder.append(", costs ").append(costs).append(" ").append(ResourceType.FOOD)
                 .append(" }").append(System.lineSeparator());
         return builder.toString();
     }

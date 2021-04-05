@@ -390,7 +390,7 @@ public class ClientController {
         try {
             System.out.println("You lost the game, entering Observer Mode, you can type exit to quit...");
             this.readExitThread = new ReadExitThread(this.consoleReader, this.communicator, this.playerId);
-            this.readExitThread.start();
+            this.readExitThread.run();
             while (true) {
                 this.waitAndReadServerResponse();
                 System.out.println(this.loggerInfo);
@@ -410,14 +410,14 @@ public class ClientController {
      */
     private void conductMoveOrAttack(List<Action> actions, int actionType) throws IOException {
         System.out.println("Please enter instruction in the following format: " +
-                "<sourceTerritoryId>,<destinationId>,<UnitType>,<amount>");
+                "<sourceTerritoryId>,<destinationId>;<UnitType1>,<amount1>;<UnitType2>,<amount2>");
         String moveInput = this.consoleReader.readLine();
         Action action;
         try {
             action = this.readAttackOrMoveAction(moveInput, this.gameBoard, playerId, actionType);
             action.simulateApply(this.gameBoard);
             actions.add(action);
-        } catch (InvalidInputException | InvalidActionException e) {
+        } catch (InvalidInputException | InvalidActionException | NumberFormatException e) {
             System.out.println(e.getMessage());
         }
     }
@@ -560,7 +560,9 @@ public class ClientController {
             }
             UnitType unitType = unitTypeMapper.get(unitTypeString);
 
-            action = new PlacementAction(territoryId, unitType, unitNum, playerId);
+            Map<UnitType, Integer> unitMap = new HashMap<>();
+            unitMap.put(unitType, unitNum);
+            action = new PlacementAction(territoryId, unitMap, playerId);
 
         } catch (NumberFormatException e) {
             throw new InvalidInputException("Cannot parse string to valid int");
@@ -595,7 +597,9 @@ public class ClientController {
                 throw new InvalidInputException("Invalid unit type string " + unitTypeString);
             }
             UnitType unitType = unitTypeMapper.get(unitTypeString);
-            action = new UpgradeUnitAction(playerId, targetTerritoryId, unitType, unitNum);
+            Map<UnitType, Integer> unitMap = new HashMap<>();
+            unitMap.put(unitType, unitNum);
+            action = new UpgradeUnitAction(playerId, targetTerritoryId, unitMap);
         } catch (NumberFormatException e) {
             throw new InvalidInputException("Cannot parse string to valid int");
         }
@@ -612,31 +616,46 @@ public class ClientController {
      * @throws InvalidInputException when input is invalid
      */
     private Action readAttackOrMoveAction(String input, GameBoard board, Integer playerId, int actionType)
-            throws InvalidInputException {
-        List<String> inputs = new ArrayList<>(Arrays.asList(input.split(",")));
-        if (inputs.size() != 4) {
+            throws InvalidInputException, NumberFormatException {
+        List<String> actionInputs = new ArrayList<>(Arrays.asList(input.split(";")));
+        if (actionInputs.size() < 2) {
             throw new InvalidInputException("Invalid input size");
         }
-        Action action;
-        try {
-            int sourceTerritoryId = Integer.parseInt(inputs.get(0));
-            int destTerritoryId = Integer.parseInt(inputs.get(1));
-            String unitTypeString = inputs.get(2);
-            int unitNum = Integer.parseInt(inputs.get(3));
 
-            //check valid unit type mapping
-            Map<String, UnitType> unitTypeMapper = board.getUnitTypeMapper();
-            if (!unitTypeMapper.containsKey(unitTypeString)) {
-                throw new InvalidInputException("Invalid unit type string " + unitTypeString);
+        //get source and destination information
+        String territoryInput = actionInputs.get(0);
+        List<String> territoryInputs = new ArrayList<>(Arrays.asList(territoryInput.split(",")));
+        int sourceTerritoryId = Integer.parseInt(territoryInputs.get(0));
+        int destTerritoryId = Integer.parseInt(territoryInputs.get(1));
+
+        //get units and number information
+        Map<UnitType, Integer> unitsMap = new HashMap<>();
+        for (int i = 1; i < actionInputs.size(); i++) {
+            String unitsInput = actionInputs.get(i);
+            List<String> inputs = new ArrayList<>(Arrays.asList(unitsInput.split(",")));
+            if (inputs.size() != 2) {
+                throw new InvalidInputException("Invalid input size");
             }
-            UnitType unitType = unitTypeMapper.get(unitTypeString);
-            if (actionType == 0) {
-                action = new MoveAction(sourceTerritoryId, destTerritoryId, unitType, unitNum, playerId);
-            } else {
-                action = new AttackAction(sourceTerritoryId, destTerritoryId, unitType, unitNum, playerId);
+            try {
+                String unitTypeString = inputs.get(0);
+                int unitNum = Integer.parseInt(inputs.get(1));
+                //check valid unit type mapping
+                Map<String, UnitType> unitTypeMapper = board.getUnitTypeMapper();
+                if (!unitTypeMapper.containsKey(unitTypeString)) {
+                    throw new InvalidInputException("Invalid unit type string " + unitTypeString);
+                }
+                UnitType unitType = unitTypeMapper.get(unitTypeString);
+                unitsMap.put(unitType, unitNum);
+            } catch (NumberFormatException e) {
+                throw new InvalidInputException("Cannot parse string to valid int");
             }
-        } catch (NumberFormatException e) {
-            throw new InvalidInputException("Cannot parse string to valid int");
+        }
+
+        Action action;
+        if (actionType == 0) {
+            action = new MoveAction(sourceTerritoryId, destTerritoryId, unitsMap, playerId);
+        } else {
+            action = new AttackAction(sourceTerritoryId, destTerritoryId, unitsMap, playerId);
         }
         return action;
     }

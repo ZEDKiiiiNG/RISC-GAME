@@ -18,16 +18,13 @@ public abstract class AbstractAction implements Action {
     protected ActionType actionType;
     protected Integer destinationId;
 
-    protected UnitType unitType;
-    protected Integer number;
+    protected Map<UnitType, Integer> unitMap;
 
-
-    public AbstractAction(Integer playerId, ActionType actionType, Integer destinationId, UnitType unitType, Integer number) {
+    public AbstractAction(Integer playerId, ActionType actionType, Integer destinationId, Map<UnitType, Integer> unitMap) {
         this.playerId = playerId;
         this.actionType = actionType;
         this.destinationId = destinationId;
-        this.unitType = unitType;
-        this.number = number;
+        this.unitMap = unitMap;
     }
 
 }

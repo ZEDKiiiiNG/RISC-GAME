@@ -5,16 +5,51 @@ package edu.duke.risc.client;
 
 import java.io.IOException;
 
+import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Slider;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+
+import static javafx.application.Application.launch;
+
 /**
  *
  */
-public class App {
+public class App extends Application {
     public String getGreeting() {
         return "Hello world from client.";
     }
-
+    Button button;
     public static void main(String[] args) throws IOException {
-        ClientController clientController = new ClientController();
-        clientController.startGame();
+        //ClientController clientController = new ClientController();
+        //clientController.startGame();
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws Exception{
+        primaryStage.setTitle("Now test javafx slider/choiceBox");
+        button = new Button();
+        Slider mySlider = new Slider(0, 3, 0);//min, max and initial value
+        ChoiceBox<String> cb = new ChoiceBox<String>(FXCollections.observableArrayList("California", "Ohio", "New Mexico", "Colorado", "Arizona"));
+        cb.setTooltip(new Tooltip("Choose target territory"));
+
+
+        VBox myVBox = new VBox(mySlider);
+        StackPane layout = new StackPane();
+        layout.getChildren().add(button);
+        layout.getChildren().add(myVBox);
+        layout.getChildren().add(cb);
+        Scene scene = new Scene(layout, 300, 250);
+        primaryStage.setScene(scene);
+        primaryStage.show();
     }
 }
