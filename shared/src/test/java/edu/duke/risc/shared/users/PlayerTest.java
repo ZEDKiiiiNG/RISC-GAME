@@ -15,7 +15,7 @@ class PlayerTest {
         Player player = new Player(0, UserColor.BLUE);
         Player playerb = new Player(0, UserColor.BLUE);
         assertFalse(player.isMaster());
-        assertEquals(player.getUnitsInfo(player.getInitUnitsMap()), "(S)oldiers : 10");
+        assertEquals(player.getUnitsInfo(player.getInitUnitsMap()), "(S)oldiers(I) : 10");
         assertEquals(player.getId(), 0);
         assertEquals(player.getColor(), UserColor.BLUE);
         assertEquals(playerb, player);
