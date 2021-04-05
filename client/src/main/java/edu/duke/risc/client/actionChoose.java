@@ -25,7 +25,11 @@ import java.util.Map;
 
 public class actionChoose extends Application  {
     Stage stage=new Stage();
-    private obeservarUI obeserver;
+    private observerUI obeserver;
+    private List<Action> moveActions = new ArrayList<>();
+    private List<Action> attackActions = new ArrayList<>();
+    private List<Action> upgradeUnitsActions = new ArrayList<>();
+    private List<Action> upgradeTechActions = new ArrayList<>();
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -54,36 +58,15 @@ public class actionChoose extends Application  {
             }
         }
 
-        List<Action> moveActions = new ArrayList<>();
-        List<Action> attackActions = new ArrayList<>();
-        List<Action> upgradeUnitsActions = new ArrayList<>();
-        List<Action> upgradeTechActions = new ArrayList<>();
+
 
 
         //text
-        String  introduce = "You are the "+ self.getColor() +" player\n"+
-                "You have territories: ";
-        for(Integer i : self.getOwnedTerritories()){
-            introduce += i+", ";
-        }
-        Text a = new Text(introduce);
+
+        Text a = new Text(self.getPlayerInfo());
         a.setLayoutX(650);
         a.setLayoutY(10);
         g.getChildren().add(a);
-
-        //commit button
-        javafx.scene.control.Button commit = new javafx.scene.control.Button("commit");
-        commit.setLayoutX(650);
-        commit.setLayoutY(50);
-        commit.setOnAction(e-> {
-            try {
-                finishThisRoll(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions);
-            } catch (IOException ioException) {
-                showSecondWindow("send actions to server failed");
-            } catch (Exception exception) {
-                showSecondWindow("send actions to server failed");
-            }
-        });
 
 
         //move button
@@ -111,25 +94,53 @@ public class actionChoose extends Application  {
         javafx.scene.control.Button tech = new javafx.scene.control.Button("tech");
         tech.setLayoutX(650);
         tech.setLayoutY(450);
-        tech.setOnAction(e->actTech(self, upgradeTechActions));
+        tech.setOnAction(e-> {
+            try {
+                actTech(self, upgradeTechActions);
+            } catch (Exception exception) {
+                showSecondWindow("upgrade tech failed");
+            }
+        });
 
+
+        //commit button
+        javafx.scene.control.Button commit = new javafx.scene.control.Button("commit");
+        commit.setLayoutX(650);
+        commit.setLayoutY(550);
+        commit.setOnAction(e-> {
+            try {
+                finishThisRoll(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions);
+            } catch (IOException ioException) {
+                showSecondWindow("send actions to server failed");
+            } catch (Exception exception) {
+                showSecondWindow("send actions to server failed");
+            }
+        });
+
+        if (App.cc.checkUserStatus()) {
+            App.cc.observerMode();
+        }
         g.getChildren().addAll(commit, move, attack, upgrade, tech);
 
         primaryStage.setTitle("choose action");
-        primaryStage.setScene(new Scene(g, 1000, 600));
+        primaryStage.setScene(new Scene(g, 1100, 600));
         primaryStage.show();
     }
 
     public void finishThisRoll(List<Action> moveActions, List<Action> attackActions,
                                List<Action> upgradeTechActions, List<Action> upgradeUnitsActions) throws Exception {
-        String log = App.cc.moveAndAttack(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions);
-        App.updateTerritories();
-        showSecondWindow(log);
         if (App.cc.checkUserStatus()) {
-            this.stage.close();
-            obeserver = new obeservarUI();
-            obeserver.showWindow();
+            return;
         }
+        String log = App.cc.moveAndAttack(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions);
+
+        moveActions.clear();
+        attackActions.clear();
+        upgradeUnitsActions.clear();
+        upgradeTechActions.clear();
+        App.updateTerritories();
+
+        showSecondWindow(log);
         this.showWindow();
     }
 
@@ -157,8 +168,11 @@ public class actionChoose extends Application  {
         Stage secondStage = new Stage();
         b.setOnAction(e-> {
             try {
-                doMove(nums, num, num1, moveActions, secondStage);
-            } catch (IOException ioException) {
+                if (!App.cc.checkUserStatus()) {//?
+                    doMove(nums, num, num1, moveActions, secondStage);
+                }
+
+            } catch (Exception ioException) {
                 ioException.printStackTrace();
             }
         });
@@ -193,8 +207,10 @@ public class actionChoose extends Application  {
         Stage secondStage = new Stage();
         b.setOnAction(e-> {
             try {
-                doAttack(nums, num, num1, attackActions, secondStage);
-            } catch (IOException ioException) {
+                if (!App.cc.checkUserStatus()) {
+                    doAttack(nums, num, num1, attackActions, secondStage);
+                }
+            } catch (Exception ioException) {
                 ioException.printStackTrace();
             }
         });
@@ -208,18 +224,24 @@ public class actionChoose extends Application  {
 
     //need to consider two cases, success and fail
     public void doMove(Map<UnitType, TextField> unitNums, TextField source, TextField dest,
-                       List<Action> moveActions, Stage secondStage) throws IOException {
+                       List<Action> moveActions, Stage secondStage) throws Exception {
+        if(source.getText().trim().equals("")||dest.getText().trim().equals("")){
+            showSecondWindow("Invalid input");
+            this.showWindow();
+            return;
+        }
         String output = "";
         output += source.getText()+","+dest.getText();
         for(UnitType i:unitNums.keySet()){
-            if(unitNums.get(i).getText()==null){
-                continue;
+            if(!unitNums.get(i).getText().trim().equals("")){
+                output += ";";
+                output += i.toString().substring(1, 2)+","+unitNums.get(i).getText();
             }
-            output += ";";
-            output += i.toString().substring(1, 2)+","+unitNums.get(i).getText();
+
         }
         System.out.println(output);
         secondStage.close();
+
         try{
             App.cc.conductMoveOrAttack(moveActions, 0, output);
             showSecondWindow("Instruction: "+output+"\n"+"move action success");
@@ -230,22 +252,28 @@ public class actionChoose extends Application  {
         } catch (InvalidActionException e) {
             showSecondWindow("Instruction: "+output+"\n"+"move action fail");
         }
-
+        this.showWindow();
     }
 
     public void doAttack(Map<UnitType, TextField> unitNums, TextField source, TextField dest,
-                         List<Action> attackActions, Stage secondStage) throws IOException {
+                         List<Action> attackActions, Stage secondStage) throws Exception {
+        if(source.getText().trim().equals("")||dest.getText().trim().equals("")){
+            showSecondWindow("Invalid input");
+            this.showWindow();
+            return;
+        }
         String output = "";
         output += source.getText()+","+dest.getText();
         for(UnitType i:unitNums.keySet()){
-            if(unitNums.get(i).getText()==null){
-                continue;
+            if(!unitNums.get(i).getText().trim().equals("")){
+                output += ";";
+                output += i.toString().substring(1, 2)+","+unitNums.get(i).getText();
             }
-            output += ";";
-            output += i.toString().substring(1, 2)+","+unitNums.get(i).getText();
+
         }
         System.out.println(output);
         secondStage.close();
+
         try{
             App.cc.conductMoveOrAttack(attackActions, 1, output);
             showSecondWindow("Instruction: "+output+"\n"+"attack action success");
@@ -256,6 +284,7 @@ public class actionChoose extends Application  {
         } catch (InvalidActionException e) {
             showSecondWindow("Instruction: "+output+"\n"+"attack action fail");
         }
+        this.showWindow();
     }
 
 
@@ -292,7 +321,9 @@ public class actionChoose extends Application  {
         b.setLayoutY(320);
         b.setOnAction(e-> {
             try {
-                doUpgrade(terr_id, unit_id, unit_num, secondStage, upgradeUnitsActions);
+                if (!App.cc.checkUserStatus()) {
+                    doUpgrade(terr_id, unit_id, unit_num, secondStage, upgradeUnitsActions);
+                }
             } catch (Exception exception) {
                 exception.printStackTrace();
             }
@@ -320,18 +351,20 @@ public class actionChoose extends Application  {
         output += terr_id.getValue()+","+unitType+","+unit_num.getText();
         System.out.println(output);
         secondStage.close();
-        this.showWindow();
+        //this.showWindow();
         try {
             App.cc.conductUpgradeUnits(upgradeUnitsActions, output);
             showSecondWindow("Instruction: "+output+"\n"+"upgrade successfully");
         } catch (InvalidInputException | InvalidActionException e) {
             showSecondWindow("Instruction: "+output+"\n"+"upgrade failed");
         }
-
+        this.showWindow();
     }
 
-    public void actTech(Player self, List<Action> upgradeTechActions){
-
+    public void actTech(Player self, List<Action> upgradeTechActions) throws Exception {
+        if (App.cc.checkUserStatus()) {
+            return;
+        }
         if (!self.isAlreadyUpgradeTechInTurn()) {
             try {
                 App.cc.conductUpgradeTechLevel(upgradeTechActions);
@@ -343,6 +376,7 @@ public class actionChoose extends Application  {
         } else {
             showSecondWindow("Already upgraded in this turn");
         }
+        this.showWindow();
     }
 
     public Map<UnitType, TextField> unitsGroup(Map<UnitType, Integer> units, Group g){

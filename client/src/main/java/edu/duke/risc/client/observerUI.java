@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class obeservarUI extends Application implements Initializable {
+public class observerUI extends Application implements Initializable {
     Stage stage=new Stage();
     private String place ="";
     private actionChoose actionChoosePage;
@@ -47,11 +47,38 @@ public class obeservarUI extends Application implements Initializable {
             }
         }
 
-        primaryStage.setTitle("Place your units");
+        //exit button
+        javafx.scene.control.Button exit = new javafx.scene.control.Button("exit");
+        exit.setLayoutX(650);
+        exit.setLayoutY(350);
+        exit.setOnAction(e->exit());
+        g.getChildren().add(exit);
+
+        primaryStage.setTitle("observe the game");
         primaryStage.setScene(new Scene(g, 1000, 600));
         primaryStage.show();
+//        while (true){
+            App.cc.waitAndReadServerResponse();
+            displayLog(App.cc.getLoggerInfo());
+//        }
     }
 
+    private void exit() {
+        this.stage.close();
+    }
+
+
+    public void displayLog(String log){
+        Text a = new Text(log);
+        a.setLayoutX(50);
+        a.setLayoutY(100);
+        Group g= new Group();
+        g.getChildren().add(a);
+        Stage secondStage = new Stage();
+        Scene techScene = new Scene(g, 400, 300);
+        secondStage.setScene(techScene);
+        secondStage.showAndWait();//用户必须首先处理新的弹窗
+    }
 
 
     public void territoryInfoScene(GameBoard gameBoard, Territory territory){

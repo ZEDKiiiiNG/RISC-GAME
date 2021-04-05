@@ -67,9 +67,11 @@ public class ClientController extends WaitPlayerUI {
      * @throws IOException IOException
      */
     public Player getMyself(){
-
         return this.gameBoard.getPlayers().get(playerId);
+    }
 
+    public String getLoggerInfo() {
+        return loggerInfo;
     }
 
     public GameBoard getGameBoard(){
@@ -145,34 +147,7 @@ public class ClientController extends WaitPlayerUI {
 
     public void assignUnits(List<Action> actions) throws IOException {
         while (true) {
-//            List<Action> actions = new ArrayList<>();
-//            Player player = this.gameBoard.getPlayers().get(playerId);
 
-//            while (!player.getInitUnitsMap().isEmpty()) {
-////                this.gameBoard.displayBoard();
-////                //print basic information
-////                System.out.println("You are the " + player.getColor() + " player: ");
-////
-////                //print resource and technology information
-////                System.out.println();
-////
-////                //asking target territory
-////                System.out.println("You are assigned " + gameBoard.getPlayerAssignedTerritoryInfo(playerId));
-////                System.out.println("You still have " + player.getUnitsInfo(player.getInitUnitsMap()) + " available");
-////                System.out.println("Please enter your placement will in the format of " +
-////                        "<target territory>,<unit type>,<unit number> for example 1,S,5");
-//
-//                //String input = this.consoleReader.readLine();
-//                Action action = null;
-//                try {
-//                    action = this.validateInputAndGeneratePlacementAction(input, this.gameBoard, playerId);
-//                    action.simulateApply(this.gameBoard);
-//                    actions.add(action);
-//                } catch (InvalidInputException | InvalidActionException e) {
-//                    System.out.println(e.getMessage());
-//                    continue;
-//                }
-//            }
 
             //sending to the server
             //constructing payload objects
@@ -243,7 +218,7 @@ public class ClientController extends WaitPlayerUI {
      */
     public void observerMode() {
         try {
-            System.out.println("You lost the game, entering Observer Mode, you can type exit to quit...");
+//            System.out.println("You lost the game, entering Observer Mode, you can type exit to quit...");
             this.readExitThread = new ReadExitThread(this.consoleReader, this.communicator, this.playerId);
             this.readExitThread.run();
             while (true) {
@@ -315,7 +290,7 @@ public class ClientController extends WaitPlayerUI {
      * @throws InvalidPayloadContent      InvalidPayloadContent
      * @throws ServerRejectException      ServerRejectException
      */
-    private void waitAndReadServerResponse() throws UnmatchedReceiverException, InvalidPayloadContent, ServerRejectException {
+    public void waitAndReadServerResponse() throws UnmatchedReceiverException, InvalidPayloadContent, ServerRejectException {
         PayloadObject response = null;
         try {
             response = waitAndRead();
