@@ -14,9 +14,9 @@ public class App {
         return "Hello world from server.";
     }
 
-    public static void main(String[] args) throws IOException {
-        GameController gameController = new GameController();
-        gameController.startGame();
+    public static void main(String[] args) throws IOException, InterruptedException {
+        Accepter accepter = new Accepter();
+        accepter.start();
     }
 
 }

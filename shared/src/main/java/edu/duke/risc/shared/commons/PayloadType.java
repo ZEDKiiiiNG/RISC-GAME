@@ -41,4 +41,12 @@ public enum PayloadType {
      */
     SUCCESS,
 
+    /**
+     * When indicating an log in process to the server.
+     */
+    LOGIN,
+    /**
+     * When indicating an sign up in process to the server.
+     */
+    SIGNUP,
 }
