@@ -135,6 +135,7 @@ public class Accepter extends Thread{
                 int gameNo = Games.size()+1;
                 content.put(SUCCESSFOUND, null);
                 content.put("STAGE",STAGE_CREATE);
+                content.put("GAMEID",gameNo);
                 GameController newGame = new GameController(gameNo, gameid);
                 Games.put(gameNo, newGame);
                 PayloadObject payloadObject = new PayloadObject(MASTER_ID, DEFAULT_PLAYER_ID, PayloadType.LOGIN, content);
