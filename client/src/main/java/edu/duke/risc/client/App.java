@@ -26,13 +26,16 @@ import static javafx.application.Application.launch;
  *
  */
 public class App extends Application {
+    //cc will hold all info, will be updated when payload object is passed in
     public static ClientController cc;
-    public static ArrayList<TerritoryUI> TerrUIs = new ArrayList<TerritoryUI>();//store UI structure and cache all territory info in a list(subject to change)
+    //store UI structure and cache all territory DISPLAY info in a list(subject to change)
+    public static ArrayList<TerritoryUI> TerrUIs = new ArrayList<TerritoryUI>();
     Button button;
     /*
     * initialize territories based on clientController info(must be called after cc's first
     * update and can only be could once)*/
     public static void initializeTerritories() {
+        //instantiate all territories
         TerrUIs.add(new UtahUI(null));
         TerrUIs.add(new NevadaUI(null));
         TerrUIs.add(new IdahoUI(null));
@@ -43,11 +46,10 @@ public class App extends Application {
         TerrUIs.add(new CaliforniaUI(null));
         TerrUIs.add(new OregonUI(null));
         TerrUIs.add(new WashingtonUI(null));
-        assert(TerrUIs.get(2).getId() == 2);//make sure territories are insert in order
-        Map<Integer, Color> territoryIds = new HashMap<>();//territory IDs and their corresponding colors
+        //assert(TerrUIs.get(2).getId() == 2);//make sure territories are insert in order
         GameBoard gameBoard = App.cc.getGameBoard();//get gameboard
-        Map<Integer, Player> players = gameBoard.getPlayers();//get active players (2 - 5)
-        //for each active territory, set visible and update its color
+        Map<Integer, Player> players = gameBoard.getPlayers();//get active players (ids may between 2 - 5)
+        //for each active territory(belong to one of players), set visible and update its color
         for (Map.Entry<Integer, Player> entry : players.entrySet()) {
             Player player = entry.getValue();
             for (Integer territoryId : player.getOwnedTerritories()) {
@@ -55,6 +57,26 @@ public class App extends Application {
                 TerritoryUI currTerr = TerrUIs.get(territoryId);//again, indexes are corresponding
                 //set visible and update color
                 currTerr.setVisible();
+                currTerr.setTerritoryColor(Color.web(player.getColor().name()));
+            }
+        }
+    }
+
+    /*
+     * should be called every time clientController is updated
+     * update every territoryUI info(color)
+     */
+    public static void updateTerritories(){
+        GameBoard gameBoard = App.cc.getGameBoard();//get gameboard
+        Map<Integer, Player> players = gameBoard.getPlayers();//get active players (ids may between 2 - 5)
+        //for each active territory(belong to one of players), set visible and update its color
+        for (Map.Entry<Integer, Player> entry : players.entrySet()) {
+            Player player = entry.getValue();
+            for (Integer territoryId : player.getOwnedTerritories()) {
+                //get Territory
+                TerritoryUI currTerr = TerrUIs.get(territoryId);//again, indexes are corresponding
+                assert(currTerr.isVisible());//if belongs to a player, should be setVisible when initialized
+                //update color
                 currTerr.setTerritoryColor(Color.web(player.getColor().name()));
             }
         }
