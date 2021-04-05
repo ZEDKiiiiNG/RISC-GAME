@@ -60,6 +60,18 @@ public class actionChoose extends Application  {
         List<Action> upgradeUnitsActions = new ArrayList<>();
         List<Action> upgradeTechActions = new ArrayList<>();
 
+
+        //text
+        String  introduce = "You are the "+ self.getColor() +" player\n"+
+                "You have territories: ";
+        for(Integer i : self.getOwnedTerritories()){
+            introduce += i+", ";
+        }
+        Text a = new Text(introduce);
+        a.setLayoutX(50);
+        a.setLayoutY(100);
+        g.getChildren().add(a);
+
         //commit button
         javafx.scene.control.Button commit = new javafx.scene.control.Button("commit");
         commit.setLayoutX(650);
@@ -251,8 +263,8 @@ public class actionChoose extends Application  {
         unit_id.setLayoutY(120);
 
         Text t2 = new Text("unit number");
-        t.setLayoutX(30);
-        t.setLayoutY(220);
+        t2.setLayoutX(30);
+        t2.setLayoutY(220);
         ChoiceBox<Integer> unit_num= new ChoiceBox<>();
         unit_num.setLayoutX(150);
         unit_num.setLayoutY(220);
@@ -271,6 +283,7 @@ public class actionChoose extends Application  {
         });
 
         for(Integer i: player.getOwnedTerritories()){
+            System.out.println(i);
             terr_id.getItems().add(i);
         }
         for(UnitType i : unitMap.keySet()){
