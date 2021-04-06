@@ -8,6 +8,9 @@ plugins {
     id 'com.bmuschko.clover' version '2.2.3'
 
 }
+repositories {
+    jcenter()
+}
 
 clover{
     enabled = true
