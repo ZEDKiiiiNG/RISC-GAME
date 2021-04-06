@@ -17,7 +17,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -110,22 +109,44 @@ public class actionChoose extends Application  {
         commit.setOnAction(e-> {
             try {
                 finishThisRoll(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions);
-            } catch (IOException ioException) {
+            } catch (Exception ioException) {
+//                if (App.cc.checkUserStatus()) {
+//                    this.stage.close();
+//                    obeserver = new observerUI();
+//                    try {
+//                        obeserver.showWindow();
+//                    } catch (Exception exception) {
+//                        exception.printStackTrace();
+//                    }
+//                }
                 showSecondWindow("send actions to server failed");
-            } catch (Exception exception) {
+//            } catch (Exception exception) {
+//                if (App.cc.checkUserStatus()) {
+//                    this.stage.close();
+//                    obeserver = new observerUI();
+//                    try {
+//                        obeserver.showWindow();
+//                    } catch (Exception ex) {
+//                        ex.printStackTrace();
+//                    }
+//                }
                 showSecondWindow("send actions to server failed");
             }
         });
 
-        if (App.cc.checkUserStatus()) {
-            App.cc.observerMode();
-        }
+
         g.getChildren().addAll(commit, move, attack, upgrade, tech);
 
         primaryStage.setTitle("choose action");
         primaryStage.setScene(new Scene(g, 1100, 600));
         primaryStage.show();
+        if (App.cc.checkUserStatus()) {
+            this.stage.close();
+            obeserver = new observerUI();
+            obeserver.showWindow();
+        }
     }
+
 
     public void finishThisRoll(List<Action> moveActions, List<Action> attackActions,
                                List<Action> upgradeTechActions, List<Action> upgradeUnitsActions) throws Exception {
@@ -346,6 +367,11 @@ public class actionChoose extends Application  {
     public void doUpgrade(ChoiceBox<Integer> terr_id, ChoiceBox<String> unit_id, TextField unit_num,
                           Stage secondStage, List<Action> upgradeUnitsActions) throws Exception {
 
+        if(terr_id.getValue()==null||unit_id.getValue()==null){
+            showSecondWindow("Invalid input");
+            this.showWindow();
+            return;
+        }
         String output = "";
         String unitType = unit_id.getValue().substring(1, 2);
         output += terr_id.getValue()+","+unitType+","+unit_num.getText();

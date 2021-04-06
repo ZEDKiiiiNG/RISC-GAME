@@ -33,10 +33,18 @@ public class ClientController extends WaitPlayerUI {
      */
     private GameBoard gameBoard;
 
+    public Communicable getCommunicator() {
+        return communicator;
+    }
+
     /**
      * Socket communicator
      */
     private Communicable communicator;
+
+    public void setReadExitThread(ReadExitThread readExitThread) {
+        this.readExitThread = readExitThread;
+    }
 
     /**
      * Buffered reader which reads from console
@@ -52,6 +60,10 @@ public class ClientController extends WaitPlayerUI {
      * Current player id
      */
     private Integer playerId = Configurations.DEFAULT_PLAYER_ID;
+
+    public ReadExitThread getReadExitThread() {
+        return readExitThread;
+    }
 
     /**
      * Thread which reads exit signal
