@@ -3,16 +3,9 @@
  */
 package edu.duke.risc.client;
 
-import java.io.IOException;
-import java.util.*;
-
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.users.Player;
 import javafx.application.Application;
-
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
 import javafx.scene.Parent;
@@ -22,7 +15,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import static javafx.application.Application.launch;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  *
