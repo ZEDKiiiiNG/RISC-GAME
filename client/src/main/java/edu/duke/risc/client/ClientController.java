@@ -11,6 +11,10 @@ import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.*;
 import edu.duke.risc.shared.users.Player;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.text.Text;
+import javafx.stage.Stage;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -78,11 +82,18 @@ public class ClientController extends WaitPlayerUI {
      */
     private String stage;
 
+    private int gameId;
+
+    public int getGameId() {
+        return gameId;
+    }
+
     /**
      * Constructor
      *
      * @throws IOException IOException
      */
+
     public Player getMyself(){
         return this.gameBoard.getPlayers().get(playerId);
     }
@@ -204,9 +215,10 @@ public class ClientController extends WaitPlayerUI {
             readObject = communicator.receiveMessage();
             if ((readObject.getContents().containsKey(SUCCESSFOUND))){
                 //create stage just join
+                this.gameId = choose == "N" ?(int) readObject.getContents().get("GAMEID") : gameId ;
                 if(readObject.getContents().get("STAGE").equals(STAGE_CREATE)){//if stage == STAGE_CREATE(create user and last exit before assign)
                     stage = STAGE_CREATE;//set stage
-                    System.out.println("Successfully create/newly join a game with ID "+readObject.getContents().get("GAMEID"));
+                    System.out.println("Successfully create/newly join a game with ID "+ this.gameId);
                     return null;
                 }
                 else{//if last exit after assign
@@ -318,7 +330,8 @@ public class ClientController extends WaitPlayerUI {
                 Configurations.MASTER_ID, PayloadType.REQUEST, content);
         try {
             this.sendMessage(request);
-            System.out.println("Actions sent, please wait other players finish placing");
+            System.out.println("Actions sent, please wait other players finish commit");
+            showWaitWindow();
             this.waitAndReadServerResponse();
             System.out.println(this.loggerInfo);
             return this.loggerInfo;
@@ -329,6 +342,18 @@ public class ClientController extends WaitPlayerUI {
         }
     }
 
+    }
+
+    public void showWaitWindow(){
+        Text msg = new Text("You have commit you placement\n please wait for other users finishing their commit...");
+        msg.setLayoutX(50);
+        msg.setLayoutY(100);
+        Group g= new Group();
+        g.getChildren().add(msg);
+        Scene waitOthers = new Scene(g, 400, 300);
+        Stage wait = new Stage();
+        wait.setScene(waitOthers);
+        wait.showAndWait();
     }
 
     /**

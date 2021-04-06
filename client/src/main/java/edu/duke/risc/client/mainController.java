@@ -21,6 +21,7 @@ public class mainController implements Initializable{
     public Stage mainStage;//to be closed
     private placement placementPage;
     private actionChoose actionChoosePage;
+    private observerUI observer;
 
     public mainController() {
         //auto generated
@@ -199,20 +200,32 @@ public class mainController implements Initializable{
                     try {
                         //connectToServer();//initialize territories and receive payload
                         //already update local gameboard in gameChoose, no need reconnect
+                        mainStage.setScene(new Scene(new Group(new TextField("Now waiting other players..."))));
                         App.cc.tryConnectAndWait();
                         App.initializeTerritories();//initialize territory UI cache
+
                         //after update(possibly no update since stage is beyond) and territories initialization
                         switch (App.cc.getStage()){
 
-                            case Configurations.STAGE_CREATE: {
+                            case Configurations.STAGE_CREATE:
+                            case Configurations.STAGE_ASSIGN: {
                                 placementPage = new placement();
                                 placementPage.showWindow();
                                 mainStage.close();
                                 return;
                             }
-                            case Configurations.STAGE_ASSIGN: return;
-                            case Configurations.STAGE_MOVE: return;
-                            case Configurations.STAGE_OBSERVE :return;
+                            case Configurations.STAGE_MOVE: {
+                                actionChoosePage = new actionChoose();
+                                actionChoosePage.showWindow();
+                                mainStage.close();
+                                return;
+                            }
+                            case Configurations.STAGE_OBSERVE :{
+                                observer = new observerUI();
+                                observer.showWindow();
+                                mainStage.close();
+                                return;
+                            }
                             default:return;
                         }
                     } catch (Exception exception) {
@@ -267,7 +280,9 @@ public class mainController implements Initializable{
                     //redirect upon success
                     //new game, so placement phase after(try connect and wait)
                     try {
+                        mainStage.setScene(new Scene(new Group(new TextField("Now waiting other players..."))));
                         connectToServerAndEnterPlacement();//initialize territories and receive payload and enter placement phase
+                        mainStage.close();
                     } catch (Exception exception) {
                         showFailedScene("Exception occur");
                     }
@@ -294,7 +309,7 @@ public class mainController implements Initializable{
 
 
     public void startGame() throws Exception {
-        
+
         showUserPageScene();
 
         //placementPage.close();
