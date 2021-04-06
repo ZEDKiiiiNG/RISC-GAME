@@ -60,7 +60,7 @@ public class observerUI extends Application implements Initializable {
         //exit button
         javafx.scene.control.Button exit = new javafx.scene.control.Button("exit");
         exit.setLayoutX(950);
-        exit.setLayoutY(650);
+        exit.setLayoutY(0);
         exit.setOnAction(e-> {
             try {
                 exitGame(self);
@@ -89,7 +89,7 @@ public class observerUI extends Application implements Initializable {
         for(int i = 0;i<10;i++){
             Text terr_info = new Text(terrInfos.get(i));
             terr_info.setLayoutX(610);
-            terr_info.setLayoutY(20+65*i);
+            terr_info.setLayoutY(20+75*i);
             g1.getChildren().add(terr_info);
         }
         Rectangle[] rects =  new Rectangle[10];
@@ -159,14 +159,14 @@ public class observerUI extends Application implements Initializable {
             if(territoryIds.get(i)!=null){
                 displayTerritory(rects[i], texts[i], g1, territoryIds.get(i));
             }
-
         }
 
 
         g1.getChildren().add(exit);
-        Scene techScene = new Scene(g1, 1000, 680);
+        Scene techScene = new Scene(g1, 1000, 800);
         primaryStage.setScene(techScene);
         primaryStage.show();
+//        this.showWindow();
         while (true) {
             App.cc.waitAndReadServerResponse();
             showSecondWindow(App.cc.getLoggerInfo());
@@ -220,19 +220,6 @@ public class observerUI extends Application implements Initializable {
         secondStage.showAndWait();//用户必须首先处理新的弹窗
     }
 
-//
-//    public void territoryInfoScene(GameBoard gameBoard, Territory territory){
-//        String terrInfo = gameBoard.getDisplayer().displaySingleTerritory(gameBoard, territory);
-//        Text a = new Text(terrInfo);
-//        a.setLayoutX(100);
-//        a.setLayoutY(100);
-//        Group g= new Group();
-//        g.getChildren().add(a);
-//        Stage secondStage = new Stage();
-//        Scene terrInfoScene = new Scene(g, 600, 400);
-//        secondStage.setScene(terrInfoScene);
-//        secondStage.show();
-//    }
 
     public static void main(String[] args) {
         launch(args);

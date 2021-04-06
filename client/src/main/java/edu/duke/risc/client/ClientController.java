@@ -14,7 +14,6 @@ import edu.duke.risc.shared.users.Player;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.*;
 
@@ -357,7 +356,7 @@ public class ClientController extends WaitPlayerUI {
      * @throws IOException
      */
     public void conductMoveOrAttack(List<Action> actions, int actionType, String moveInput)
-            throws IOException, InvalidInputException, InvalidActionException {
+            throws InvalidInputException, InvalidActionException {
 //        System.out.println("Please enter instruction in the following format: " +
 //                "<sourceTerritoryId>,<destinationId>;<UnitType1>,<amount1>;<UnitType2>,<amount2>");
 //        String moveInput = this.consoleReader.readLine();
@@ -653,7 +652,7 @@ public class ClientController extends WaitPlayerUI {
         try {
             System.out.println("GAME OVER");
             this.communicator.terminate();
-            this.consoleReader.close();
+            //this.consoleReader.close();
             System.exit(0);
         } catch (IOException e) {
             e.printStackTrace();

@@ -25,6 +25,8 @@ import java.util.Map;
 public class actionChoose extends Application  {
     Stage stage=new Stage();
     private observerUI obeserver;
+    private winUI win;
+    private loseUI lose;
     private List<Action> moveActions = new ArrayList<>();
     private List<Action> attackActions = new ArrayList<>();
     private List<Action> upgradeUnitsActions = new ArrayList<>();
@@ -57,9 +59,6 @@ public class actionChoose extends Application  {
             }
         }
 
-
-
-
         //text
 
         Text a = new Text(self.getPlayerInfo());
@@ -82,7 +81,6 @@ public class actionChoose extends Application  {
         attack.setOnAction(e->actAttack(self, attackActions));
 
 
-        //
         //upgrade button
         javafx.scene.control.Button upgrade = new javafx.scene.control.Button("upgrade");
         upgrade.setLayoutX(650);
@@ -107,31 +105,13 @@ public class actionChoose extends Application  {
         commit.setLayoutX(650);
         commit.setLayoutY(550);
         commit.setOnAction(e-> {
+
             try {
                 finishThisRoll(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions);
-            } catch (Exception ioException) {
-//                if (App.cc.checkUserStatus()) {
-//                    this.stage.close();
-//                    obeserver = new observerUI();
-//                    try {
-//                        obeserver.showWindow();
-//                    } catch (Exception exception) {
-//                        exception.printStackTrace();
-//                    }
-//                }
-                showSecondWindow("send actions to server failed");
-//            } catch (Exception exception) {
-//                if (App.cc.checkUserStatus()) {
-//                    this.stage.close();
-//                    obeserver = new observerUI();
-//                    try {
-//                        obeserver.showWindow();
-//                    } catch (Exception ex) {
-//                        ex.printStackTrace();
-//                    }
-//                }
-                showSecondWindow("send actions to server failed");
+            } catch (Exception exception) {
+                exception.printStackTrace();
             }
+
         });
 
 
@@ -140,10 +120,15 @@ public class actionChoose extends Application  {
         primaryStage.setTitle("choose action");
         primaryStage.setScene(new Scene(g, 1100, 600));
         primaryStage.show();
-        if (App.cc.checkUserStatus()) {
+        if(self.isLost()){
             this.stage.close();
-            obeserver = new observerUI();
-            obeserver.showWindow();
+            lose = new loseUI();
+            lose.showWindow();
+        }
+        if (self.isWin()) {
+            this.stage.close();
+            win = new winUI();
+            win.showWindow();
         }
     }
 
@@ -153,7 +138,10 @@ public class actionChoose extends Application  {
         if (App.cc.checkUserStatus()) {
             return;
         }
-        String log = App.cc.moveAndAttack(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions);
+        String log = null;
+
+        log = App.cc.moveAndAttack(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions);//
+
 
         moveActions.clear();
         attackActions.clear();
@@ -189,7 +177,7 @@ public class actionChoose extends Application  {
         Stage secondStage = new Stage();
         b.setOnAction(e-> {
             try {
-                if (!App.cc.checkUserStatus()) {//?
+                if (!App.cc.checkUserStatus()) {
                     doMove(nums, num, num1, moveActions, secondStage);
                 }
 
@@ -267,11 +255,11 @@ public class actionChoose extends Application  {
             App.cc.conductMoveOrAttack(moveActions, 0, output);
             showSecondWindow("Instruction: "+output+"\n"+"move action success");
         }catch (NumberFormatException e){
-            showSecondWindow("Instruction: "+output+"\n"+"move action fail");
+            showSecondWindow(e.getMessage());
         } catch (InvalidInputException e) {
-            showSecondWindow("Instruction: "+output+"\n"+"move action fail");
+            showSecondWindow(e.getMessage());
         } catch (InvalidActionException e) {
-            showSecondWindow("Instruction: "+output+"\n"+"move action fail");
+            showSecondWindow(e.getMessage());
         }
         this.showWindow();
     }
@@ -299,11 +287,11 @@ public class actionChoose extends Application  {
             App.cc.conductMoveOrAttack(attackActions, 1, output);
             showSecondWindow("Instruction: "+output+"\n"+"attack action success");
         }catch (NumberFormatException e){
-            showSecondWindow("Instruction: "+output+"\n"+"attack action fail");
+            showSecondWindow(e.getMessage());
         } catch (InvalidInputException e) {
-            showSecondWindow("Instruction: "+output+"\n"+"attack action fail");
+            showSecondWindow(e.getMessage());
         } catch (InvalidActionException e) {
-            showSecondWindow("Instruction: "+output+"\n"+"attack action fail");
+            showSecondWindow(e.getMessage());
         }
         this.showWindow();
     }
@@ -382,7 +370,7 @@ public class actionChoose extends Application  {
             App.cc.conductUpgradeUnits(upgradeUnitsActions, output);
             showSecondWindow("Instruction: "+output+"\n"+"upgrade successfully");
         } catch (InvalidInputException | InvalidActionException e) {
-            showSecondWindow("Instruction: "+output+"\n"+"upgrade failed");
+            showSecondWindow(e.getMessage());
         }
         this.showWindow();
     }
@@ -396,7 +384,7 @@ public class actionChoose extends Application  {
                 App.cc.conductUpgradeTechLevel(upgradeTechActions);
                 showSecondWindow("Upgrade tech success");
             } catch (InvalidActionException e) {
-                showSecondWindow("Upgrade tech fail");
+                showSecondWindow(e.getMessage());
             }
 
         } else {
