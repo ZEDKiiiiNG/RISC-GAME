@@ -103,7 +103,7 @@ public class placement extends Application implements Initializable {
             }
         }
 
-        primaryStage.setTitle("Place your units");
+        primaryStage.setTitle("Place your units (GameID = " + App.cc.getGameId()+")");
         primaryStage.setScene(new Scene(g, 1000, 600));
         primaryStage.show();
     }

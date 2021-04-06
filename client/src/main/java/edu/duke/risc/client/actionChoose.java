@@ -117,7 +117,7 @@ public class actionChoose extends Application  {
 
         g.getChildren().addAll(commit, move, attack, upgrade, tech);
 
-        primaryStage.setTitle("choose action");
+        primaryStage.setTitle("choose action (GameID = "+ App.cc.getGameId() + ")");
         primaryStage.setScene(new Scene(g, 1100, 600));
         primaryStage.show();
         if(self.isLost()){

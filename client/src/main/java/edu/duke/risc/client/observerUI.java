@@ -165,6 +165,7 @@ public class observerUI extends Application implements Initializable {
         g1.getChildren().add(exit);
         Scene techScene = new Scene(g1, 1000, 800);
         primaryStage.setScene(techScene);
+        primaryStage.setTitle("Now in observer mode, you can exit anytime. (GameID = " + App.cc.getGameId()+")");
         primaryStage.show();
 //        this.showWindow();
         while (true) {
