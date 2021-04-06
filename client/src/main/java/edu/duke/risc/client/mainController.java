@@ -34,12 +34,12 @@ public class mainController implements Initializable{
     }
 
     public void connectToServerAndEnterPlacement() throws Exception {
-        showConnectingScene();
+        //showConnectingScene();
         App.cc.tryConnectAndWait();
         App.initializeTerritories();
         placementPage = new placement();
         placementPage.showWindow();
-        mainStage.close();//close the first window after connect
+        //mainStage.close();//close the first window after connect
     }
 
     /*
@@ -192,12 +192,15 @@ public class mainController implements Initializable{
         //set actions,
         confirm.setOnAction(e -> {
             try {
-                String errorMsg = App.cc.gameChoose(choose, Integer.parseInt(GID.getText()), -1);
+                String errorMsg = App.cc.gameChoose(choose, Integer.parseInt(GID.getText()));
                 if (errorMsg == null){
                     //redirect upon success
-                    //joined game, may go to later phase rather than placement
+                    System.out.println("Successfully joined a game");
                     try {
-                        connectToServer();//initialize territories and receive payload
+                        //connectToServer();//initialize territories and receive payload
+                        //already update local gameboard in gameChoose, no need reconnect
+                        App.cc.tryConnectAndWait();
+                        App.initializeTerritories();//initialize territory UI cache
                         //after update(possibly no update since stage is beyond) and territories initialization
                         switch (App.cc.getStage()){
 
@@ -259,7 +262,7 @@ public class mainController implements Initializable{
         //set actions,
         confirm.setOnAction(e -> {
             try {
-                String errorMsg = App.cc.gameChoose(choose, -1, num_choice_box.getValue());
+                String errorMsg = App.cc.gameChoose(choose, num_choice_box.getValue());
                 if (errorMsg == null){
                     //redirect upon success
                     //new game, so placement phase after(try connect and wait)

@@ -167,12 +167,16 @@ public class ClientController extends WaitPlayerUI {
      * @throws IOException            IOException
      * @throws ClassNotFoundException ClassNotFoundException
      */
-    public String gameChoose(String choose, int gameId, int playerNum) throws IOException, ClassNotFoundException, UnmatchedReceiverException, InvalidPayloadContent {
+
+    /*
+    * Note that in joining a new gamer: gameId represents the game id
+    * in creating a new game, gameId represents the max player num*/
+    public String gameChoose(String choose, int gameId) throws IOException, ClassNotFoundException, UnmatchedReceiverException, InvalidPayloadContent {
             PayloadObject readObject = null;
 
             //if player num is valid?
             if(choose.equals("N")) {
-                if (playerNum < 2 || playerNum > 5){
+                if (gameId < 2 || gameId > 5){
                     System.out.println("the game numbers should be in range 2 to 5 ");
                     return "the game numbers should be in range 2 to 5 ";
                 }
@@ -188,7 +192,7 @@ public class ClientController extends WaitPlayerUI {
                 //create stage just join
                 if(readObject.getContents().get("STAGE").equals(STAGE_CREATE)){//if stage == STAGE_CREATE(create user and last exit before assign)
                     stage = STAGE_CREATE;//set stage
-                    System.out.println("Successfully create game with ID "+readObject.getContents().get("GAMEID"));
+                    System.out.println("Successfully create/newly join a game with ID "+readObject.getContents().get("GAMEID"));
                     return null;
                 }
                 else{//if last exit after assign
@@ -200,7 +204,7 @@ public class ClientController extends WaitPlayerUI {
                     } else if (!readObject.getReceiver().equals(playerId)) {//reconnect?
                         throw new UnmatchedReceiverException("the " + playerId + "is not matched with " + readObject.getReceiver());//unlikely?
                     }
-                    //unpack message
+                    //unpack message(update local board)
                     Map<String, Object> contents = readObject.getContents();
                     if (contents.containsKey(GAME_BOARD_STRING)
                             && contents.containsKey(PLAYER_STRING)) {

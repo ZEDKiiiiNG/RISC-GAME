@@ -88,6 +88,7 @@ public class Accepter extends Thread{
             readObject = communicator.receiveMessage();
             String choose = (String) readObject.getContents().get("CHOOSE");
             int gameid = (int) readObject.getContents().get("ID");
+            System.out.println("Now the request maxPlayer(or game id in joining game is : " + (int) readObject.getContents().get("ID")+ "\n");
             Map<String, Object> content = new HashMap<>(10);
             // join exist game
             if(choose.equals("E")){
@@ -103,6 +104,7 @@ public class Accepter extends Thread{
                 if(Games.get(gameid).getStage().equals(STAGE_CREATE) ){
                     content.put(SUCCESSFOUND, null);
                     content.put("STAGE",STAGE_CREATE);
+                    content.put("GAMEID", gameid);
                     PayloadObject payloadObject = new PayloadObject(MASTER_ID, DEFAULT_PLAYER_ID, PayloadType.LOGIN, content);
                     Games.get(gameid).addUserConnections(id, communicator);
                     communicator.writeMessage(payloadObject);
@@ -176,6 +178,8 @@ public class Accepter extends Thread{
                 System.out.println("game"+ entry.getKey()+"start");
             }
             else{
+                System.out.println("maxplayer: "+ entry.getValue().getMaxPlayer() + "\n");
+                System.out.println("User connections " + entry.getValue().getUserConnections().size() + "\n");
                 System.out.println("game"+ entry.getKey()+"waiting for"
                         +(entry.getValue().getMaxPlayer()- entry.getValue().getUserConnections().size())+"to join the game");
             }
