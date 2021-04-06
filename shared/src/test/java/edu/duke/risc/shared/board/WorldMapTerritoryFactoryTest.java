@@ -13,7 +13,7 @@ public class WorldMapTerritoryFactoryTest {
     f.makeTerritories(2);
     f.makeTerritories(4);
     f.makeTerritories(3);
-    assertEquals(9, f.territoryNum());
+    assertEquals(6, f.territoryNum());
   }
 
 }

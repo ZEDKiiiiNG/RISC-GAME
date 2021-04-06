@@ -1,5 +1,6 @@
 package edu.duke.risc.shared;
 
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -54,6 +55,10 @@ public class SocketCommunicator implements Communicable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    @Override
+    public void sendUrgentData() throws  IOException {
+        this.socket.sendUrgentData(0xFF);
     }
 
 }

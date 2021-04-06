@@ -358,9 +358,9 @@ public class actionChoose extends Application  {
             unit_id.getItems().add(i.toString());
         }
         g.getChildren().addAll(t, t1, t2, terr_id, unit_id, unit_num, b);
-        Scene upgardeScene = new Scene(g, 300, 350);
+        Scene upgradeScene = new Scene(g, 300, 350);
 
-        secondStage.setScene(upgardeScene);
+        secondStage.setScene(upgradeScene);
         secondStage.show();
     }
 

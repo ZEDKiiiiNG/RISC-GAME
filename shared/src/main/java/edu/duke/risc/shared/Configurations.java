@@ -31,4 +31,19 @@ public class Configurations {
     public static final String REQUEST_UPGRADE_UNITS_ACTIONS = "REQUEST_UPGRADE_UNITS_ACTIONS";
     public static final String REQUEST_UPGRADE_TECH_ACTIONS = "REQUEST_UPGRADE_TECH_ACTIONS";
 
+    public static final String STAGE_ASSIGN = "STAGE_ASSIGN";
+    public static final String STAGE_MOVE = "STAGE_MOVE";
+    public static final String STAGE_OBSERVE = "STAGE_OBSERVE";
+    public static final String STAGE_CREATE = "STAGE_CREATE";
+
+    public static final String SUCCESS_LOG = "SUCCESS_LOG";
+    public static final String OCCUPIED_LOG = "OCCUPIED_LOG";
+    public static final String CANNOTFIND_LOG = "CANNOTFIND_LOG";
+
+    public static final String GAMENOTFOUND = "GAMENOTFOUND";
+    public static final String USERNOTFOUND = "USERNOTFOUND";
+    public static final String SUCCESSFOUND = "SUCCESSFOUND";
+
+    public static final String GAMEFINISHED = "GAMEFINISHED";
+
 }

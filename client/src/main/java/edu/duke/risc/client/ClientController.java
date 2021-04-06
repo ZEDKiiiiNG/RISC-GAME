@@ -74,6 +74,11 @@ public class ClientController extends WaitPlayerUI {
      */
     private WaitPlayerUI waitPlayerUI;
     /**
+     * stage of the client
+     */
+    private String stage;
+
+    /**
      * Constructor
      *
      * @throws IOException IOException
@@ -86,6 +91,10 @@ public class ClientController extends WaitPlayerUI {
         return loggerInfo;
     }
 
+    public String getStage() {
+        return stage;
+    }
+
     public GameBoard getGameBoard(){
         return this.gameBoard;
     }
@@ -95,7 +104,11 @@ public class ClientController extends WaitPlayerUI {
     }
 
     public ClientController() throws IOException {
-        this.consoleReader = new BufferedReader(new InputStreamReader(System.in));
+        //no need reader in GUI
+        //this.consoleReader = new BufferedReader(new InputStreamReader(System.in));
+        //here communicator is first initialized when constructed
+        Socket socket = new Socket(ClientConfigurations.LOCALHOST, Configurations.DEFAULT_SERVER_PORT);
+        communicator = new SocketCommunicator(socket);
     }
 
     /**
@@ -103,12 +116,6 @@ public class ClientController extends WaitPlayerUI {
      *
      * @throws IOException IOException
      */
-    public void startGame() throws IOException {
-        tryConnectAndWait();
-        //assignUnits();
-        //moveAndAttack();
-        observerMode();
-    }
 
     /**
      * Try to connect with the server and wait for other users
@@ -116,24 +123,123 @@ public class ClientController extends WaitPlayerUI {
     public void tryConnectAndWait() {
         try {
             //try connect to the server
-            Socket socket = new Socket(ClientConfigurations.LOCALHOST, Configurations.DEFAULT_SERVER_PORT);
-            communicator = new SocketCommunicator(socket);
+            //the user is already in a game, skip
+            if(!stage.equals(STAGE_CREATE)){
+                System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
+                return;
+            }
             System.out.println(ClientConfigurations.CONNECT_SUCCESS_MSG);
 
 
             //waiting for other users
             this.waitAndReadServerResponse();
 
-            System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
+            //System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
             //waitPlayerUI.start(new Stage());
             //System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (UnmatchedReceiverException | InvalidPayloadContent | ServerRejectException e) {
             System.out.println(e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Log in server and wait response
+     *
+     * @return String indicate login status
+     * @throws IOException            IOException
+     * @throws ClassNotFoundException ClassNotFoundException
+     */
+    public String logInValidate(String choose, String id, String pwd) throws IOException, ClassNotFoundException {
+       //construct a payload , send and read server response
+        System.out.println("id passed in loginValidate is \n\n\n\n" + id +"\n\n\n\n\n\n");
+        PayloadObject readObject = null;
+        Map<String, Object> userInfo = new HashMap<>();
+        userInfo.put("ID",id);
+        userInfo.put("PWD",pwd);
+        PayloadObject writeObject = choose.equals("L") ? new PayloadObject(DEFAULT_PLAYER_ID , MASTER_ID , PayloadType.LOGIN, userInfo) :new PayloadObject(DEFAULT_PLAYER_ID , MASTER_ID , PayloadType.SIGNUP, userInfo) ;
+        communicator.writeMessage(writeObject);
+        readObject = communicator.receiveMessage();
+        if ((readObject.getContents().containsKey(SUCCESS_LOG))){
+            return null;
+        }
+        else if((readObject.getContents().containsKey(OCCUPIED_LOG))){
+            System.out.println("The user Id is occupied ");
+            return "The user Id is occupied ";
+        }
+        else{
+            System.out.println("Cannot find corresponding id or password is wrong");
+            return "Cannot find corresponding id or password is wrong";
+        }
+    }
+
+    /**
+     * Log in server and wait response
+     *
+     * @return String error mess(null on success)
+     * @throws IOException            IOException
+     * @throws ClassNotFoundException ClassNotFoundException
+     */
+
+    /*
+    * Note that in joining a new gamer: gameId represents the game id
+    * in creating a new game, gameId represents the max player num*/
+    public String gameChoose(String choose, int gameId) throws IOException, ClassNotFoundException, UnmatchedReceiverException, InvalidPayloadContent {
+            PayloadObject readObject = null;
+
+            //if player num is valid?
+            if(choose.equals("N")) {
+                if (gameId < 2 || gameId > 5){
+                    System.out.println("the game numbers should be in range 2 to 5 ");
+                    return "the game numbers should be in range 2 to 5 ";
+                }
+            }
+            Map<String, Object> gameInfo = new HashMap<>();
+            gameInfo.put("CHOOSE",choose);
+            gameInfo.put("ID",gameId);
+            PayloadObject writeObject = new PayloadObject(DEFAULT_PLAYER_ID , MASTER_ID , PayloadType.LOGIN, gameInfo);
+            communicator.writeMessage(writeObject);
+            //read the response
+            readObject = communicator.receiveMessage();
+            if ((readObject.getContents().containsKey(SUCCESSFOUND))){
+                //create stage just join
+                if(readObject.getContents().get("STAGE").equals(STAGE_CREATE)){//if stage == STAGE_CREATE(create user and last exit before assign)
+                    stage = STAGE_CREATE;//set stage
+                    System.out.println("Successfully create/newly join a game with ID "+readObject.getContents().get("GAMEID"));
+                    return null;
+                }
+                else{//if last exit after assign
+                    // other stage update the info and move foward
+                    stage = (String) readObject.getContents().get("STAGE");//update local stage
+
+                    if (playerId == Configurations.DEFAULT_PLAYER_ID) {//why????????????????????????????
+                        playerId = readObject.getReceiver(); //update playerId with server based on user Id
+                    } else if (!readObject.getReceiver().equals(playerId)) {//reconnect?
+                        throw new UnmatchedReceiverException("the " + playerId + "is not matched with " + readObject.getReceiver());//unlikely?
+                    }
+                    //unpack message(update local board)
+                    Map<String, Object> contents = readObject.getContents();
+                    if (contents.containsKey(GAME_BOARD_STRING)
+                            && contents.containsKey(PLAYER_STRING)) {
+                        this.gameBoard = (GameBoard) contents.get(GAME_BOARD_STRING);
+                        this.playerId = (Integer) contents.get(PLAYER_STRING);
+                        this.loggerInfo = (String) contents.get(LOGGER_STRING);
+                    } else {
+                        throw new InvalidPayloadContent("do not contain gameBoard object");
+                    }
+                    System.out.println("Successfully reconnect");
+                    return null;
+                }
+            }
+            else if((readObject.getContents().containsKey(USERNOTFOUND))){
+                System.out.println("The user Id is not in the game ");
+                return "The user Id is not in the game ";
+            }
+            else{
+                System.out.println("Cannot find corresponding game");
+                return "Cannot find corresponding game";
+            }
     }
 
     /**
@@ -160,7 +266,6 @@ public class ClientController extends WaitPlayerUI {
     public void assignUnits(List<Action> actions) throws IOException {
         while (true) {
 
-
             //sending to the server
             //constructing payload objects
             Map<String, Object> content = new HashMap<>(3);
@@ -181,6 +286,7 @@ public class ClientController extends WaitPlayerUI {
             System.out.println("Successfully finished placement phase");
             break;
         }
+        stage = STAGE_MOVE;
     }
 
     /**

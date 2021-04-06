@@ -14,6 +14,7 @@ import java.util.Map;
  */
 public class PayloadObject implements Serializable {
 
+
     @SerializedName("sender")
     private Integer sender;
 
@@ -51,6 +52,9 @@ public class PayloadObject implements Serializable {
         this.messageType = messageType;
         this.contents = contents;
     }
+
+//    public PayloadObject(int defaultPlayerId, int masterId, PayloadType login, Map<String, String> userInfo) {
+//    }
 
     @Override
     public String toString() {
