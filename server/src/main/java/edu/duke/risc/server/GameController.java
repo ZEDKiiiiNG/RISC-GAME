@@ -412,14 +412,21 @@ public class GameController {
      * update user connections
      */
 
-    public void updateConnections(){
-        for(Map.Entry<String, SocketCommunicator> entry : userConnections.entrySet()){
-            String id = entry.getKey();
-            SocketCommunicator socketCommunicator = entry.getValue();
-            Player player = idMap.get(id);
-
-            playerConnections.put(player, socketCommunicator);
-        }
+    public void updateConnections(String id){
+        SocketCommunicator socketCommunicator = userConnections.get(id);
+        Player player = idMap.get(id);
+        playerConnections.put(player, socketCommunicator);
+        PlayerHandler handler = new PlayerHandler(socketCommunicator, barrier/*, serverSocket,playerConnections, player*/);
+        handler.start();
+//        for(Map.Entry<String, SocketCommunicator> entry : userConnections.entrySet()){
+//            String id = entry.getKey();
+//            SocketCommunicator socketCommunicator = entry.getValue();
+//            Player player = idMap.get(id);
+//
+//            playerConnections.put(player, socketCommunicator);
+//            PlayerHandler handler = new PlayerHandler(socketCommunicator, barrier/*, serverSocket,playerConnections, player*/);
+//            handler.start();
+//        }
     }
 
 
