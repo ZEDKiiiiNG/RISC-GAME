@@ -29,9 +29,9 @@ public class App extends Application {
     }
     Button button;
     public static void main(String[] args) throws IOException {
-        //ClientController clientController = new ClientController();
-        //clientController.startGame();
-        launch(args);
+        ClientController clientController = new ClientController();
+        clientController.startGame();
+//        launch(args);
     }
 
     @Override

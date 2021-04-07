@@ -202,7 +202,7 @@ public class ClientController {
                 //create stage just join
                 if(readObject.getContents().get("STAGE").equals(STAGE_CREATE)){
                     stage = STAGE_CREATE;
-                    System.out.println("Successfully create game with ID "+readObject.getContents().get("GAMEID"));
+                    System.out.println("Successfully join game with ID "+readObject.getContents().get("GAMEID"));
                     return;
                 }
                 else{

@@ -103,6 +103,7 @@ public class Accepter extends Thread{
                 if(Games.get(gameid).getStage().equals(STAGE_CREATE) ){
                     content.put(SUCCESSFOUND, null);
                     content.put("STAGE",STAGE_CREATE);
+                    content.put("GAMEID",gameid);
                     PayloadObject payloadObject = new PayloadObject(MASTER_ID, DEFAULT_PLAYER_ID, PayloadType.LOGIN, content);
                     Games.get(gameid).addUserConnections(id, communicator);
                     communicator.writeMessage(payloadObject);
@@ -115,7 +116,7 @@ public class Accepter extends Thread{
                     content.put("STAGE", Games.get(gameid).getStage());
                     PayloadObject payloadObject = new PayloadObject(MASTER_ID, Games.get(gameid).getIdMap().get(id).getId(), PayloadType.LOGIN, content);
                     Games.get(gameid).addUserConnections(id, communicator);
-                    Games.get(gameid).updateConnections();
+                    Games.get(gameid).updateConnections(id);
 
                     content.put(GAME_BOARD_STRING, Games.get(gameid).getBoard());
                     content.put(LOGGER_STRING, "");
