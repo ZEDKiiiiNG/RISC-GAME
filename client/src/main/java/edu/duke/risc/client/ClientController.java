@@ -147,6 +147,7 @@ public class ClientController extends WaitPlayerUI {
             //System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
             //waitPlayerUI.start(new Stage());
             //System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
+            stage = STAGE_ASSIGN;//if all users all ready, set their stage to ASSIGN
         } catch (UnmatchedReceiverException | InvalidPayloadContent | ServerRejectException e) {
             System.out.println(e.getMessage());
         } catch (Exception e) {
