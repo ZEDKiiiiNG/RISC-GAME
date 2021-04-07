@@ -88,6 +88,7 @@ public class Accepter extends Thread{
             readObject = communicator.receiveMessage();
             String choose = (String) readObject.getContents().get("CHOOSE");
             int gameid = (int) readObject.getContents().get("ID");
+            System.out.println("Now the request maxPlayer(or game id in joining game is : " + (int) readObject.getContents().get("ID")+ "\n");
             Map<String, Object> content = new HashMap<>(10);
             // join exist game
             if(choose.equals("E")){
@@ -177,6 +178,8 @@ public class Accepter extends Thread{
                 System.out.println("game"+ entry.getKey()+"start");
             }
             else{
+                System.out.println("maxplayer: "+ entry.getValue().getMaxPlayer() + "\n");
+                System.out.println("User connections " + entry.getValue().getUserConnections().size() + "\n");
                 System.out.println("game"+ entry.getKey()+"waiting for"
                         +(entry.getValue().getMaxPlayer()- entry.getValue().getUserConnections().size())+"to join the game");
             }

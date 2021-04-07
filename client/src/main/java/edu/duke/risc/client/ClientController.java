@@ -4,32 +4,23 @@ import edu.duke.risc.shared.Communicable;
 import edu.duke.risc.shared.Configurations;
 import edu.duke.risc.shared.PayloadObject;
 import edu.duke.risc.shared.SocketCommunicator;
-import edu.duke.risc.shared.actions.Action;
-import edu.duke.risc.shared.actions.AttackAction;
-import edu.duke.risc.shared.actions.MoveAction;
-import edu.duke.risc.shared.actions.PlacementAction;
-import edu.duke.risc.shared.actions.UpgradeTechAction;
-import edu.duke.risc.shared.actions.UpgradeUnitAction;
+import edu.duke.risc.shared.actions.*;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.commons.ActionType;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UnitType;
-import edu.duke.risc.shared.exceptions.InvalidActionException;
-import edu.duke.risc.shared.exceptions.InvalidInputException;
-import edu.duke.risc.shared.exceptions.InvalidPayloadContent;
-import edu.duke.risc.shared.exceptions.ServerRejectException;
-import edu.duke.risc.shared.exceptions.UnmatchedReceiverException;
+import edu.duke.risc.shared.exceptions.*;
 import edu.duke.risc.shared.users.Player;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.text.Text;
+import javafx.stage.Stage;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static edu.duke.risc.shared.Configurations.*;
 
@@ -39,17 +30,25 @@ import static edu.duke.risc.shared.Configurations.*;
  * @author eason
  * @date 2021/3/10 13:58
  */
-public class ClientController {
+public class ClientController extends WaitPlayerUI {
 
     /**
      * The game board
      */
     private GameBoard gameBoard;
 
+    public Communicable getCommunicator() {
+        return communicator;
+    }
+
     /**
      * Socket communicator
      */
     private Communicable communicator;
+
+    public void setReadExitThread(ReadExitThread readExitThread) {
+        this.readExitThread = readExitThread;
+    }
 
     /**
      * Buffered reader which reads from console
@@ -66,23 +65,61 @@ public class ClientController {
      */
     private Integer playerId = Configurations.DEFAULT_PLAYER_ID;
 
+    public ReadExitThread getReadExitThread() {
+        return readExitThread;
+    }
+
     /**
      * Thread which reads exit signal
      */
     private ReadExitThread readExitThread;
+    /*
 
+     */
+    private WaitPlayerUI waitPlayerUI;
     /**
      * stage of the client
      */
     private String stage;
+
+    private int gameId;
+
+    public int getGameId() {
+        return gameId;
+    }
 
     /**
      * Constructor
      *
      * @throws IOException IOException
      */
+
+    public Player getMyself(){
+        return this.gameBoard.getPlayers().get(playerId);
+    }
+
+    public String getLoggerInfo() {
+        return loggerInfo;
+    }
+
+    public String getStage() {
+        return stage;
+    }
+
+    public GameBoard getGameBoard(){
+        return this.gameBoard;
+    }
+
+    public Integer getPlayerId(){
+        return this.playerId;
+    }
+
     public ClientController() throws IOException {
-        this.consoleReader = new BufferedReader(new InputStreamReader(System.in));
+        //no need reader in GUI
+        //this.consoleReader = new BufferedReader(new InputStreamReader(System.in));
+        //here communicator is first initialized when constructed
+        Socket socket = new Socket(ClientConfigurations.LOCALHOST, Configurations.DEFAULT_SERVER_PORT);
+        communicator = new SocketCommunicator(socket);
     }
 
     /**
@@ -90,107 +127,85 @@ public class ClientController {
      *
      * @throws IOException IOException
      */
-    public void startGame() throws IOException {
-        tryConnectAndWait();
-
-        assignUnits();
-
-        moveAndAttack();
-
-        observerMode();
-    }
 
     /**
      * Try to connect with the server and wait for other users
      */
-    private void tryConnectAndWait() {
+    public void tryConnectAndWait() {
         try {
             //try connect to the server
-            Socket socket = new Socket(ClientConfigurations.LOCALHOST, Configurations.DEFAULT_SERVER_PORT);
-            communicator = new SocketCommunicator(socket);
-            logInValidate();
-            gameChoose();
+            //the user is already in a game, skip
             if(!stage.equals(STAGE_CREATE)){
                 System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
                 return;
             }
             System.out.println(ClientConfigurations.CONNECT_SUCCESS_MSG);
+
+
             //waiting for other users
             this.waitAndReadServerResponse();
-            System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
-            stage = STAGE_ASSIGN;
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+
+            //System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
+            //waitPlayerUI.start(new Stage());
+            //System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
         } catch (UnmatchedReceiverException | InvalidPayloadContent | ServerRejectException e) {
             System.out.println(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     /**
      * Log in server and wait response
      *
-     * @return PayloadObject as response
+     * @return String indicate login status
      * @throws IOException            IOException
      * @throws ClassNotFoundException ClassNotFoundException
      */
-    private void logInValidate() throws IOException, ClassNotFoundException {
-        while (true) {
-            PayloadObject readObject = null;
-            System.out.println("Please choose (S)ign up or (L)og in");
-            String choose = this.consoleReader.readLine();
-            System.out.println("Please enter your id which consist of characters and numbers only ");
-            String id = this.consoleReader.readLine();
-            System.out.println("Please enter your password which consist of characters and numbers only ");
-            String pwd = this.consoleReader.readLine();
-            Map<String, Object> userInfo = new HashMap<>();
-            userInfo.put("ID",id);
-            userInfo.put("PWD",pwd);
-            PayloadObject writeObject = choose.equals("L") ? new PayloadObject(DEFAULT_PLAYER_ID , MASTER_ID , PayloadType.LOGIN, userInfo) :new PayloadObject(DEFAULT_PLAYER_ID , MASTER_ID , PayloadType.SIGNUP, userInfo) ;
-            communicator.writeMessage(writeObject);
-            readObject = communicator.receiveMessage();
-            if ((readObject.getContents().containsKey(SUCCESS_LOG))){
-                return;
-            }
-            else if((readObject.getContents().containsKey(OCCUPIED_LOG))){
-                System.out.println("The user Id is occupied ");
-            }
-            else{
-                System.out.println("Cannot find corresponding id or password is wrong");
-            }
+    public String logInValidate(String choose, String id, String pwd) throws IOException, ClassNotFoundException {
+       //construct a payload , send and read server response
+        System.out.println("id passed in loginValidate is \n\n\n\n" + id +"\n\n\n\n\n\n");
+        PayloadObject readObject = null;
+        Map<String, Object> userInfo = new HashMap<>();
+        userInfo.put("ID",id);
+        userInfo.put("PWD",pwd);
+        PayloadObject writeObject = choose.equals("L") ? new PayloadObject(DEFAULT_PLAYER_ID , MASTER_ID , PayloadType.LOGIN, userInfo) :new PayloadObject(DEFAULT_PLAYER_ID , MASTER_ID , PayloadType.SIGNUP, userInfo) ;
+        communicator.writeMessage(writeObject);
+        readObject = communicator.receiveMessage();
+        if ((readObject.getContents().containsKey(SUCCESS_LOG))){
+            return null;
+        }
+        else if((readObject.getContents().containsKey(OCCUPIED_LOG))){
+            System.out.println("The user Id is occupied ");
+            return "The user Id is occupied ";
+        }
+        else{
+            System.out.println("Cannot find corresponding id or password is wrong");
+            return "Cannot find corresponding id or password is wrong";
         }
     }
 
     /**
      * Log in server and wait response
      *
-     * @return PayloadObject as response
+     * @return String error mess(null on success)
      * @throws IOException            IOException
      * @throws ClassNotFoundException ClassNotFoundException
      */
-    private void gameChoose() throws IOException, ClassNotFoundException, UnmatchedReceiverException, InvalidPayloadContent {
-        while (true) {
-            PayloadObject readObject = null;
-            System.out.println("Please choose (N)ew Game or (E)xist game in");
-            String choose = this.consoleReader.readLine();
 
-            int gameId = -1;
-            if(choose.equals("E")) {
-                System.out.println("Please enter your game id you want to join ");
-                gameId = Integer.parseInt(this.consoleReader.readLine());
-            }
-            else if(choose.equals("N")) {
-                System.out.println("Please enter how many players new game should have between(2-5) ");
-                gameId = Integer.parseInt(this.consoleReader.readLine());
+    /*
+    * Note that in joining a new gamer: gameId represents the game id
+    * in creating a new game, gameId represents the max player num*/
+    public String gameChoose(String choose, int gameId) throws IOException, ClassNotFoundException, UnmatchedReceiverException, InvalidPayloadContent {
+            PayloadObject readObject = null;
+
+            //if player num is valid?
+            if(choose.equals("N")) {
                 if (gameId < 2 || gameId > 5){
                     System.out.println("the game numbers should be in range 2 to 5 ");
-                    continue;
+                    return "the game numbers should be in range 2 to 5 ";
                 }
             }
-            else{
-                System.out.println("Choose should only be N or E");
-                continue;
-            }
-
             Map<String, Object> gameInfo = new HashMap<>();
             gameInfo.put("CHOOSE",choose);
             gameInfo.put("ID",gameId);
@@ -200,21 +215,22 @@ public class ClientController {
             readObject = communicator.receiveMessage();
             if ((readObject.getContents().containsKey(SUCCESSFOUND))){
                 //create stage just join
-                if(readObject.getContents().get("STAGE").equals(STAGE_CREATE)){
-                    stage = STAGE_CREATE;
-                    System.out.println("Successfully join game with ID "+readObject.getContents().get("GAMEID"));
-                    return;
+                this.gameId = choose == "N" ?(int) readObject.getContents().get("GAMEID") : gameId ;
+                if(readObject.getContents().get("STAGE").equals(STAGE_CREATE)){//if stage == STAGE_CREATE(create user and last exit before assign)
+                    stage = STAGE_CREATE;//set stage
+                    System.out.println("Successfully create/newly join a game with ID "+ this.gameId);
+                    return null;
                 }
-                else{
+                else{//if last exit after assign
                     // other stage update the info and move foward
-                    stage = (String) readObject.getContents().get("STAGE");
+                    stage = (String) readObject.getContents().get("STAGE");//update local stage
 
-                    if (playerId == Configurations.DEFAULT_PLAYER_ID) {
-                        playerId = readObject.getReceiver();
-                    } else if (!readObject.getReceiver().equals(playerId)) {
-                        throw new UnmatchedReceiverException("the " + playerId + "is not matched with " + readObject.getReceiver());
+                    if (playerId == Configurations.DEFAULT_PLAYER_ID) {//why????????????????????????????
+                        playerId = readObject.getReceiver(); //update playerId with server based on user Id
+                    } else if (!readObject.getReceiver().equals(playerId)) {//reconnect?
+                        throw new UnmatchedReceiverException("the " + playerId + "is not matched with " + readObject.getReceiver());//unlikely?
                     }
-                    //unpack message
+                    //unpack message(update local board)
                     Map<String, Object> contents = readObject.getContents();
                     if (contents.containsKey(GAME_BOARD_STRING)
                             && contents.containsKey(PLAYER_STRING)) {
@@ -225,16 +241,17 @@ public class ClientController {
                         throw new InvalidPayloadContent("do not contain gameBoard object");
                     }
                     System.out.println("Successfully reconnect");
-                    return;
+                    return null;
                 }
             }
             else if((readObject.getContents().containsKey(USERNOTFOUND))){
                 System.out.println("The user Id is not in the game ");
+                return "The user Id is not in the game ";
             }
             else{
                 System.out.println("Cannot find corresponding game");
+                return "Cannot find corresponding game";
             }
-        }
     }
 
     /**
@@ -242,37 +259,24 @@ public class ClientController {
      *
      * @throws IOException IOException
      */
-    private void assignUnits() throws IOException {
-        if(!stage.equals(STAGE_ASSIGN)) return;
+
+    public void clientAssignUnits(List<Action> actions, String input){
+        Action action = null;
+        try {
+            action = this.validateInputAndGeneratePlacementAction(input, this.gameBoard, playerId);
+            action.simulateApply(this.gameBoard);
+            actions.add(action);
+        } catch (InvalidInputException | InvalidActionException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+
+
+
+
+    public void assignUnits(List<Action> actions) throws IOException {
         while (true) {
-            List<Action> actions = new ArrayList<>();
-            Player player = this.gameBoard.getPlayers().get(playerId);
-
-            while (!player.getInitUnitsMap().isEmpty()) {
-                this.gameBoard.displayBoard();
-                //print basic information
-                System.out.println("You are the " + player.getColor() + " player: ");
-
-                //print resource and technology information
-                System.out.println();
-
-                //asking target territory
-                System.out.println("You are assigned " + gameBoard.getPlayerAssignedTerritoryInfo(playerId));
-                System.out.println("You still have " + player.getUnitsInfo(player.getInitUnitsMap()) + " available");
-                System.out.println("Please enter your placement will in the format of " +
-                        "<target territory>,<unit type>,<unit number> for example 1,S,5");
-
-                String input = this.consoleReader.readLine();
-                Action action = null;
-                try {
-                    action = this.validateInputAndGeneratePlacementAction(input, this.gameBoard, playerId);
-                    action.simulateApply(this.gameBoard);
-                    actions.add(action);
-                } catch (InvalidInputException | InvalidActionException e) {
-                    System.out.println(e.getMessage());
-                    continue;
-                }
-            }
 
             //sending to the server
             //constructing payload objects
@@ -284,8 +288,8 @@ public class ClientController {
                 this.sendMessage(request);
                 System.out.println("Actions sent, please wait other players finish placing");
                 this.waitAndReadServerResponse();
-                System.out.println(this.loggerInfo);
-                this.gameBoard.displayBoard();
+                //System.out.println(this.loggerInfo);
+                //this.gameBoard.displayBoard();
             } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
                 //if server returns failed, re-do the actions again
                 exception.printStackTrace();
@@ -303,7 +307,7 @@ public class ClientController {
      * @param payloadObject payloadObject
      * @throws IOException IOException
      */
-    private void sendMessage(PayloadObject payloadObject) throws IOException {
+    public void sendMessage(PayloadObject payloadObject) throws IOException {
         this.communicator.writeMessage(payloadObject);
     }
 
@@ -312,84 +316,52 @@ public class ClientController {
      *
      * @throws IOException IOException
      */
-    private void moveAndAttack() throws IOException {
-        if(!stage.equals(STAGE_MOVE)) return;
-        while (true) {
-            if (this.checkUserStatus()) {
-                stage = STAGE_OBSERVE;
-                return;
-            }
-            Player player = this.gameBoard.getPlayers().get(playerId);
-            boolean isFinished = false;
-            List<Action> moveActions = new ArrayList<>();
-            List<Action> attackActions = new ArrayList<>();
-            List<Action> upgradeUnitsActions = new ArrayList<>();
-            List<Action> upgradeTechActions = new ArrayList<>();
-            while (!isFinished) {
-                this.gameBoard.displayBoard();
-                System.out.println(player.getPlayerInfo());
-                System.out.println("What would you like to do?");
-                System.out.println("(M)ove");
-                System.out.println("(A)ttack");
-                System.out.println("(U)nits upgrade");
-                System.out.println("(T)echnology upgrade");
-                System.out.println("(D)one");
-                String input = this.consoleReader.readLine();
-                switch (input) {
-                    case "M":
-                        conductMoveOrAttack(moveActions, 0);
-                        break;
-                    case "A":
-                        conductMoveOrAttack(attackActions, 1);
-                        break;
-                    case "U":
-                        conductUpgradeUnits(upgradeUnitsActions);
-                        break;
-                    case "T":
-                        if (player.isAlreadyUpgradeTechInTurn()) {
-                            System.out.println("Already upgraded in this turn");
-                        } else {
-                            conductUpgradeTechLevel(upgradeTechActions);
-                        }
-                        break;
-                    case "D":
-                        System.out.println("You have finished your actions, submitting...");
-                        isFinished = true;
-                        break;
-                    default:
-                        System.out.println("Invalid input, please input again");
-                        break;
-                }
-            }
-
-            //sending to the server
-            //constructing payload objects
-            Map<String, Object> content = new HashMap<>(3);
-            content.put(Configurations.REQUEST_MOVE_ACTIONS, moveActions);
-            content.put(Configurations.REQUEST_ATTACK_ACTIONS, attackActions);
-            content.put(Configurations.REQUEST_UPGRADE_UNITS_ACTIONS, upgradeUnitsActions);
-            content.put(Configurations.REQUEST_UPGRADE_TECH_ACTIONS, upgradeTechActions);
-            PayloadObject request = new PayloadObject(this.playerId,
-                    Configurations.MASTER_ID, PayloadType.REQUEST, content);
-            try {
-                this.sendMessage(request);
-                System.out.println("Actions sent, please wait other players finish placing");
-                this.waitAndReadServerResponse();
-                System.out.println(this.loggerInfo);
-            } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
-                //if server returns failed, re-do the actions again
-                exception.printStackTrace();
-                continue;
-            }
+    public String moveAndAttack(List<Action> moveActions, List<Action> attackActions,
+                              List<Action> upgradeTechActions, List<Action> upgradeUnitsActions) throws IOException {
+    while(true) {
+        //sending to the server
+        //constructing payload objects
+        Map<String, Object> content = new HashMap<>(3);
+        content.put(Configurations.REQUEST_MOVE_ACTIONS, moveActions);
+        content.put(Configurations.REQUEST_ATTACK_ACTIONS, attackActions);
+        content.put(Configurations.REQUEST_UPGRADE_UNITS_ACTIONS, upgradeUnitsActions);
+        content.put(Configurations.REQUEST_UPGRADE_TECH_ACTIONS, upgradeTechActions);
+        PayloadObject request = new PayloadObject(this.playerId,
+                Configurations.MASTER_ID, PayloadType.REQUEST, content);
+        try {
+            this.sendMessage(request);
+            System.out.println("Actions sent, please wait other players finish commit");
+            showWaitWindow();
+            this.waitAndReadServerResponse();
+            System.out.println(this.loggerInfo);
+            return this.loggerInfo;
+        } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
+            //if server returns failed, re-do the actions again
+            exception.printStackTrace();
+            continue;
         }
+    }
+
+    }
+
+    public void showWaitWindow(){
+        Text msg = new Text("You have commit you placement\n please wait for other users finishing their commit...");
+        msg.setLayoutX(50);
+        msg.setLayoutY(100);
+        Group g= new Group();
+        g.getChildren().add(msg);
+        Scene waitOthers = new Scene(g, 400, 300);
+        Stage wait = new Stage();
+        wait.setScene(waitOthers);
+        wait.showAndWait();
     }
 
     /**
      * Entering the observer's mode
      */
-    private void observerMode() {
+    public void observerMode() {
         try {
-            System.out.println("You lost the game, entering Observer Mode, you can type exit to quit...");
+//            System.out.println("You lost the game, entering Observer Mode, you can type exit to quit...");
             this.readExitThread = new ReadExitThread(this.consoleReader, this.communicator, this.playerId);
             this.readExitThread.run();
             while (true) {
@@ -409,18 +381,17 @@ public class ClientController {
      * @param actionType 0 for move and 1 for attack
      * @throws IOException
      */
-    private void conductMoveOrAttack(List<Action> actions, int actionType) throws IOException {
-        System.out.println("Please enter instruction in the following format: " +
-                "<sourceTerritoryId>,<destinationId>;<UnitType1>,<amount1>;<UnitType2>,<amount2>");
-        String moveInput = this.consoleReader.readLine();
+    public void conductMoveOrAttack(List<Action> actions, int actionType, String moveInput)
+            throws IOException, InvalidInputException, InvalidActionException {
+//        System.out.println("Please enter instruction in the following format: " +
+//                "<sourceTerritoryId>,<destinationId>;<UnitType1>,<amount1>;<UnitType2>,<amount2>");
+//        String moveInput = this.consoleReader.readLine();
         Action action;
-        try {
-            action = this.readAttackOrMoveAction(moveInput, this.gameBoard, playerId, actionType);
-            action.simulateApply(this.gameBoard);
-            actions.add(action);
-        } catch (InvalidInputException | InvalidActionException | NumberFormatException e) {
-            System.out.println(e.getMessage());
-        }
+
+        action = this.readAttackOrMoveAction(moveInput, this.gameBoard, playerId, actionType);
+        action.simulateApply(this.gameBoard);
+        actions.add(action);
+
     }
 
     /**
@@ -428,15 +399,13 @@ public class ClientController {
      *
      * @param actions action
      */
-    private void conductUpgradeTechLevel(List<Action> actions) {
+    public void conductUpgradeTechLevel(List<Action> actions) throws InvalidActionException {
         Action action;
-        try {
-            action = new UpgradeTechAction(playerId, ActionType.UPGRADE_TECH);
-            action.simulateApply(this.gameBoard);
-            actions.add(action);
-        } catch (InvalidActionException e) {
-            System.out.println(e.getMessage());
-        }
+
+        action = new UpgradeTechAction(playerId, ActionType.UPGRADE_TECH);
+        action.simulateApply(this.gameBoard);
+        actions.add(action);
+
     }
 
     /**
@@ -445,18 +414,16 @@ public class ClientController {
      * @param actions action
      * @throws IOException IOException
      */
-    private void conductUpgradeUnits(List<Action> actions) throws IOException {
-        System.out.println("Please enter instruction in the following format: " +
-                "<targetTerritoryId>,<UnitType>,<amount>");
-        String upgradeUnitInput = this.consoleReader.readLine();
+    public void conductUpgradeUnits(List<Action> actions, String upgradeUnitInput) throws IOException, InvalidInputException, InvalidActionException {
+//        System.out.println("Please enter instruction in the following format: " +
+//                "<targetTerritoryId>,<UnitType>,<amount>");
+//        String upgradeUnitInput = this.consoleReader.readLine();
         Action action;
-        try {
-            action = this.readUpgradeUnitAction(upgradeUnitInput, this.gameBoard, playerId);
-            action.simulateApply(this.gameBoard);
-            actions.add(action);
-        } catch (InvalidInputException | InvalidActionException e) {
-            System.out.println(e.getMessage());
-        }
+
+        action = this.readUpgradeUnitAction(upgradeUnitInput, this.gameBoard, playerId);
+        action.simulateApply(this.gameBoard);
+        actions.add(action);
+
     }
 
     /**
@@ -466,7 +433,7 @@ public class ClientController {
      * @throws InvalidPayloadContent      InvalidPayloadContent
      * @throws ServerRejectException      ServerRejectException
      */
-    private void waitAndReadServerResponse() throws UnmatchedReceiverException, InvalidPayloadContent, ServerRejectException {
+    public void waitAndReadServerResponse() throws UnmatchedReceiverException, InvalidPayloadContent, ServerRejectException {
         PayloadObject response = null;
         try {
             response = waitAndRead();
@@ -666,7 +633,7 @@ public class ClientController {
      *
      * @return whether the user is win or lost
      */
-    private boolean checkUserStatus() {
+    boolean checkUserStatus() {
         return isLost() || isWin();
     }
 

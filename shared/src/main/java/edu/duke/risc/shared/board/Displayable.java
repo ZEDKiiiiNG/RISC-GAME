@@ -17,4 +17,5 @@ public interface Displayable extends Serializable {
      */
     public void display(GameBoard gameBoard);
 
+    String displaySingleTerritory(GameBoard gameBoard, Territory territory);
 }

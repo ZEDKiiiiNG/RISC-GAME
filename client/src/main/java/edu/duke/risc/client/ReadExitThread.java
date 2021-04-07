@@ -46,4 +46,9 @@ public class ReadExitThread extends Thread {
 
     }
 
+    public void exit() throws IOException {
+        PayloadObject request = new PayloadObject(playerId, Configurations.MASTER_ID, PayloadType.QUIT);
+        this.communicator.writeMessage(request);
+    }
+
 }
