@@ -11,7 +11,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.layout.BackgroundFill;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -27,6 +26,7 @@ public class placement extends Application implements Initializable {
     private String place ="";
     private actionChoose actionChoosePage;
 
+    private List<Action> actions = new ArrayList<>();
     @FXML
     private Label whoami;
 
@@ -77,13 +77,14 @@ public class placement extends Application implements Initializable {
 
         g.getChildren().addAll(terr_choice, terr_choice_box, num_choice, num_choice_box);
 
+
         //button commit
         javafx.scene.control.Button commit = new javafx.scene.control.Button("commit");
         commit.setLayoutX(750);
         commit.setLayoutY(550);
         commit.setOnAction(e-> {
             try {
-                getPlacements(terr_choice_box, num_choice_box, self);
+                getPlacements(terr_choice_box, num_choice_box, self, actions);
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             } catch (Exception exception) {
@@ -102,13 +103,13 @@ public class placement extends Application implements Initializable {
             }
         }
 
-        primaryStage.setTitle("Place your units");
+        primaryStage.setTitle("Place your units (GameID = " + App.cc.getGameId()+")");
         primaryStage.setScene(new Scene(g, 1000, 600));
         primaryStage.show();
     }
 
-    public void getPlacements(ChoiceBox<String> terr, ChoiceBox<Integer> num, Player player) throws Exception {
-        List<Action> actions = new ArrayList<>();
+    public void getPlacements(ChoiceBox<String> terr, ChoiceBox<Integer> num, Player player, List<Action> actions) throws Exception {
+
         String action = "";
         if(terr.getItems()==null){
             action = "0,S,0";
@@ -141,7 +142,7 @@ public class placement extends Application implements Initializable {
 
     }
     public void showWaitingSence(){
-        Text msg = new Text("You have commit you placement\n please waite for other users finishing their placement...");
+        Text msg = new Text("You have commit you placement\n please wait for other users finishing their placement...");
         msg.setLayoutX(50);
         msg.setLayoutY(100);
         Group g= new Group();

@@ -3,24 +3,22 @@
  */
 package edu.duke.risc.client;
 
-import java.io.IOException;
-import java.util.*;
-
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.users.Player;
 import javafx.application.Application;
-
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import static javafx.application.Application.launch;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  *
@@ -88,23 +86,47 @@ public class App extends Application {
     public static void main(String[] args){
         //ClientController clientController = new ClientController();
         //clientController.startGame();
-        try {
-            cc = new ClientController();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+
         launch(args);
     }
 
-    @Override
-    public void start(Stage primaryStage) throws Exception{
 
+    @Override
+    public void start(Stage primaryStage){
+        try {
+            cc = new ClientController();
+        } catch (IOException e) {
+            showConnectErrorPage();
+            return;
+        }
         FXMLLoader fxmlLoder = new FXMLLoader(Objects.requireNonNull(getClass().getClassLoader().getResource("main.fxml")));
-        Parent root = fxmlLoder.load();
-        primaryStage.setTitle("Listening from server");
+        Parent root = null;
+        try {
+            root = fxmlLoder.load();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        primaryStage.setTitle("Start Page");
         ((mainController)fxmlLoder.getController()).setStage(primaryStage);
         primaryStage.setScene(new Scene(root, 600, 400));
         primaryStage.show();
+
+    }
+
+    private static void showConnectErrorPage() {
+        Text warn = new Text("WARNING!");
+        Text msg = new Text("Initialize client App failed, please check the server to make sure it is running on the right host&port");
+        warn.setLayoutX(50);
+        warn.setLayoutY(50);
+        msg.setLayoutX(50);
+        msg.setLayoutY(100);
+        Group g= new Group();
+        g.getChildren().addAll(msg, warn);
+        Scene ConnectError = new Scene(g, 800, 300);
+        Stage newStage = new Stage();
+        newStage.setScene(ConnectError);
+        newStage.showAndWait();
     }
 }
 

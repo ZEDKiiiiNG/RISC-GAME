@@ -11,7 +11,7 @@
             fx:controller="edu.duke.risc.client.mainController"
             prefHeight="400.0" prefWidth="600.0">
     <children>
-        <Button layoutX="150.0" layoutY="100.0" mnemonicParsing="false" onAction="#startGame" text="Try connect to sever" />
+        <Button layoutX="150.0" layoutY="100.0" mnemonicParsing="false" onAction="#startGame" text="StartGame" />
         <Label layoutX="70.0" layoutY="60.0" text="MainStage" />
 
     </children>
