@@ -425,6 +425,15 @@ public class Player implements GameUser, Serializable {
         }
         this.virtualTechnology = nextTech;
 
+        //gain missile for the tech
+        try {
+            MissileType gainMissile = MissileType.getMissileTypeWithTechLevel(nextTech);
+            MapHelper.updateMap(missiles, gainMissile, 1);
+        } catch (InvalidInputException e) {
+            e.printStackTrace();
+        }
+
+
         for (Map.Entry<ResourceType, Integer> entry : required.entrySet()) {
             useResources(entry.getKey(), entry.getValue());
             builder.append(entry.getValue()).append(" ").append(entry.getKey());
