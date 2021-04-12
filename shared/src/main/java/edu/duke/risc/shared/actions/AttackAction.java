@@ -32,20 +32,6 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
         super(player, ActionType.ATTACK, destinationId, unitMap, sourceTerritoryId);
     }
 
-    /**
-     * Find the player who owns the destination territory
-     *
-     * @return player or -1 if not owned
-     */
-    private int findPlayerOwnsTerritory(GameBoard board) {
-        for (Player player : board.getPlayers().values()) {
-            if (player.ownsTerritory(destinationId)) {
-                return player.getId();
-            }
-        }
-        return -1;
-    }
-
     @Override
     public String isValid(GameBoard board) {
         //check whether input has valid number
@@ -140,7 +126,7 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
         Player attackerPlayer = board.getPlayers().get(super.playerId);
 
         /* -1 if the target place is not occupied */
-        Integer defenderPlayerId = findPlayerOwnsTerritory(board);
+        Integer defenderPlayerId = board.findPlayerOwnsTerritory(destinationId);
         Player defenderPlayer = board.findPlayer(defenderPlayerId);
         Territory sourceTerritory = board.findTerritory(sourceTerritoryId);
         Territory desTerritory = board.findTerritory(destinationId);

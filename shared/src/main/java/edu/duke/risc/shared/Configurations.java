@@ -30,6 +30,7 @@ public class Configurations {
     public static final String REQUEST_ATTACK_ACTIONS = "REQUEST_ATTACK_ACTIONS";
     public static final String REQUEST_UPGRADE_UNITS_ACTIONS = "REQUEST_UPGRADE_UNITS_ACTIONS";
     public static final String REQUEST_UPGRADE_TECH_ACTIONS = "REQUEST_UPGRADE_TECH_ACTIONS";
+    public static final String REQUEST_MISSILE_ATTACK_ACTIONS = "REQUEST_MISSILE_ATTACK_ACTIONS";
 
     public static final String STAGE_ASSIGN = "STAGE_ASSIGN";
     public static final String STAGE_MOVE = "STAGE_MOVE";

@@ -1,10 +1,12 @@
 package edu.duke.risc.shared.users;
 
 import edu.duke.risc.shared.Configurations;
+import edu.duke.risc.shared.commons.MissileType;
 import edu.duke.risc.shared.commons.ResourceType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.commons.UserColor;
 import edu.duke.risc.shared.exceptions.InvalidInputException;
+import edu.duke.risc.shared.util.MapHelper;
 import edu.duke.risc.shared.util.TechHelper;
 
 import java.io.Serializable;
@@ -53,6 +55,11 @@ public class Player implements GameUser, Serializable {
     private PlayerStatus status;
 
     /**
+     * The missiles that this player owns
+     */
+    private Map<MissileType, Integer> missiles;
+
+    /**
      * The resources that this player owns
      */
     private final Map<ResourceType, Integer> resources;
@@ -82,6 +89,10 @@ public class Player implements GameUser, Serializable {
         this.userId = userId;
         this.color = color;
         this.totalUnitsMap = new HashMap<>();
+
+        //initialize missiles
+        this.missiles = new HashMap<>();
+        missiles.put(MissileType.MISSILE_LV1, 1);
 
         //initialize resources
         this.resources = new HashMap<>();
@@ -118,6 +129,10 @@ public class Player implements GameUser, Serializable {
         //tech, resources
         builder.append("You have ");
         for (Map.Entry<ResourceType, Integer> entry : resources.entrySet()) {
+            builder.append(entry.getValue()).append(" ").append(entry.getKey()).append(", ");
+        }
+
+        for (Map.Entry<MissileType, Integer> entry : missiles.entrySet()) {
             builder.append(entry.getValue()).append(" ").append(entry.getKey()).append(", ");
         }
         builder.append(" and is currently in tech level ").append(this.technology);
@@ -197,7 +212,7 @@ public class Player implements GameUser, Serializable {
      * @param diff     either add or subtract
      */
     public void updateInitUnitMap(UnitType unitType, Integer diff) {
-        this.updateMap(this.initUnitsMap, unitType, diff);
+        MapHelper.updateMap(this.initUnitsMap, unitType, diff);
     }
 
     /**
@@ -207,7 +222,7 @@ public class Player implements GameUser, Serializable {
      * @param diff     diff
      */
     public void updateTotalUnitMap(UnitType unitType, Integer diff) {
-        this.updateMap(this.totalUnitsMap, unitType, diff);
+        MapHelper.updateMap(this.totalUnitsMap, unitType, diff);
     }
 
     /**
@@ -217,7 +232,7 @@ public class Player implements GameUser, Serializable {
      * @param diff         diff
      */
     public void updateResourceMap(ResourceType resourceType, Integer diff) {
-        this.updateMap(this.resources, resourceType, diff);
+        MapHelper.updateMap(this.resources, resourceType, diff);
     }
 
     /**
@@ -228,33 +243,6 @@ public class Player implements GameUser, Serializable {
      */
     public boolean ownsTerritory(Integer territoryId) {
         return this.ownedTerritories.contains(territoryId);
-    }
-
-    /**
-     * updateUnitsMap
-     *
-     * @param unitsMap unitsMap
-     * @param unitType unitType
-     * @param diff     either add or subtract
-     */
-    private <T> void updateMap(Map<T, Integer> unitsMap, T unitType, Integer diff) {
-        assert unitsMap != null;
-        if (unitsMap.containsKey(unitType)) {
-            int originVal = unitsMap.get(unitType);
-            if (diff >= 0) {
-                unitsMap.put(unitType, diff + originVal);
-            } else {
-                if (originVal + diff <= 0) {
-                    unitsMap.remove(unitType);
-                } else {
-                    unitsMap.put(unitType, diff + originVal);
-                }
-            }
-        } else {
-            if (diff > 0) {
-                unitsMap.put(unitType, diff);
-            }
-        }
     }
 
     /**
@@ -461,6 +449,36 @@ public class Player implements GameUser, Serializable {
      */
     public boolean isAlreadyUpgradeTechInTurn() {
         return this.virtualTechnology != this.technology;
+    }
+
+    /**
+     * Obtain missiles for the player
+     *
+     * @param missileType missileType
+     * @param amount      amount of the missile
+     */
+    public void obtainMissile(MissileType missileType, int amount) {
+        MapHelper.updateMap(this.missiles, missileType, amount);
+    }
+
+    /**
+     * Use missiles for the player
+     *
+     * @param missileType missileType
+     * @param amount      amount of the missile
+     */
+    public void useMissiles(MissileType missileType, int amount) {
+        MapHelper.updateMap(this.missiles, missileType, -amount);
+    }
+
+    /**
+     * Whether the player has enough missiles
+     *
+     * @param missileType missileType
+     * @param required      required amount of the missile
+     */
+    public boolean hasEnoughMissiles(MissileType missileType, int required) {
+        return missiles.containsKey(missileType) && missiles.get(missileType) >= required;
     }
 
 }

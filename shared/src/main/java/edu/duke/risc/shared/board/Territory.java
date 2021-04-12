@@ -1,7 +1,9 @@
 package edu.duke.risc.shared.board;
 
+import edu.duke.risc.shared.commons.MissileType;
 import edu.duke.risc.shared.commons.ResourceType;
 import edu.duke.risc.shared.commons.UnitType;
+import edu.duke.risc.shared.util.MapHelper;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -40,6 +42,11 @@ public class Territory implements Serializable {
     private final Map<UnitType, Integer> virtualUnitsMap;
 
     /**
+     * virtual missile map, only for client simulation of missile attack action
+     */
+    private final Map<MissileType, Integer> virtualMissileMap;
+
+    /**
      * Adjacent territories
      */
     private final Set<Integer> adjacentTerritories;
@@ -76,7 +83,7 @@ public class Territory implements Serializable {
      * @param territoryName territory name
      */
     public Territory(int territoryId, String territoryName, int techProd, int foodProd, int size) {
-        this(territoryId, territoryName, new HashMap<>(), new HashSet<>(), new HashMap<>(),
+        this(territoryId, territoryName, new HashMap<>(), new HashSet<>(), new HashMap<>(), new HashMap<>(),
                 false, techProd, foodProd, size);
     }
 
@@ -92,6 +99,7 @@ public class Territory implements Serializable {
      */
     private Territory(int territoryId, String territoryName, Map<UnitType, Integer> unitsMap,
                       Set<Integer> adjacentTerritories, Map<UnitType, Integer> virtualUnitsMap,
+                      Map<MissileType, Integer> virtualMissileMap,
                       boolean isValid, int techProd, int foodProd, int size) {
         this.territoryId = territoryId;
         this.territoryName = territoryName;
@@ -99,6 +107,7 @@ public class Territory implements Serializable {
         this.adjacentTerritories = adjacentTerritories;
         this.virtualUnitsMap = virtualUnitsMap;
         this.isValid = isValid;
+        this.virtualMissileMap = virtualMissileMap;
         this.productivity = new HashMap<>();
         productivity.put(ResourceType.FOOD, foodProd);
         productivity.put(ResourceType.TECH, techProd);
@@ -185,7 +194,17 @@ public class Territory implements Serializable {
      * @param diff     difference, -1 for subtract 1,
      */
     public void updateVirtualUnitsMap(UnitType unitType, Integer diff) {
-        this.generalUpdateUnitsMap(this.virtualUnitsMap, unitType, diff);
+        MapHelper.updateMap(this.virtualUnitsMap, unitType, diff);
+    }
+
+    /**
+     * Update virtual missile map
+     *
+     * @param missileType missileType
+     * @param diff        difference, -1 for subtract 1,
+     */
+    public void updateVirtualMissileMap(MissileType missileType, Integer diff) {
+        MapHelper.updateMap(virtualMissileMap, missileType, diff);
     }
 
     /**
@@ -195,32 +214,7 @@ public class Territory implements Serializable {
      * @param diff     difference, -1 for subtract 1,
      */
     public void updateUnitsMap(UnitType unitType, Integer diff) {
-        this.generalUpdateUnitsMap(this.unitsMap, unitType, diff);
-    }
-
-    /**
-     * Update units map in this territory. If no more units like this, remove from map
-     *
-     * @param unitType unit type
-     * @param diff     difference, -1 for subtract 1
-     */
-    private void generalUpdateUnitsMap(Map<UnitType, Integer> unitsMap, UnitType unitType, Integer diff) {
-        if (unitsMap.containsKey(unitType)) {
-            int originVal = unitsMap.get(unitType);
-            if (diff >= 0) {
-                unitsMap.put(unitType, diff + originVal);
-            } else {
-                if (originVal + diff <= 0) {
-                    unitsMap.remove(unitType);
-                } else {
-                    unitsMap.put(unitType, diff + originVal);
-                }
-            }
-        } else {
-            if (diff > 0) {
-                unitsMap.put(unitType, diff);
-            }
-        }
+        MapHelper.updateMap(this.unitsMap, unitType, diff);
     }
 
     /**
@@ -250,6 +244,16 @@ public class Territory implements Serializable {
      */
     public boolean containsUnitType(UnitType unitType) {
         return unitsMap.containsKey(unitType);
+    }
+
+    /**
+     * Whether this territory contains unit type
+     *
+     * @param unitType unitType
+     * @return Whether this territory contains unit type
+     */
+    public Integer getUnitsNumber(UnitType unitType) {
+        return unitsMap.getOrDefault(unitType, 0);
     }
 
     /**

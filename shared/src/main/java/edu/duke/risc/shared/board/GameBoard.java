@@ -338,4 +338,18 @@ public class GameBoard implements Serializable {
         return unitTypeMapper;
     }
 
+    /**
+     * Find the player who owns the destination territory
+     *
+     * @return player or -1 if not owned
+     */
+    public int findPlayerOwnsTerritory(int targetTerritoryId) {
+        for (Player player : players.values()) {
+            if (player.ownsTerritory(targetTerritoryId)) {
+                return player.getId();
+            }
+        }
+        return -1;
+    }
+
 }
