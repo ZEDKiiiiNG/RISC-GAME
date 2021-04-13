@@ -373,15 +373,18 @@ public class GameBoard implements Serializable {
             return true;
         }
 
-        //whether the territory is adjacent to and does not have cloaking
-        for (Integer ownedTerritoryId : player.getOwnedTerritories()) {
-            if (territory.isAdjacentTo(ownedTerritoryId)){
-                return true;
+        //the territory does not have cloaking and the territory is adjacent to player's territories
+        if (!territory.hasCloaks()) {
+            for (Integer ownedTerritoryId : player.getOwnedTerritories()) {
+                if (territory.isAdjacentTo(ownedTerritoryId)) {
+                    return true;
+                }
             }
-            //todo consider cloaking
         }
 
         //todo whether the player has a spy on that territory
+
+
 
         return false;
     }

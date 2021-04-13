@@ -1,5 +1,6 @@
 package edu.duke.risc.shared.board;
 
+import edu.duke.risc.shared.Configurations;
 import edu.duke.risc.shared.commons.MissileType;
 import edu.duke.risc.shared.commons.ResourceType;
 import edu.duke.risc.shared.commons.UnitType;
@@ -67,6 +68,11 @@ public class Territory implements Serializable {
     private final int size;
 
     /**
+     * Cloaking counting, when 0 the territory is not cloaked
+     */
+    private int cloakingCount;
+
+    /**
      * Constructor
      *
      * @param territoryId   territory id
@@ -129,35 +135,6 @@ public class Territory implements Serializable {
         //print territory info
         builder.append(territoryName).append("(").append(this.territoryId).append(")").append(System.lineSeparator());
 
-//        //print resources
-//        builder.append("    Productivity: ");
-//        for (Map.Entry<ResourceType, Integer> entry : productivity.entrySet()) {
-//            builder.append(entry.getValue()).append(" ").append(entry.getKey());
-//        }
-//        builder.append(System.lineSeparator());
-//
-//        //print neighbors
-//        builder.append("    ").append(" (next to: ");
-//        for (Integer adjacent : this.adjacentTerritories) {
-//            builder.append(adjacent).append(", ");
-//        }
-//        builder.append(")").append(System.lineSeparator());
-//
-//        //print units in that territory
-//        if (this.isEmptyTerritory()) {
-//            builder.append("No Units ");
-//        } else {
-//            //real units
-//            for (Map.Entry<UnitType, Integer> mapUnit : this.unitsMap.entrySet()) {
-//                builder.append(mapUnit.getValue()).append(" ").append(mapUnit.getKey()).append(" ");
-//            }
-//        }
-//
-//        //virtual units for clients
-//        for (Map.Entry<UnitType, Integer> mapUnit : this.virtualUnitsMap.entrySet()) {
-//            builder.append("(Ready to attack units: ")
-//                    .append(mapUnit.getValue()).append(" ").append(mapUnit.getKey()).append(")");
-//        }
         return builder.toString();
     }
 
@@ -347,6 +324,38 @@ public class Territory implements Serializable {
      */
     public Map<ResourceType, Integer> getProductivity() {
         return productivity;
+    }
+
+    /**
+     * Whether the territory has cloaks on it
+     *
+     * @return Whether the territory has cloaks on it
+     */
+    public boolean hasCloaks() {
+        return this.cloakingCount > 0;
+    }
+
+    /**
+     * reduce cloak in this territory
+     */
+    public void reduceCloaks() {
+        if (cloakingCount > 0) {
+            cloakingCount -= 1;
+        }
+    }
+
+    /**
+     * Enables cloaking
+     */
+    public void enableCloaking() {
+        cloakingCount = Configurations.DEFAULT_INIT_CLOAKING;
+    }
+
+    /**
+     * reset cloak in this territory (to zero)
+     */
+    public void resetCloak() {
+        cloakingCount = 0;
     }
 
 }

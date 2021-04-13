@@ -217,11 +217,9 @@ public class GameController {
         while (true) {
             this.board.setGameStart();
             int numberOfRequestRequired = this.board.getShouldWaitPlayers();
-            List<Action> moveCacheActions = new ArrayList<>();
-            List<Action> attackCacheActions = new ArrayList<>();
-            List<Action> upgradeUnitsCacheActions = new ArrayList<>();
-            List<Action> upgradeTechCacheActions = new ArrayList<>();
-            List<Action> missileAttackCacheActions = new ArrayList<>();
+            List<Action> nonAffectActionCache = new ArrayList<>();
+            List<Action> attackActionCache = new ArrayList<>();
+            List<Action> missileAttackActionCache = new ArrayList<>();
             StringBuilder logger = getLogger();
             while (numberOfRequestRequired > 0) {
                 PayloadObject request = this.barrier.consumeRequest();
@@ -231,44 +229,29 @@ public class GameController {
                 //validate move_attack_request
                 if (request.getMessageType() != PayloadType.REQUEST
                         || request.getReceiver() != this.root.getId()
-                        || !request.getContents().containsKey(Configurations.REQUEST_MOVE_ACTIONS)
+                        || !request.getContents().containsKey(Configurations.REQUEST_NON_AFFECT_ACTIONS)
+                        || !request.getContents().containsKey(Configurations.REQUEST_MISSILE_ATTACK_ACTIONS)
                         || !request.getContents().containsKey(Configurations.REQUEST_ATTACK_ACTIONS)) {
                     sendBackErrorMessage(request, "Invalid request type");
                     continue;
                 }
-                List<Action> moveActions =
-                        (List<Action>) request.getContents().get(Configurations.REQUEST_MOVE_ACTIONS);
                 List<Action> attackActions =
                         (List<Action>) request.getContents().get(Configurations.REQUEST_ATTACK_ACTIONS);
-                List<Action> upgradeUnitsAction =
-                        (List<Action>) request.getContents().get(Configurations.REQUEST_UPGRADE_UNITS_ACTIONS);
-                List<Action> upgradeTechAction =
-                        (List<Action>) request.getContents().get(Configurations.REQUEST_UPGRADE_TECH_ACTIONS);
                 List<Action> missileAttackAction =
                         (List<Action>) request.getContents().get(REQUEST_MISSILE_ATTACK_ACTIONS);
+                List<Action> nonAffectActions =
+                        (List<Action>) request.getContents().get(Configurations.REQUEST_NON_AFFECT_ACTIONS);
                 //validate success, response the client with success message and continues the next request
-                moveCacheActions.addAll(moveActions);
-                attackCacheActions.addAll(attackActions);
-                upgradeUnitsCacheActions.addAll(upgradeUnitsAction);
-                upgradeTechCacheActions.addAll(upgradeTechAction);
-                missileAttackCacheActions.addAll(missileAttackAction);
+
+                attackActionCache.addAll(attackActions);
+                missileAttackActionCache.addAll(missileAttackAction);
+                nonAffectActionCache.addAll(nonAffectActions);
                 numberOfRequestRequired -= 1;
             }
             //with all requests received, process them simultaneously
 
-            //conduct upgrade tech actions
-            for (Action action : upgradeTechCacheActions) {
-                try {
-                    String result = action.apply(this.board);
-                    logger.append(result);
-                } catch (InvalidActionException e) {
-                    //simply ignore this
-                    logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
-                }
-            }
-
-            //first conduct upgrade units actions
-            for (Action action : upgradeUnitsCacheActions) {
+            //then conduct non-affective actions
+            for (Action action : nonAffectActionCache) {
                 try {
                     String result = action.apply(this.board);
                     logger.append(result);
@@ -279,18 +262,7 @@ public class GameController {
             }
 
             //then conduct move actions
-            for (Action action : moveCacheActions) {
-                try {
-                    String result = action.apply(this.board);
-                    logger.append(result);
-                } catch (InvalidActionException e) {
-                    //simply ignore this
-                    logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
-                }
-            }
-
-            //then conduct move actions
-            for (Action action : missileAttackCacheActions) {
+            for (Action action : missileAttackActionCache) {
                 try {
                     String result = action.apply(this.board);
                     logger.append(result);
@@ -301,7 +273,7 @@ public class GameController {
             }
 
             //then conduct attack actions
-            List<Action> validAttackList = attackCacheActions.stream().filter((action -> {
+            List<Action> validAttackList = attackActionCache.stream().filter((action -> {
                 String error;
                 if ((error = action.isValid(board)) != null) {
                     logger.append("FAILED: ").append(action).append(" : ").append(error).append(System.lineSeparator());

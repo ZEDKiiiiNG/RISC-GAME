@@ -54,12 +54,15 @@ public class Player implements GameUser, Serializable {
      */
     private PlayerStatus status;
 
-
+    /**
+     * Whether cloaking is researched
+     */
+    private boolean cloakingResearched = false;
 
     /**
      * The missiles that this player owns
      */
-    private Map<MissileType, Integer> missiles;
+    private final Map<MissileType, Integer> missiles;
 
     /**
      * The resources that this player owns
@@ -487,18 +490,36 @@ public class Player implements GameUser, Serializable {
      * Whether the player has enough missiles
      *
      * @param missileType missileType
-     * @param required      required amount of the missile
+     * @param required    required amount of the missile
      */
     public boolean hasEnoughMissiles(MissileType missileType, int required) {
         return missiles.containsKey(missileType) && missiles.get(missileType) >= required;
     }
 
     /**
+     * getMissiles
      *
-     * @return
+     * @return getMissiles
      */
     public Map<MissileType, Integer> getMissiles() {
         return missiles;
+    }
+
+    /**
+     * Whether cloaking is researched
+     *
+     * @return Whether cloaking is researched
+     */
+    public boolean isCloakingResearched() {
+        return cloakingResearched;
+    }
+
+    /**
+     * Do research on Cloaking
+     */
+    public String doResearchCloaking() {
+        this.cloakingResearched = true;
+        return "RESEARCH CLOAKING ACTION { conducted by player " + userId + " }";
     }
 
 }

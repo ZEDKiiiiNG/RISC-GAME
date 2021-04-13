@@ -38,4 +38,14 @@ public enum ActionType implements Serializable {
      */
     MISSILE_ATTACK,
 
+    /**
+     * conduct research cloak action
+     */
+    CLOAK_RESEARCH,
+
+    /**
+     * conduct cloak action
+     */
+    CLOAK_CONDUCT,
+
 }
