@@ -198,13 +198,24 @@ public class Territory implements Serializable {
     }
 
     /**
-     * Update virtual missile map
+     * todo Update virtual missile map
      *
      * @param missileType missileType
      * @param diff        difference, -1 for subtract 1,
      */
     public void updateVirtualMissileMap(MissileType missileType, Integer diff) {
         MapHelper.updateMap(virtualMissileMap, missileType, diff);
+    }
+
+    /**
+     * Returns whether the current territory is adjacent to the target territory
+     * If they are the same territory, return false.
+     *
+     * @param target target territory
+     * @return whether the current territory is adjacent to the target territory
+     */
+    public boolean isAdjacentTo(Integer target) {
+        return adjacentTerritories.contains(target);
     }
 
     /**
@@ -275,31 +286,67 @@ public class Territory implements Serializable {
         return unitsMap;
     }
 
+    /**
+     * getAdjacentTerritories
+     *
+     * @return getAdjacentTerritories
+     */
     public Set<Integer> getAdjacentTerritories() {
         return adjacentTerritories;
     }
 
+    /**
+     * getTerritoryId
+     *
+     * @return getTerritoryId
+     */
     public int getTerritoryId() {
         return territoryId;
     }
 
+    /**
+     * getVirtualUnitsMap
+     *
+     * @return getVirtualUnitsMap
+     */
     public Map<UnitType, Integer> getVirtualUnitsMap() {
         return virtualUnitsMap;
     }
 
+    /**
+     * setValid
+     *
+     * @param valid setValid
+     */
     public void setValid(boolean valid) {
         isValid = valid;
     }
 
+    /**
+     * get valid
+     *
+     * @return valid
+     */
     public boolean isValid() {
         return isValid;
     }
 
+    /**
+     * get territory size (cost)
+     *
+     * @return territory size (cost)
+     */
     public int getSize() {
         return size;
     }
 
+    /**
+     * Get productivity
+     *
+     * @return productivity
+     */
     public Map<ResourceType, Integer> getProductivity() {
         return productivity;
     }
+
 }
