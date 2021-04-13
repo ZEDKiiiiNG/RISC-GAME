@@ -73,7 +73,7 @@ public class GameController {
     /**
      * Maximum number of players
      */
-    private int maxPlayer;
+    private final int maxPlayer;
 
     /**
      * id with corresponding communicator
@@ -83,7 +83,7 @@ public class GameController {
     /**
      * id with corresponding player
      */
-    private Map<String, Player> idMap;
+    private final Map<String, Player> idMap;
 
 
     /**
@@ -305,6 +305,9 @@ public class GameController {
 
             //grow the territories owned by players
             String growResult = this.board.territoryGrow();
+
+            //reduce cloaking on every single territory
+            logger.append(board.reduceCloaking());
 
             logger.append(growResult);
             System.out.println(logger.toString());

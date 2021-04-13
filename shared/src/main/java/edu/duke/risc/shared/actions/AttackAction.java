@@ -209,7 +209,8 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
                     desTerritory.updateUnitsMap(entry.getKey(), entry.getValue());
                 }
                 builder.append("defender lost territory ").append(board.findTerritory(destinationId).getTerritoryName());
-                //todo when attacker takes the player, remove all cloaking counts
+                // when attacker takes the player, remove all cloaking counts
+                desTerritory.resetCloak();
             }
         } else {
             for (Map.Entry<UnitType, Integer> entry : attackerMap.entrySet()) {
