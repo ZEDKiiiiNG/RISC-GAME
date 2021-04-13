@@ -6,7 +6,9 @@ import edu.duke.risc.shared.PayloadObject;
 import edu.duke.risc.shared.SocketCommunicator;
 import edu.duke.risc.shared.actions.*;
 import edu.duke.risc.shared.board.GameBoard;
+import edu.duke.risc.shared.board.Territory;
 import edu.duke.risc.shared.commons.ActionType;
+import edu.duke.risc.shared.commons.MissileType;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.*;
@@ -317,7 +319,7 @@ public class ClientController extends WaitPlayerUI {
      * @throws IOException IOException
      */
     public String moveAndAttack(List<Action> moveActions, List<Action> attackActions,
-                              List<Action> upgradeTechActions, List<Action> upgradeUnitsActions) throws IOException {
+                              List<Action> upgradeTechActions, List<Action> upgradeUnitsActions, List<Action> missileAttackActions) throws IOException {
     while(true) {
         //sending to the server
         //constructing payload objects
@@ -326,6 +328,7 @@ public class ClientController extends WaitPlayerUI {
         content.put(Configurations.REQUEST_ATTACK_ACTIONS, attackActions);
         content.put(Configurations.REQUEST_UPGRADE_UNITS_ACTIONS, upgradeUnitsActions);
         content.put(Configurations.REQUEST_UPGRADE_TECH_ACTIONS, upgradeTechActions);
+        content.put(REQUEST_MISSILE_ATTACK_ACTIONS, missileAttackActions);
         PayloadObject request = new PayloadObject(this.playerId,
                 Configurations.MASTER_ID, PayloadType.REQUEST, content);
         try {
@@ -395,6 +398,22 @@ public class ClientController extends WaitPlayerUI {
     }
 
     /**
+     * conductMissileAttack
+     *
+     * @param actions    action
+     * @throws IOException
+     */
+    public void conductMissileAttack(List<Action> actions, String moveInput)
+            throws InvalidInputException, InvalidActionException {
+
+        Action action;
+        action = this.readMissileAttack(moveInput, this.gameBoard, playerId);
+        action.simulateApply(this.gameBoard);
+        actions.add(action);
+
+    }
+
+    /**
      * conductUpgradeUnits
      *
      * @param actions action
@@ -414,10 +433,8 @@ public class ClientController extends WaitPlayerUI {
      * @param actions action
      * @throws IOException IOException
      */
-    public void conductUpgradeUnits(List<Action> actions, String upgradeUnitInput) throws IOException, InvalidInputException, InvalidActionException {
-//        System.out.println("Please enter instruction in the following format: " +
-//                "<targetTerritoryId>,<UnitType>,<amount>");
-//        String upgradeUnitInput = this.consoleReader.readLine();
+    public void conductUpgradeUnits(List<Action> actions, String upgradeUnitInput) throws InvalidInputException, InvalidActionException {
+
         Action action;
 
         action = this.readUpgradeUnitAction(upgradeUnitInput, this.gameBoard, playerId);
@@ -624,6 +641,41 @@ public class ClientController extends WaitPlayerUI {
             action = new MoveAction(sourceTerritoryId, destTerritoryId, unitsMap, playerId);
         } else {
             action = new AttackAction(sourceTerritoryId, destTerritoryId, unitsMap, playerId);
+        }
+        return action;
+    }
+//???????
+    /**
+     * input in the format "sourceTerritoryId,destinationId,UnitType,amount"
+     *
+     * @param input    input
+     * @param board    board
+     * @param playerId id of the player
+     * @return result action
+     * @throws InvalidInputException when input is invalid
+     */
+    private Action readMissileAttack(String input, GameBoard board, Integer playerId)
+            throws InvalidInputException {
+        List<String> inputs = new ArrayList<>(Arrays.asList(input.split(",")));
+        if (inputs.size() != 2) {
+            throw new InvalidInputException("Invalid input size");
+        }
+        Action action;
+        try {
+            int destinationTerritoryId = Integer.parseInt(inputs.get(0));
+            Territory destinationTerritory = this.gameBoard.findTerritory(destinationTerritoryId);
+            int missileTypeId = Integer.parseInt(inputs.get(1));
+            MissileType missileType = MissileType.getMissileTypeWithTechLevel(missileTypeId);
+            //check if the player still have this kind of missiletype
+            if(this.getMyself().getOwnedTerritories().contains(destinationTerritory)){
+                throw new InvalidInputException("You can not attack your own territory.");
+            }
+//            if(this.getMyself().hasEnoughMissiles(missileType, 1)){
+//                throw new InvalidInputException("This player does not have enough missile of this type.");
+//            }
+            action = new MissileAttackAction(this.playerId, ActionType.MISSILE_ATTACK, destinationTerritoryId, missileType);
+        } catch (NumberFormatException e) {
+            throw new InvalidInputException("Cannot parse string to valid int");
         }
         return action;
     }

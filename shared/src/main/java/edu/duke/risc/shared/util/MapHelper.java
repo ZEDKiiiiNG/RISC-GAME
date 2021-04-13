@@ -8,6 +8,13 @@ import java.util.Map;
  */
 public class MapHelper {
 
+    /**
+     * Update maps
+     * @param map map
+     * @param unitType unitType
+     * @param diff diff
+     * @param <T> generic type
+     */
     public static <T> void updateMap(Map<T, Integer> map, T unitType, int diff) {
         if (map.containsKey(unitType)) {
             int originVal = map.get(unitType);

@@ -3,6 +3,7 @@ package edu.duke.risc.client;
 import edu.duke.risc.shared.actions.Action;
 import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.board.Territory;
+import edu.duke.risc.shared.commons.MissileType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.InvalidActionException;
 import edu.duke.risc.shared.exceptions.InvalidInputException;
@@ -17,10 +18,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class actionChoose extends Application  {
     Stage stage=new Stage();
@@ -31,6 +29,7 @@ public class actionChoose extends Application  {
     private List<Action> attackActions = new ArrayList<>();
     private List<Action> upgradeUnitsActions = new ArrayList<>();
     private List<Action> upgradeTechActions = new ArrayList<>();
+    private List<Action> missileAttackActions = new ArrayList<>();
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -62,35 +61,35 @@ public class actionChoose extends Application  {
         //text
 
         Text a = new Text(self.getPlayerInfo());
-        a.setLayoutX(650);
+        a.setLayoutX(620);
         a.setLayoutY(10);
         g.getChildren().add(a);
 
 
         //move button
         javafx.scene.control.Button move = new javafx.scene.control.Button("move");
-        move.setLayoutX(650);
+        move.setLayoutX(620);
         move.setLayoutY(150);
         move.setOnAction(e->actMove(self, moveActions));
 
 
         //attack button
-        javafx.scene.control.Button attack = new javafx.scene.control.Button("attack");
-        attack.setLayoutX(650);
-        attack.setLayoutY(250);
+        javafx.scene.control.Button attack = new javafx.scene.control.Button("units attack");
+        attack.setLayoutX(620);
+        attack.setLayoutY(230);
         attack.setOnAction(e->actAttack(self, attackActions));
 
 
         //upgrade button
         javafx.scene.control.Button upgrade = new javafx.scene.control.Button("upgrade");
-        upgrade.setLayoutX(650);
-        upgrade.setLayoutY(350);
+        upgrade.setLayoutX(620);
+        upgrade.setLayoutY(310);
         upgrade.setOnAction(e->actUpgrade(self, upgradeUnitsActions));
 
         //tech button
         javafx.scene.control.Button tech = new javafx.scene.control.Button("tech");
-        tech.setLayoutX(650);
-        tech.setLayoutY(450);
+        tech.setLayoutX(620);
+        tech.setLayoutY(390);
         tech.setOnAction(e-> {
             try {
                 actTech(self, upgradeTechActions);
@@ -99,15 +98,21 @@ public class actionChoose extends Application  {
             }
         });
 
+        //missile button
+        javafx.scene.control.Button attackMissile = new javafx.scene.control.Button("missile attack");
+        attackMissile.setLayoutX(620);
+        attackMissile.setLayoutY(470);
+        attackMissile.setOnAction(e->actAttackMissile(self, missileAttackActions));
+
 
         //commit button
         javafx.scene.control.Button commit = new javafx.scene.control.Button("commit");
-        commit.setLayoutX(650);
+        commit.setLayoutX(620);
         commit.setLayoutY(550);
         commit.setOnAction(e-> {
 
             try {
-                finishThisRoll(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions);
+                finishThisRoll(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions, missileAttackActions);
             } catch (Exception exception) {
                 exception.printStackTrace();
             }
@@ -115,39 +120,40 @@ public class actionChoose extends Application  {
         });
 
 
-        g.getChildren().addAll(commit, move, attack, upgrade, tech);
+        g.getChildren().addAll(commit, move, attack, upgrade, tech, attackMissile);
 
         primaryStage.setTitle("choose action (GameID = "+ App.cc.getGameId() + ")");
         primaryStage.setScene(new Scene(g, 1100, 600));
         primaryStage.show();
         if(self.isLost()){
+
             this.stage.close();
             lose = new loseUI();
             lose.showWindow();
         }
         if (self.isWin()) {
-            this.stage.close();
-            win = new winUI();
-            win.showWindow();
+            showSecondWindow("You win");
         }
     }
 
 
     public void finishThisRoll(List<Action> moveActions, List<Action> attackActions,
-                               List<Action> upgradeTechActions, List<Action> upgradeUnitsActions) throws Exception {
+                               List<Action> upgradeTechActions, List<Action> upgradeUnitsActions, List<Action> missileAttackActions) throws Exception {
         if (App.cc.checkUserStatus()) {
             return;
         }
         String log = null;
 
-        log = App.cc.moveAndAttack(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions);//
+        log = App.cc.moveAndAttack(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions, missileAttackActions);//
 
 
         moveActions.clear();
         attackActions.clear();
         upgradeUnitsActions.clear();
         upgradeTechActions.clear();
+        missileAttackActions.clear();
         App.updateTerritories();
+
 
         showSecondWindow(log);
         this.showWindow();
@@ -297,6 +303,66 @@ public class actionChoose extends Application  {
     }
 
 
+    public void actAttackMissile(Player player, List<Action> missileAttackActions){
+
+        Set<Integer> territoryIds = new HashSet<>();
+        Map<Integer, Player> players = App.cc.getGameBoard().getPlayers();
+        for (Map.Entry<Integer, Player> entry : players.entrySet()) {
+            Player p = entry.getValue();
+            for (Integer territoryId : p.getOwnedTerritories()) {
+                //printing units
+                territoryIds.add(territoryId);
+            }
+        }
+
+        for(int i: player.getOwnedTerritories()){
+            if(territoryIds.contains(i)){
+                territoryIds.remove(i);
+            }
+        }
+        Group g = new Group();
+        Text t = new Text("Destination territory");
+        t.setLayoutX(20);
+        t.setLayoutY(20);
+        ChoiceBox<Integer> enemy = new ChoiceBox<>();
+        enemy.setLayoutX(150);
+        enemy.setLayoutY(20);
+        for(Integer i : territoryIds){
+            enemy.getItems().add(i);
+        }
+
+        Text t1 = new Text("missileType");
+        t1.setLayoutX(20);
+        t1.setLayoutY(120);
+        ChoiceBox<String> missile = new ChoiceBox<>();
+        missile.setLayoutX(150);
+        missile.setLayoutY(120);
+        for(MissileType i:player.getMissiles().keySet()){
+            missile.getItems().add(i.toString());
+        }
+        Stage secondStage = new Stage();
+
+        Button b = new Button("submit");
+        b.setLayoutX(190);
+        b.setLayoutY(200);
+        b.setOnAction(e-> {
+            try {
+                doMissileAttack(enemy, missile, missileAttackActions, secondStage);
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        });
+
+        g.getChildren().addAll(t, t1, enemy, missile, b);
+        Scene missileScene = new Scene(g, 270, 300);
+
+        secondStage.setScene(missileScene);
+        secondStage.show();
+
+    }
+
+
+
     public void actUpgrade(Player player, List<Action> upgradeUnitsActions){
         Group g = new Group();
         Map<UnitType, Integer> unitMap = player.getTotalUnitsMap();
@@ -346,7 +412,7 @@ public class actionChoose extends Application  {
             unit_id.getItems().add(i.toString());
         }
         g.getChildren().addAll(t, t1, t2, terr_id, unit_id, unit_num, b);
-        Scene upgradeScene = new Scene(g, 300, 350);
+        Scene upgradeScene = new Scene(g, 400, 350);
 
         secondStage.setScene(upgradeScene);
         secondStage.show();
@@ -373,6 +439,26 @@ public class actionChoose extends Application  {
             showSecondWindow(e.getMessage());
         }
         this.showWindow();
+    }
+
+    private void doMissileAttack(ChoiceBox<Integer> enemy, ChoiceBox<String> missile,
+                                 List<Action> missileAttackActions, Stage secondStage) throws Exception {
+        if(enemy.getValue()==null||missile.getValue()==null){
+            showSecondWindow("Invalid input");
+            this.showWindow();
+            return;
+        }
+        String output = enemy.getValue()+","+missile.getValue().substring(10);
+        System.out.println(output);
+        secondStage.close();
+        try{
+            App.cc.conductMissileAttack(missileAttackActions, output);
+            showSecondWindow("Instruction: "+output+"\n"+"missile attack successfully");
+        }catch (InvalidActionException | InvalidInputException e){
+            showSecondWindow(e.getMessage());
+        }
+        this.showWindow();
+
     }
 
     public void actTech(Player self, List<Action> upgradeTechActions) throws Exception {
@@ -420,7 +506,7 @@ public class actionChoose extends Application  {
         Stage secondStage = new Stage();
         Scene techScene = new Scene(g, 400, 300);
         secondStage.setScene(techScene);
-        secondStage.showAndWait();//用户必须首先处理新的弹窗
+        secondStage.showAndWait();
     }
     public void territoryInfoScene(GameBoard gameBoard, Territory territory){
         String terrInfo = gameBoard.getDisplayer().displaySingleTerritory(gameBoard, territory);

@@ -60,7 +60,10 @@ public class loseUI extends Application {
                 exception.printStackTrace();
             }
         });
-        g.getChildren().add(observe);
+        if(!App.cc.getCommunicator().getSocket().isClosed()){
+            g.getChildren().add(observe);
+        }
+
 
         primaryStage.setTitle("Lose");
         primaryStage.setScene(new Scene(g, 400, 300));
@@ -80,10 +83,14 @@ public class loseUI extends Application {
     }
 
     private void exitGame(Player self) throws IOException {
-//        App.cc.setReadExitThread(new ReadExitThread(null, App.cc.getCommunicator(), self.getId()));
-        PayloadObject request = new PayloadObject(self.getId(), Configurations.MASTER_ID, PayloadType.QUIT);
-        App.cc.getCommunicator().writeMessage(request);
+        if(!App.cc.getCommunicator().getSocket().isClosed()){
+            //        App.cc.setReadExitThread(new ReadExitThread(null, App.cc.getCommunicator(), self.getId()));
+            PayloadObject request = new PayloadObject(self.getId(), Configurations.MASTER_ID, PayloadType.QUIT);
+            App.cc.getCommunicator().writeMessage(request);
 //        App.cc.getReadExitThread().exit();
+        }
+
+
         System.exit(0);
     }
 

@@ -13,11 +13,24 @@ import java.util.Map;
  */
 public abstract class AbstractAction implements Action {
 
+    /**
+     * Player id of the action conductor
+     */
     protected Integer playerId;
 
+    /**
+     * The action type
+     */
     protected ActionType actionType;
+
+    /**
+     * The destination territory id
+     */
     protected Integer destinationId;
 
+    /**
+     * unit maps
+     */
     protected Map<UnitType, Integer> unitMap;
 
     public AbstractAction(Integer playerId, ActionType actionType, Integer destinationId, Map<UnitType, Integer> unitMap) {

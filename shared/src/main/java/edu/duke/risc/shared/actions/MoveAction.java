@@ -148,6 +148,11 @@ public class MoveAction extends AbstractSourceAction {
         return this.apply(board);
     }
 
+    /**
+     * Print action information
+     * @param costs costs
+     * @return action information in string
+     */
     public String printInfo(int costs) {
         StringBuilder builder = new StringBuilder();
         builder.append("MOVE ACTION { ")

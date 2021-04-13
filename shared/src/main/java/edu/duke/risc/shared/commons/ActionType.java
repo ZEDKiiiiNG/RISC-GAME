@@ -33,4 +33,9 @@ public enum ActionType implements Serializable {
      */
     UPGRADE_TECH,
 
+    /**
+     * Attack territory with missile
+     */
+    MISSILE_ATTACK,
+
 }
