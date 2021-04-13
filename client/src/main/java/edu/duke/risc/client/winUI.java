@@ -1,10 +1,7 @@
 package edu.duke.risc.client;
 
-import edu.duke.risc.shared.Configurations;
-import edu.duke.risc.shared.PayloadObject;
 import edu.duke.risc.shared.actions.Action;
 import edu.duke.risc.shared.board.GameBoard;
-import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.users.Player;
 import javafx.application.Application;
 import javafx.fxml.FXML;
@@ -73,8 +70,8 @@ public class winUI extends Application {
 
     private void exitGame(Player self) throws IOException {
 //        App.cc.setReadExitThread(new ReadExitThread(null, App.cc.getCommunicator(), self.getId()));
-        PayloadObject request = new PayloadObject(self.getId(), Configurations.MASTER_ID, PayloadType.QUIT);
-        App.cc.getCommunicator().writeMessage(request);
+//        PayloadObject request = new PayloadObject(self.getId(), Configurations.MASTER_ID, PayloadType.QUIT);
+//        App.cc.getCommunicator().writeMessage(request);
 //        App.cc.getReadExitThread().exit();
         System.exit(0);
     }
