@@ -54,6 +54,8 @@ public class Player implements GameUser, Serializable {
      */
     private PlayerStatus status;
 
+
+
     /**
      * The missiles that this player owns
      */
@@ -131,10 +133,11 @@ public class Player implements GameUser, Serializable {
         for (Map.Entry<ResourceType, Integer> entry : resources.entrySet()) {
             builder.append(entry.getValue()).append(" ").append(entry.getKey()).append(", ");
         }
-
+        builder.append(System.lineSeparator());
         for (Map.Entry<MissileType, Integer> entry : missiles.entrySet()) {
             builder.append(entry.getValue()).append(" ").append(entry.getKey()).append(", ");
         }
+        builder.append(System.lineSeparator());
         builder.append(" and is currently in tech level ").append(this.technology);
         if (virtualTechnology != technology) {
             builder.append(" -> (").append(virtualTechnology).append(")");
@@ -488,6 +491,14 @@ public class Player implements GameUser, Serializable {
      */
     public boolean hasEnoughMissiles(MissileType missileType, int required) {
         return missiles.containsKey(missileType) && missiles.get(missileType) >= required;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public Map<MissileType, Integer> getMissiles() {
+        return missiles;
     }
 
 }

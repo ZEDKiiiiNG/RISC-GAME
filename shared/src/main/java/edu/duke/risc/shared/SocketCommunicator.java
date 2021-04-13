@@ -20,6 +20,10 @@ public class SocketCommunicator implements Communicable {
 
     private OutputStream writer;
 
+    public Socket getSocket() {
+        return socket;
+    }
+
     private InputStream reader;
 
     public SocketCommunicator(Socket socket) {
