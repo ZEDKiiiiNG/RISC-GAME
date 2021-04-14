@@ -39,6 +39,8 @@ public class Player implements GameUser, Serializable {
      */
     private final Map<UnitType, Integer> initUnitsMap;
 
+
+
     /**
      * Spy map of the player, key for territory id and value for number of spies
      */
@@ -546,6 +548,12 @@ public class Player implements GameUser, Serializable {
         return technology;
     }
 
-
+    /**
+     *
+     * @return spyMap
+     */
+    public Map<Integer, Integer> getSpiesMap() {
+        return spiesMap;
+    }
 
 }

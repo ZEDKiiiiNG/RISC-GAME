@@ -388,11 +388,7 @@ public class ClientController extends WaitPlayerUI {
      */
     public void conductMoveOrAttack(List<Action> actions, int actionType, String moveInput)
             throws InvalidInputException, InvalidActionException {
-//        System.out.println("Please enter instruction in the following format: " +
-//                "<sourceTerritoryId>,<destinationId>;<UnitType1>,<amount1>;<UnitType2>,<amount2>");
-//        String moveInput = this.consoleReader.readLine();
         Action action;
-
         action = this.readAttackOrMoveAction(moveInput, this.gameBoard, playerId, actionType);
         action.simulateApply(this.gameBoard);
         actions.add(action);
@@ -463,6 +459,29 @@ public class ClientController extends WaitPlayerUI {
         action.simulateApply(this.gameBoard);
         actions.add(action);
 
+    }
+
+    public void conductTrainSpy(List<Action> nonAffectActions, String output) throws InvalidInputException, InvalidActionException {
+        Action action;
+        action = this.readTrySpyAction(output, playerId);
+        action.simulateApply(this.gameBoard);
+        nonAffectActions.add(action);
+    }
+
+    private Action readTrySpyAction(String input, Integer playerId) throws InvalidInputException {
+        List<String> inputs = new ArrayList<>(Arrays.asList(input.split(",")));
+        if (inputs.size() != 2) {
+            throw new InvalidInputException("Invalid input size");
+        }
+        Action action;
+        try {
+            int targetTerritoryId = Integer.parseInt(inputs.get(0));
+            int unitNum = Integer.parseInt(inputs.get(1));
+            action = new TrainSpyAction(playerId, ActionType.TRAIN_SPY, targetTerritoryId, unitNum);
+        } catch (NumberFormatException e) {
+            throw new InvalidInputException("Cannot parse string to valid int");
+        }
+        return action;
     }
 
     /**
@@ -666,7 +685,30 @@ public class ClientController extends WaitPlayerUI {
         }
         return action;
     }
-//???????
+
+
+    public void conductMoveSpy(List<Action> nonAffectActions, String output) throws InvalidInputException, InvalidActionException {
+        Action action;
+        action = this.readMoveSpy(output, this.gameBoard, playerId);
+        action.simulateApply(this.gameBoard);
+        nonAffectActions.add(action);
+    }
+
+    private Action readMoveSpy(String output, GameBoard gameBoard, Integer playerId) throws InvalidInputException {
+        List<String> actionInputs = new ArrayList<>(Arrays.asList(output.split(",")));
+        if (actionInputs.size() != 3) {
+            throw new InvalidInputException("Invalid input");
+        }
+
+        //get source and destination information
+        int sourceTerritoryId = Integer.parseInt(actionInputs.get(0));
+        int destTerritoryId = Integer.parseInt(actionInputs.get(1));
+        int num = Integer.parseInt(actionInputs.get(2));
+        Action moveSpy = new MoveSpyAction(playerId, ActionType.MOVE_SPY, sourceTerritoryId, destTerritoryId, num);
+        return moveSpy;
+    }
+
+
     /**
      * input in the format "sourceTerritoryId,destinationId,UnitType,amount"
      *
@@ -758,5 +800,7 @@ public class ClientController extends WaitPlayerUI {
             e.printStackTrace();
         }
     }
+
+
 
 }

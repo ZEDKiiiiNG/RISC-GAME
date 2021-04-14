@@ -35,9 +35,6 @@ public class actionChoose extends Application  {
     @Override
     public void start(Stage primaryStage) throws Exception{
         Map<Integer, String> newVisibleTerritories = new HashMap<>();
-//        //visibleTerritories.clear();
-//        newVisibleTerritories.clear();
-//        oldVisibleTerritories.clear();
 
         Map<Integer, Color> territoryIds = new HashMap<>();
         Player self = App.cc.getMyself();
@@ -69,14 +66,7 @@ public class actionChoose extends Application  {
         }
 
         visibleTerritories = newVisibleTerritories;
-        System.out.println("visible terr");
-        for(Integer i: visibleTerritories.keySet()){
-            System.out.print(i+", ");
-        }
-        System.out.println("oldvisible");
-        for(Integer i: oldVisibleTerritories.keySet()){
-            System.out.print(i+", ");
-        }
+
         Group g = new Group();
 
         //add territories
@@ -112,20 +102,20 @@ public class actionChoose extends Application  {
         //attack button
         javafx.scene.control.Button attack = new javafx.scene.control.Button("units attack");
         attack.setLayoutX(620);
-        attack.setLayoutY(220);
+        attack.setLayoutY(205);
         attack.setOnAction(e->actAttack(self, attackActions));
 
 
         //upgrade button
         javafx.scene.control.Button upgrade = new javafx.scene.control.Button("upgrade");
         upgrade.setLayoutX(620);
-        upgrade.setLayoutY(290);
+        upgrade.setLayoutY(260);
         upgrade.setOnAction(e->actUpgrade(self, nonAffectActions));
 
         //tech button
         javafx.scene.control.Button tech = new javafx.scene.control.Button("tech");
         tech.setLayoutX(620);
-        tech.setLayoutY(360);
+        tech.setLayoutY(315);
         tech.setOnAction(e-> {
             try {
                 actTech(self, nonAffectActions);
@@ -137,17 +127,28 @@ public class actionChoose extends Application  {
         //missile button
         javafx.scene.control.Button attackMissile = new javafx.scene.control.Button("missile attack");
         attackMissile.setLayoutX(620);
-        attackMissile.setLayoutY(430);
+        attackMissile.setLayoutY(370);
         attackMissile.setOnAction(e->actAttackMissile(self, missileAttackActions));
 
+        //train spy button
+        Button trainSpy = new Button("train spy");
+        trainSpy.setLayoutX(620);
+        trainSpy.setLayoutY(425);
+        trainSpy.setOnAction(e-> actTrainSpy(self, nonAffectActions));
+
+        //move spy button
+        Button moveSpy = new Button("move spy");
+        moveSpy.setLayoutX(620);
+        moveSpy.setLayoutY(480);
+        moveSpy.setOnAction(e->actMoveSpy(self, nonAffectActions));
 
         //cloak research button
         javafx.scene.control.Button cloakRearch = new Button("cloak research");
         cloakRearch.setLayoutX(620);
-        cloakRearch.setLayoutY(500);
+        cloakRearch.setLayoutY(535);
         cloakRearch.setOnAction(e-> {
             try {
-                actCloakRearch(self, nonAffectActions);
+                actCloakResearch(self, nonAffectActions);
             } catch (Exception exception) {
                 exception.printStackTrace();
             }
@@ -156,25 +157,23 @@ public class actionChoose extends Application  {
         //cloak territory button
         Button cloakTerritory = new Button("cloak territory");
         cloakTerritory.setLayoutX(620);
-        cloakTerritory.setLayoutY(500);
+        cloakTerritory.setLayoutY(535);
         cloakTerritory.setOnAction(e->actCloakTerritory(self,  nonAffectActions));
 
         //commit button
         javafx.scene.control.Button commit = new javafx.scene.control.Button("commit");
         commit.setLayoutX(620);
-        commit.setLayoutY(560);
+        commit.setLayoutY(580);
         commit.setOnAction(e-> {
-
             try {
                 finishThisRoll(attackActions, missileAttackActions, nonAffectActions);
             } catch (Exception exception) {
                 exception.printStackTrace();
             }
-
         });
 
 
-        g.getChildren().addAll(commit, move, attack, upgrade, tech, attackMissile);
+        g.getChildren().addAll(commit, move, attack, upgrade, tech, attackMissile, trainSpy, moveSpy);
 
         if(self.getTechnology()>=3){
             if(!self.isCloakingResearched()){
@@ -185,7 +184,7 @@ public class actionChoose extends Application  {
         }
 
         primaryStage.setTitle("choose action (GameID = "+ App.cc.getGameId() + ")");
-        primaryStage.setScene(new Scene(g, 1100, 600));
+        primaryStage.setScene(new Scene(g, 1100, 620));
         primaryStage.show();
         if(self.isLost()){
 
@@ -196,6 +195,155 @@ public class actionChoose extends Application  {
         if (self.isWin()) {
             showSecondWindow("You win");
         }
+    }
+
+    private void actMoveSpy(Player self, List<Action> nonAffectActions) {
+        Group g = new Group();
+        Map<Integer, Integer> spyMap = self.getSpiesMap();
+
+        Text t = new Text("source territory");
+        t.setLayoutX(30);
+        t.setLayoutY(20);
+        ChoiceBox<Integer> source = new ChoiceBox<>();
+        source.setLayoutX(150);
+        source.setLayoutY(20);
+        for(Integer i:spyMap.keySet()){
+            source.getItems().add(i);
+        }
+
+        Text t1 = new Text("destination territory");
+        t1.setLayoutX(30);
+        t1.setLayoutY(75);
+        ChoiceBox<Integer> destinate = new ChoiceBox<>();
+        destinate.setLayoutX(150);
+        destinate.setLayoutY(90);
+        Set<Integer> territoryIds = new HashSet<>();
+        Map<Integer, Player> players = App.cc.getGameBoard().getPlayers();
+        for (Map.Entry<Integer, Player> entry : players.entrySet()) {
+            Player p = entry.getValue();
+            for (Integer territoryId : p.getOwnedTerritories()) {
+                //printing units
+                territoryIds.add(territoryId);
+            }
+        }
+        for(Integer i:territoryIds){
+            destinate.getItems().add(i);
+        }
+
+
+        Text t2 = new Text("number");
+        t2.setLayoutX(30);
+        t2.setLayoutY(130);
+        TextField spy_num = new TextField();
+        spy_num.setLayoutX(150);
+        spy_num.setLayoutY(120);
+
+        Button b = new Button("submit");
+        b.setLayoutX(370);
+        b.setLayoutY(200);
+        Stage secondStage = new Stage();
+        b.setOnAction(e-> {
+            try {
+                doMoveSpy(source, destinate, spy_num, nonAffectActions, secondStage);
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        });
+        g.getChildren().addAll(t,source, t1, destinate, b, t2, spy_num);
+        Scene moveScene = new Scene(g, 450, 250);
+
+        secondStage.setScene(moveScene);
+        secondStage.show();
+    }
+
+    private void doMoveSpy(ChoiceBox<Integer> source, ChoiceBox<Integer> destinate, TextField spy_num,
+                           List<Action> nonAffectActions, Stage secondStage) throws Exception {
+        if(source.getValue()==null||destinate.getValue()==null){
+            showSecondWindow("Invalid input");
+            this.showWindow();
+            return;
+        }
+        String output = "";
+        output += source.getValue()+","+destinate.getValue()+","+spy_num.getText();
+        System.out.println(output);
+        secondStage.close();
+
+        try {
+            App.cc.conductMoveSpy(nonAffectActions, output);
+        } catch (InvalidInputException e) {
+            showSecondWindow(e.getMessage());
+        } catch (InvalidActionException e) {
+            showSecondWindow(e.getMessage());
+        }
+        showSecondWindow("Instruction: "+output+"\n"+"move spy success");
+
+        this.showWindow();
+    }
+
+    private void actTrainSpy(Player self, List<Action> nonAffectActions) {
+        Group g = new Group();
+        Map<UnitType, Integer> unitMap = self.getTotalUnitsMap();
+
+        Text t = new Text("target territory");
+        t.setLayoutX(30);
+        t.setLayoutY(30);
+        ChoiceBox<Integer> terr_id= new ChoiceBox<>();
+        terr_id.setLayoutX(150);
+        terr_id.setLayoutY(30);
+
+        Text t2 = new Text("number");
+        t2.setLayoutX(30);
+        t2.setLayoutY(120);
+        TextField unit_num = new TextField();
+        unit_num.setLayoutX(150);
+        unit_num.setLayoutY(120);
+
+        Stage secondStage = new Stage();
+
+        Button b = new Button("submit");
+        b.setLayoutX(170);
+        b.setLayoutY(220);
+        b.setOnAction(e-> {
+            try {
+                if (!App.cc.checkUserStatus()) {
+                    doTrainSpy(terr_id, unit_num, secondStage, nonAffectActions);
+                }
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        });
+
+        for(Integer i: self.getOwnedTerritories()){
+            System.out.println(i);
+            terr_id.getItems().add(i);
+        }
+
+        g.getChildren().addAll(t, t2, terr_id, unit_num, b);
+        Scene upgradeScene = new Scene(g, 400, 260);
+
+        secondStage.setScene(upgradeScene);
+        secondStage.show();
+
+    }
+
+    private void doTrainSpy(ChoiceBox<Integer> terr_id, TextField unit_num, Stage secondStage, List<Action> nonAffectActions) throws Exception {
+        if(terr_id.getValue()==null){
+            showSecondWindow("Invalid input");
+            this.showWindow();
+            return;
+        }
+        String output = "";
+        output += terr_id.getValue()+","+unit_num.getText();
+        System.out.println(output);
+        secondStage.close();
+        //this.showWindow();
+        try {
+            App.cc.conductTrainSpy(nonAffectActions, output);
+            showSecondWindow("Instruction: "+output+"\n"+"train spy successfully");
+        } catch (InvalidInputException | InvalidActionException e) {
+            showSecondWindow(e.getMessage());
+        }
+        this.showWindow();
     }
 
 
@@ -426,7 +574,7 @@ public class actionChoose extends Application  {
     }
 
 
-    public void actCloakRearch(Player player, List<Action> cloakResearch) throws Exception {
+    public void actCloakResearch(Player player, List<Action> cloakResearch) throws Exception {
         //to do
 
         try {
