@@ -382,10 +382,8 @@ public class GameBoard implements Serializable {
             }
         }
 
-        //todo whether the player has a spy on that territory
-
-
-        return false;
+        // whether the player has a spy on that territory
+        return territory.containsSpies(playerId);
     }
 
     /**
@@ -394,7 +392,7 @@ public class GameBoard implements Serializable {
      * @return logging information
      */
     public String reduceCloaking() {
-        for (Territory territory : territories.values()){
+        for (Territory territory : territories.values()) {
             territory.reduceCloaks();
         }
         return "Reducing cloak on every territory" + System.lineSeparator();

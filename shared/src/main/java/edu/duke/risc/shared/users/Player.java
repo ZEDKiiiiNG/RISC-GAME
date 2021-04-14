@@ -40,6 +40,11 @@ public class Player implements GameUser, Serializable {
     private final Map<UnitType, Integer> initUnitsMap;
 
     /**
+     * Spy map of the player, key for territory id and value for number of spies
+     */
+    private final Map<Integer, Integer> spiesMap;
+
+    /**
      * Owned territories.
      */
     private Set<Integer> ownedTerritories;
@@ -94,6 +99,7 @@ public class Player implements GameUser, Serializable {
         this.userId = userId;
         this.color = color;
         this.totalUnitsMap = new HashMap<>();
+        this.spiesMap = new HashMap<>();
 
         //initialize missiles
         this.missiles = new HashMap<>();
@@ -219,6 +225,16 @@ public class Player implements GameUser, Serializable {
      */
     public void updateInitUnitMap(UnitType unitType, Integer diff) {
         MapHelper.updateMap(this.initUnitsMap, unitType, diff);
+    }
+
+    /**
+     * updateInitUnitMap
+     *
+     * @param territoryId territoryId
+     * @param diff     either add or subtract
+     */
+    public void updateSpiesMap(Integer territoryId, Integer diff) {
+        MapHelper.updateMap(this.spiesMap, territoryId, diff);
     }
 
     /**
@@ -529,5 +545,7 @@ public class Player implements GameUser, Serializable {
     public int getTechnology() {
         return technology;
     }
+
+
 
 }

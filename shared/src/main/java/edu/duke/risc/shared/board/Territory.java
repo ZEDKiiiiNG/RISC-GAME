@@ -38,6 +38,11 @@ public class Territory implements Serializable {
     private final Map<UnitType, Integer> unitsMap;
 
     /**
+     * Spies in this territory, key for player id and value for number of spies of that player
+     */
+    private final Map<Integer, Integer> spies;
+
+    /**
      * virtual unitsMap, only for client simulation of attack
      */
     private final Map<UnitType, Integer> virtualUnitsMap;
@@ -109,6 +114,7 @@ public class Territory implements Serializable {
                       boolean isValid, int techProd, int foodProd, int size) {
         this.territoryId = territoryId;
         this.territoryName = territoryName;
+        this.spies = new HashMap<>();
         this.unitsMap = unitsMap;
         this.adjacentTerritories = adjacentTerritories;
         this.virtualUnitsMap = virtualUnitsMap;
@@ -225,6 +231,26 @@ public class Territory implements Serializable {
     }
 
     /**
+     * Whether this territory has spies of specific player
+     *
+     * @param playerId specific player
+     * @return Whether this territory has spies of specific player
+     */
+    public boolean containsSpies(Integer playerId) {
+        return this.spies.containsKey(playerId);
+    }
+
+    /**
+     * Get the number of spies of specific player in this territory
+     *
+     * @param playerId specific player
+     * @return number of spies of specific player in this territory
+     */
+    public Integer getNumberOfSpies(Integer playerId) {
+        return this.spies.getOrDefault(playerId, 0);
+    }
+
+    /**
      * Whether this territory contains unit type
      *
      * @param unitType unitType
@@ -270,6 +296,19 @@ public class Territory implements Serializable {
      */
     public Set<Integer> getAdjacentTerritories() {
         return adjacentTerritories;
+    }
+
+    /**
+     * Get total number of units in this territory
+     *
+     * @return total number of units in this territory
+     */
+    public Integer getTotalNumberOfUnits() {
+        int count = 0;
+        for(Integer temp : this.unitsMap.values()){
+            count += temp;
+        }
+        return count;
     }
 
     /**
@@ -333,6 +372,16 @@ public class Territory implements Serializable {
      */
     public boolean hasCloaks() {
         return this.cloakingCount > 0;
+    }
+
+    /**
+     * updateInitUnitMap
+     *
+     * @param playerId territoryId
+     * @param diff     either add or subtract
+     */
+    public void updateSpiesMap(Integer playerId, Integer diff) {
+        MapHelper.updateMap(this.spies, playerId, diff);
     }
 
     /**

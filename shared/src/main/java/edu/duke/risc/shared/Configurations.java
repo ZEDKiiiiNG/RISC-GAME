@@ -25,6 +25,7 @@ public class Configurations {
     public static final int DEFAULT_PLAYER_ID = -1;
     public static final int MASTER_ID = 0;
     public static final int DEFAULT_INIT_CLOAKING = 3;
+    public static final int TRAIN_SPY_COSTS = 20;
 
 
     public static final String REQUEST_PLACEMENT_ACTIONS = "REQUEST_PLACEMENT_ACTIONS";

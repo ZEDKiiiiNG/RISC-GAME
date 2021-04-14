@@ -48,4 +48,15 @@ public enum ActionType implements Serializable {
      */
     CLOAK_CONDUCT,
 
+    /**
+     * train the spies
+     */
+    TRAIN_SPY,
+
+    /**
+     * move the spies
+     */
+    MOVE_SPY,
+
+
 }
