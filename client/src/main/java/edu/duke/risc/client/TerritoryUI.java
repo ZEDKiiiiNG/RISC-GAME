@@ -1,6 +1,5 @@
 package edu.duke.risc.client;
 
-import edu.duke.risc.shared.commons.UserColor;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -12,7 +11,7 @@ public abstract class TerritoryUI {
     private  StackPane pane;
     private  javafx.scene.control.Button button;
     private Color TerritoryColor;
-    private boolean visible = false;//no more change after initialized
+    private boolean visible = false;
 
     public void setId(int id) {
         this.id = id;
@@ -60,7 +59,6 @@ public abstract class TerritoryUI {
     public void setVisible() {
         visible = true;
     }
-
     /*
     * returns true if the territory is visible
     * called to determine whether to show territory on scene or not*/

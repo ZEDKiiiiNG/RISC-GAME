@@ -318,16 +318,18 @@ public class ClientController extends WaitPlayerUI {
      *
      * @throws IOException IOException
      */
-    public String moveAndAttack(List<Action> moveActions, List<Action> attackActions,
-                              List<Action> upgradeTechActions, List<Action> upgradeUnitsActions, List<Action> missileAttackActions) throws IOException {
+    public String moveAndAttack(List<Action> attackActions, List<Action> missileAttackActions,
+                                List<Action> nonAffectActions) throws IOException {
+        //to do non-affect actions in this part
     while(true) {
         //sending to the server
         //constructing payload objects
         Map<String, Object> content = new HashMap<>(3);
-        content.put(Configurations.REQUEST_MOVE_ACTIONS, moveActions);
+//        content.put(Configurations.REQUEST_MOVE_ACTIONS, moveActions);
         content.put(Configurations.REQUEST_ATTACK_ACTIONS, attackActions);
-        content.put(Configurations.REQUEST_UPGRADE_UNITS_ACTIONS, upgradeUnitsActions);
-        content.put(Configurations.REQUEST_UPGRADE_TECH_ACTIONS, upgradeTechActions);
+//        content.put(Configurations.REQUEST_UPGRADE_UNITS_ACTIONS, upgradeUnitsActions);
+//        content.put(Configurations.REQUEST_UPGRADE_TECH_ACTIONS, upgradeTechActions);
+        content.put(REQUEST_NON_AFFECT_ACTIONS, nonAffectActions);
         content.put(REQUEST_MISSILE_ATTACK_ACTIONS, missileAttackActions);
         PayloadObject request = new PayloadObject(this.playerId,
                 Configurations.MASTER_ID, PayloadType.REQUEST, content);
@@ -425,6 +427,26 @@ public class ClientController extends WaitPlayerUI {
         action.simulateApply(this.gameBoard);
         actions.add(action);
 
+    }
+
+    /**
+     * conductCloakRearch
+     * @param actions
+     * @throws InvalidActionException
+     */
+    public void conductCloakRearch( Player player, List<Action> actions) throws InvalidActionException {
+        Action action;
+        action = new CloakResearchAction(player.getId());
+        action.simulateApply(this.gameBoard);
+        actions.add(action);
+    }
+
+    public void conductCloakTerritory(Player player, List<Action> actions, Integer destinationId) throws InvalidActionException {
+        Action action;
+        action = new CloakTerritoryAction(player.getId(), ActionType.CLOAK_CONDUCT,
+                destinationId, null);
+        action.simulateApply(this.gameBoard);
+        actions.add(action);
     }
 
     /**

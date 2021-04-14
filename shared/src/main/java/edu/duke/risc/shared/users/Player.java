@@ -522,4 +522,12 @@ public class Player implements GameUser, Serializable {
         return "RESEARCH CLOAKING ACTION { conducted by player " + userId + " }";
     }
 
+    /**
+     *
+     * @return the player's tech level
+     */
+    public int getTechnology() {
+        return technology;
+    }
+
 }
