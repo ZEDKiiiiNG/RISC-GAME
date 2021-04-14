@@ -105,6 +105,7 @@ public class MoveSpyAction implements Action {
         }
         Territory destTerritory = board.findTerritory(destinationId);
         Territory srcTerritory = board.findTerritory(sourceId);
+        Player player = board.getPlayers().get(playerId);
         StringBuilder builder = new StringBuilder();
 
         //reduce spies in the source territory
@@ -112,6 +113,10 @@ public class MoveSpyAction implements Action {
         if (!isSimulate) {
             destTerritory.updateSpiesMap(playerId, amount);
         }
+
+        //update spies map in the player
+        player.updateSpiesMap(sourceId, -amount);
+        player.updateSpiesMap(destinationId, amount);
 
         //logging
         builder.append("SUCCESS: player ").append(playerId).append(" moves ")
