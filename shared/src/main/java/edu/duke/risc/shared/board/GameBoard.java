@@ -70,7 +70,7 @@ public class GameBoard implements Serializable {
         displayer = new TextDisplayer();
     }
 
-    public Displayable getDisplayer(){
+    public Displayable getDisplayer() {
         return this.displayer;
     }
 
@@ -169,7 +169,7 @@ public class GameBoard implements Serializable {
      * Pretend to move certain number of units from one place to another, only for the client-side pre-check.
      *
      * @param sourceTerritoryId id of the source territory
-     * @param unitMap units map
+     * @param unitMap           units map
      */
     public void playerMoveFromTerritory(int sourceTerritoryId, Map<UnitType, Integer> unitMap) {
         Territory sourceTerritory = this.getTerritories().get(sourceTerritoryId);
@@ -350,6 +350,52 @@ public class GameBoard implements Serializable {
             }
         }
         return -1;
+    }
+
+    /**
+     * Return whether the specific territory is visible to the specific player
+     *
+     * @param playerId    specific player
+     * @param territoryId specific territory
+     * @return whether the specific territory is visible to the specific player
+     */
+    public boolean isTerritoryVisible(Integer playerId, Integer territoryId) {
+        Player player = this.findPlayer(playerId);
+        Territory territory = this.findTerritory(territoryId);
+
+        //if the player has lost, he is able to see everything
+        if (player.isLost() || player.isWin()) {
+            return true;
+        }
+
+        //whether the player owns the territory
+        if (player.ownsTerritory(territoryId)) {
+            return true;
+        }
+
+        //the territory does not have cloaking and the territory is adjacent to player's territories
+        if (!territory.hasCloaks()) {
+            for (Integer ownedTerritoryId : player.getOwnedTerritories()) {
+                if (territory.isAdjacentTo(ownedTerritoryId)) {
+                    return true;
+                }
+            }
+        }
+
+        // whether the player has a spy on that territory
+        return territory.containsSpies(playerId);
+    }
+
+    /**
+     * Reducing cloaking on every territories at the end of the turn
+     *
+     * @return logging information
+     */
+    public String reduceCloaking() {
+        for (Territory territory : territories.values()) {
+            territory.reduceCloaks();
+        }
+        return "Reducing cloak on every territory" + System.lineSeparator();
     }
 
 }

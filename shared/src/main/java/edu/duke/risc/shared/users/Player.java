@@ -39,6 +39,13 @@ public class Player implements GameUser, Serializable {
      */
     private final Map<UnitType, Integer> initUnitsMap;
 
+
+
+    /**
+     * Spy map of the player, key for territory id and value for number of spies
+     */
+    private final Map<Integer, Integer> spiesMap;
+
     /**
      * Owned territories.
      */
@@ -54,12 +61,15 @@ public class Player implements GameUser, Serializable {
      */
     private PlayerStatus status;
 
-
+    /**
+     * Whether cloaking is researched
+     */
+    private boolean cloakingResearched = false;
 
     /**
      * The missiles that this player owns
      */
-    private Map<MissileType, Integer> missiles;
+    private final Map<MissileType, Integer> missiles;
 
     /**
      * The resources that this player owns
@@ -91,6 +101,7 @@ public class Player implements GameUser, Serializable {
         this.userId = userId;
         this.color = color;
         this.totalUnitsMap = new HashMap<>();
+        this.spiesMap = new HashMap<>();
 
         //initialize missiles
         this.missiles = new HashMap<>();
@@ -216,6 +227,16 @@ public class Player implements GameUser, Serializable {
      */
     public void updateInitUnitMap(UnitType unitType, Integer diff) {
         MapHelper.updateMap(this.initUnitsMap, unitType, diff);
+    }
+
+    /**
+     * updateInitUnitMap
+     *
+     * @param territoryId territoryId
+     * @param diff     either add or subtract
+     */
+    public void updateSpiesMap(Integer territoryId, Integer diff) {
+        MapHelper.updateMap(this.spiesMap, territoryId, diff);
     }
 
     /**
@@ -487,18 +508,52 @@ public class Player implements GameUser, Serializable {
      * Whether the player has enough missiles
      *
      * @param missileType missileType
-     * @param required      required amount of the missile
+     * @param required    required amount of the missile
      */
     public boolean hasEnoughMissiles(MissileType missileType, int required) {
         return missiles.containsKey(missileType) && missiles.get(missileType) >= required;
     }
 
     /**
+     * getMissiles
      *
-     * @return
+     * @return getMissiles
      */
     public Map<MissileType, Integer> getMissiles() {
         return missiles;
+    }
+
+    /**
+     * Whether cloaking is researched
+     *
+     * @return Whether cloaking is researched
+     */
+    public boolean isCloakingResearched() {
+        return cloakingResearched;
+    }
+
+    /**
+     * Do research on Cloaking
+     */
+    public String doResearchCloaking() {
+        this.cloakingResearched = true;
+        return "RESEARCH CLOAKING ACTION { conducted by player " + userId + " }";
+    }
+
+    /**
+     *
+     * @return the player's tech level
+     */
+    public int getTechnology() {
+        return technology;
+    }
+
+    /**
+     *
+     * @return spyMap
+     */
+    public Map<Integer, Integer> getSpiesMap() {
+        return spiesMap;
     }
 
 }

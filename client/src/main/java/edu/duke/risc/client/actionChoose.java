@@ -25,14 +25,16 @@ public class actionChoose extends Application  {
     private observerUI obeserver;
     private winUI win;
     private loseUI lose;
-    private List<Action> moveActions = new ArrayList<>();
     private List<Action> attackActions = new ArrayList<>();
-    private List<Action> upgradeUnitsActions = new ArrayList<>();
-    private List<Action> upgradeTechActions = new ArrayList<>();
     private List<Action> missileAttackActions = new ArrayList<>();
+    private List<Action> nonAffectActions = new ArrayList<>();
+    private Map<Integer, String> visibleTerritories = new HashMap<>();
+    private Map<Integer, String> oldVisibleTerritories = new HashMap<>();
+
 
     @Override
     public void start(Stage primaryStage) throws Exception{
+        Map<Integer, String> newVisibleTerritories = new HashMap<>();
 
         Map<Integer, Color> territoryIds = new HashMap<>();
         Player self = App.cc.getMyself();
@@ -42,9 +44,28 @@ public class actionChoose extends Application  {
             Player player = entry.getValue();
             for (Integer territoryId : player.getOwnedTerritories()) {
                 //printing units
+                Territory terr = gameBoard.findTerritory(territoryId);
+                String terrInfo = gameBoard.getDisplayer().displaySingleTerritory(gameBoard, terr);
+                //
                 territoryIds.put(territoryId, Color.web(player.getColor().name()));
+                //
+                if(gameBoard.isTerritoryVisible(self.getId(), territoryId)){
+                    newVisibleTerritories.put(territoryId, "used to owned by player "+player.getColor().toString()+"\n"+terrInfo);
+                }
             }
         }
+
+
+        for(Integer i:visibleTerritories.keySet()){
+            if(newVisibleTerritories.get(i)==null){
+                oldVisibleTerritories.put(i, visibleTerritories.get(i));
+            }
+            else{
+                oldVisibleTerritories.remove(i);
+            }
+        }
+
+        visibleTerritories = newVisibleTerritories;
 
         Group g = new Group();
 
@@ -54,7 +75,12 @@ public class actionChoose extends Application  {
                 int id = terrUI.getId();
                 Territory terr = gameBoard.getTerritories().get(id);
                 g.getChildren().addAll(terrUI.getPane());
-                App.TerrUIs.get(id).getButton().setOnAction(e -> territoryInfoScene(gameBoard, terr));
+                if(gameBoard.isTerritoryVisible(self.getId(), id)){
+                    App.TerrUIs.get(id).getButton().setOnAction(e -> territoryInfoScene(gameBoard, terr));
+                }
+                if(oldVisibleTerritories.get(id)!=null){
+                    App.TerrUIs.get(id).getButton().setOnAction(e->showSecondWindow(oldVisibleTerritories.get(id)));
+                }
             }
         }
 
@@ -70,29 +96,29 @@ public class actionChoose extends Application  {
         javafx.scene.control.Button move = new javafx.scene.control.Button("move");
         move.setLayoutX(620);
         move.setLayoutY(150);
-        move.setOnAction(e->actMove(self, moveActions));
+        move.setOnAction(e->actMove(self, nonAffectActions));
 
 
         //attack button
         javafx.scene.control.Button attack = new javafx.scene.control.Button("units attack");
         attack.setLayoutX(620);
-        attack.setLayoutY(230);
+        attack.setLayoutY(205);
         attack.setOnAction(e->actAttack(self, attackActions));
 
 
         //upgrade button
         javafx.scene.control.Button upgrade = new javafx.scene.control.Button("upgrade");
         upgrade.setLayoutX(620);
-        upgrade.setLayoutY(310);
-        upgrade.setOnAction(e->actUpgrade(self, upgradeUnitsActions));
+        upgrade.setLayoutY(260);
+        upgrade.setOnAction(e->actUpgrade(self, nonAffectActions));
 
         //tech button
         javafx.scene.control.Button tech = new javafx.scene.control.Button("tech");
         tech.setLayoutX(620);
-        tech.setLayoutY(390);
+        tech.setLayoutY(315);
         tech.setOnAction(e-> {
             try {
-                actTech(self, upgradeTechActions);
+                actTech(self, nonAffectActions);
             } catch (Exception exception) {
                 showSecondWindow("upgrade tech failed");
             }
@@ -101,29 +127,64 @@ public class actionChoose extends Application  {
         //missile button
         javafx.scene.control.Button attackMissile = new javafx.scene.control.Button("missile attack");
         attackMissile.setLayoutX(620);
-        attackMissile.setLayoutY(470);
+        attackMissile.setLayoutY(370);
         attackMissile.setOnAction(e->actAttackMissile(self, missileAttackActions));
 
+        //train spy button
+        Button trainSpy = new Button("train spy");
+        trainSpy.setLayoutX(620);
+        trainSpy.setLayoutY(425);
+        trainSpy.setOnAction(e-> actTrainSpy(self, nonAffectActions));
+
+        //move spy button
+        Button moveSpy = new Button("move spy");
+        moveSpy.setLayoutX(620);
+        moveSpy.setLayoutY(480);
+        moveSpy.setOnAction(e->actMoveSpy(self, nonAffectActions));
+
+        //cloak research button
+        javafx.scene.control.Button cloakRearch = new Button("cloak research");
+        cloakRearch.setLayoutX(620);
+        cloakRearch.setLayoutY(535);
+        cloakRearch.setOnAction(e-> {
+            try {
+                actCloakResearch(self, nonAffectActions);
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        });
+
+        //cloak territory button
+        Button cloakTerritory = new Button("cloak territory");
+        cloakTerritory.setLayoutX(620);
+        cloakTerritory.setLayoutY(535);
+        cloakTerritory.setOnAction(e->actCloakTerritory(self,  nonAffectActions));
 
         //commit button
         javafx.scene.control.Button commit = new javafx.scene.control.Button("commit");
         commit.setLayoutX(620);
-        commit.setLayoutY(550);
+        commit.setLayoutY(580);
         commit.setOnAction(e-> {
-
             try {
-                finishThisRoll(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions, missileAttackActions);
+                finishThisRoll(attackActions, missileAttackActions, nonAffectActions);
             } catch (Exception exception) {
                 exception.printStackTrace();
             }
-
         });
 
 
-        g.getChildren().addAll(commit, move, attack, upgrade, tech, attackMissile);
+        g.getChildren().addAll(commit, move, attack, upgrade, tech, attackMissile, trainSpy, moveSpy);
+
+        if(self.getTechnology()>=3){
+            if(!self.isCloakingResearched()){
+                g.getChildren().add(cloakRearch);
+            }else{
+                g.getChildren().add(cloakTerritory);
+            }
+        }
 
         primaryStage.setTitle("choose action (GameID = "+ App.cc.getGameId() + ")");
-        primaryStage.setScene(new Scene(g, 1100, 600));
+        primaryStage.setScene(new Scene(g, 1100, 620));
         primaryStage.show();
         if(self.isLost()){
 
@@ -136,27 +197,179 @@ public class actionChoose extends Application  {
         }
     }
 
+    private void actMoveSpy(Player self, List<Action> nonAffectActions) {
+        Group g = new Group();
+        Map<Integer, Integer> spyMap = self.getSpiesMap();
 
-    public void finishThisRoll(List<Action> moveActions, List<Action> attackActions,
-                               List<Action> upgradeTechActions, List<Action> upgradeUnitsActions, List<Action> missileAttackActions) throws Exception {
+        Text t = new Text("source territory");
+        t.setLayoutX(30);
+        t.setLayoutY(20);
+        ChoiceBox<Integer> source = new ChoiceBox<>();
+        source.setLayoutX(150);
+        source.setLayoutY(20);
+        for(Integer i:spyMap.keySet()){
+            source.getItems().add(i);
+        }
+
+        Text t1 = new Text("destination territory");
+        t1.setLayoutX(30);
+        t1.setLayoutY(75);
+        ChoiceBox<Integer> destinate = new ChoiceBox<>();
+        destinate.setLayoutX(150);
+        destinate.setLayoutY(90);
+        Set<Integer> territoryIds = new HashSet<>();
+        Map<Integer, Player> players = App.cc.getGameBoard().getPlayers();
+        for (Map.Entry<Integer, Player> entry : players.entrySet()) {
+            Player p = entry.getValue();
+            for (Integer territoryId : p.getOwnedTerritories()) {
+                //printing units
+                territoryIds.add(territoryId);
+            }
+        }
+        for(Integer i:territoryIds){
+            destinate.getItems().add(i);
+        }
+
+
+        Text t2 = new Text("number");
+        t2.setLayoutX(30);
+        t2.setLayoutY(130);
+        TextField spy_num = new TextField();
+        spy_num.setLayoutX(150);
+        spy_num.setLayoutY(120);
+
+        Button b = new Button("submit");
+        b.setLayoutX(370);
+        b.setLayoutY(200);
+        Stage secondStage = new Stage();
+        b.setOnAction(e-> {
+            try {
+                doMoveSpy(source, destinate, spy_num, nonAffectActions, secondStage);
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        });
+        g.getChildren().addAll(t,source, t1, destinate, b, t2, spy_num);
+        Scene moveScene = new Scene(g, 450, 250);
+
+        secondStage.setScene(moveScene);
+        secondStage.show();
+    }
+
+    private void doMoveSpy(ChoiceBox<Integer> source, ChoiceBox<Integer> destinate, TextField spy_num,
+                           List<Action> nonAffectActions, Stage secondStage) throws Exception {
+        if(source.getValue()==null||destinate.getValue()==null){
+            showSecondWindow("Invalid input");
+            this.showWindow();
+            return;
+        }
+        String output = "";
+        output += source.getValue()+","+destinate.getValue()+","+spy_num.getText();
+        System.out.println(output);
+        secondStage.close();
+
+        try {
+            App.cc.conductMoveSpy(nonAffectActions, output);
+            showSecondWindow("Instruction: "+output+"\n"+"move spy success");
+        } catch (InvalidInputException e) {
+            showSecondWindow(e.getMessage());
+        } catch (InvalidActionException e) {
+            showSecondWindow(e.getMessage());
+        }
+
+
+        this.showWindow();
+    }
+
+    private void actTrainSpy(Player self, List<Action> nonAffectActions) {
+        Group g = new Group();
+        Map<UnitType, Integer> unitMap = self.getTotalUnitsMap();
+
+        Text t = new Text("target territory");
+        t.setLayoutX(30);
+        t.setLayoutY(30);
+        ChoiceBox<Integer> terr_id= new ChoiceBox<>();
+        terr_id.setLayoutX(150);
+        terr_id.setLayoutY(30);
+
+        Text t2 = new Text("number");
+        t2.setLayoutX(30);
+        t2.setLayoutY(120);
+        TextField unit_num = new TextField();
+        unit_num.setLayoutX(150);
+        unit_num.setLayoutY(120);
+
+        Stage secondStage = new Stage();
+
+        Button b = new Button("submit");
+        b.setLayoutX(170);
+        b.setLayoutY(220);
+        b.setOnAction(e-> {
+            try {
+                if (!App.cc.checkUserStatus()) {
+                    doTrainSpy(terr_id, unit_num, secondStage, nonAffectActions);
+                }
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        });
+
+        for(Integer i: self.getOwnedTerritories()){
+            System.out.println(i);
+            terr_id.getItems().add(i);
+        }
+
+        g.getChildren().addAll(t, t2, terr_id, unit_num, b);
+        Scene upgradeScene = new Scene(g, 400, 260);
+
+        secondStage.setScene(upgradeScene);
+        secondStage.show();
+
+    }
+
+    private void doTrainSpy(ChoiceBox<Integer> terr_id, TextField unit_num, Stage secondStage, List<Action> nonAffectActions) throws Exception {
+        if(terr_id.getValue()==null){
+            showSecondWindow("Invalid input");
+            this.showWindow();
+            return;
+        }
+        String output = "";
+        output += terr_id.getValue()+","+unit_num.getText();
+        System.out.println(output);
+        secondStage.close();
+        //this.showWindow();
+        try {
+            App.cc.conductTrainSpy(nonAffectActions, output);
+            showSecondWindow("Instruction: "+output+"\n"+"train spy successfully");
+        } catch (InvalidInputException | InvalidActionException e) {
+            showSecondWindow(e.getMessage());
+        }
+        this.showWindow();
+    }
+
+
+    public void finishThisRoll(List<Action> attackActions, List<Action> missileAttackActions,
+                               List<Action> nonAffectActions) throws Exception {
         if (App.cc.checkUserStatus()) {
             return;
         }
         String log = null;
 
-        log = App.cc.moveAndAttack(moveActions, attackActions, upgradeTechActions, upgradeUnitsActions, missileAttackActions);//
-
-
-        moveActions.clear();
-        attackActions.clear();
-        upgradeUnitsActions.clear();
-        upgradeTechActions.clear();
-        missileAttackActions.clear();
-        App.updateTerritories();
+        log = App.cc.moveAndAttack(attackActions, missileAttackActions, nonAffectActions);//
 
 
         showSecondWindow(log);
         this.showWindow();
+
+
+        attackActions.clear();
+        missileAttackActions.clear();
+        nonAffectActions.clear();
+
+        App.updateTerritories(oldVisibleTerritories);
+
+
+
     }
 
     public void actMove(Player player, List<Action> moveActions){
@@ -361,6 +574,67 @@ public class actionChoose extends Application  {
 
     }
 
+
+    public void actCloakResearch(Player player, List<Action> cloakResearch) throws Exception {
+        //to do
+
+        try {
+            App.cc.conductCloakRearch(player, cloakResearch);
+            showSecondWindow("cloak research success");
+        } catch (InvalidActionException e) {
+            showSecondWindow(e.getMessage());
+        }
+        this.showWindow();
+    }
+
+    public void actCloakTerritory(Player self, List<Action> cloakTerritoryActions){
+        Group g = new Group();
+        Set<Integer> territoryIds = self.getOwnedTerritories();
+        Text t = new Text("territory id");
+        t.setLayoutX(20);
+        t.setLayoutY(20);
+        ChoiceBox<Integer> terr_id = new ChoiceBox<>();
+        terr_id.setLayoutX(130);
+        terr_id.setLayoutY(20);
+        for(int i: territoryIds){
+            terr_id.getItems().add(i);
+        }
+        Stage secondStage = new Stage();
+        Button b = new Button("submit");
+        b.setLayoutX(170);
+        b.setLayoutY(80);
+        b.setOnAction(e-> {
+            try {
+                doCloakTerritory(self, terr_id, cloakTerritoryActions, secondStage);
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        });
+        g.getChildren().addAll(t, terr_id, b);
+        Scene cloakScene = new Scene(g, 250, 140);
+        secondStage.setScene(cloakScene);
+        secondStage.show();
+
+    }
+
+    private void doCloakTerritory(Player self, ChoiceBox<Integer> terr_id,
+                                  List<Action> cloakTerritoryActions, Stage secondStage) throws Exception {
+        if(terr_id.getValue()==null){
+            showSecondWindow("Invalid input");
+            this.showWindow();
+            return;
+        }
+        int output = terr_id.getValue();
+        System.out.println(output);
+        secondStage.close();
+        try {
+            App.cc.conductCloakTerritory(self, cloakTerritoryActions, output);
+            showSecondWindow("cloak territory successfully");
+        } catch (InvalidActionException e) {
+            showSecondWindow(e.getMessage());
+        }
+        this.showWindow();
+    }
 
 
     public void actUpgrade(Player player, List<Action> upgradeUnitsActions){

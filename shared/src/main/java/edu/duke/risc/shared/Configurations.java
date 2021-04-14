@@ -24,12 +24,18 @@ public class Configurations {
     public static final int INIT_SOLDIER_NUM = 10;
     public static final int DEFAULT_PLAYER_ID = -1;
     public static final int MASTER_ID = 0;
+    public static final int DEFAULT_INIT_CLOAKING = 3;
+    public static final int TRAIN_SPY_COSTS = 20;
+
 
     public static final String REQUEST_PLACEMENT_ACTIONS = "REQUEST_PLACEMENT_ACTIONS";
-    public static final String REQUEST_MOVE_ACTIONS = "REQUEST_MOVE_ACTIONS";
+    /**
+     * Actions that does not affect others: move, upgrade units,
+     * upgrade tech, research cloaking, conduct cloaking: should conduct before attack and missile attack
+     * and remain in original sequence
+     */
+    public static final String REQUEST_NON_AFFECT_ACTIONS = "REQUEST_NON_AFFECT_ACTIONS";
     public static final String REQUEST_ATTACK_ACTIONS = "REQUEST_ATTACK_ACTIONS";
-    public static final String REQUEST_UPGRADE_UNITS_ACTIONS = "REQUEST_UPGRADE_UNITS_ACTIONS";
-    public static final String REQUEST_UPGRADE_TECH_ACTIONS = "REQUEST_UPGRADE_TECH_ACTIONS";
     public static final String REQUEST_MISSILE_ATTACK_ACTIONS = "REQUEST_MISSILE_ATTACK_ACTIONS";
 
     public static final String STAGE_ASSIGN = "STAGE_ASSIGN";

@@ -99,12 +99,14 @@ public class placement extends Application implements Initializable {
                 int id = terrUI.getId();
                 Territory terr = gameBoard.getTerritories().get(id);
                 g.getChildren().addAll(terrUI.getPane());
-                App.TerrUIs.get(id).getButton().setOnAction(e -> territoryInfoScene(gameBoard, terr));
+                if(gameBoard.isTerritoryVisible(self.getId(), id)){
+                    App.TerrUIs.get(id).getButton().setOnAction(e -> territoryInfoScene(gameBoard, terr));
+                }
             }
         }
 
         primaryStage.setTitle("Place your units (GameID = " + App.cc.getGameId()+")");
-        primaryStage.setScene(new Scene(g, 1000, 600));
+        primaryStage.setScene(new Scene(g, 1000, 620));
         primaryStage.show();
     }
 
@@ -164,7 +166,7 @@ public class placement extends Application implements Initializable {
         Scene techScene = new Scene(g, 400, 300);
         secondStage.setScene(techScene);
         exitButton.setOnAction(e ->{secondStage.close();});
-        secondStage.showAndWait();//用户必须首先处理新的弹窗
+        secondStage.showAndWait();
     }
 
     public void territoryInfoScene(GameBoard gameBoard, Territory territory){
