@@ -270,12 +270,13 @@ public class actionChoose extends Application  {
 
         try {
             App.cc.conductMoveSpy(nonAffectActions, output);
+            showSecondWindow("Instruction: "+output+"\n"+"move spy success");
         } catch (InvalidInputException e) {
             showSecondWindow(e.getMessage());
         } catch (InvalidActionException e) {
             showSecondWindow(e.getMessage());
         }
-        showSecondWindow("Instruction: "+output+"\n"+"move spy success");
+
 
         this.showWindow();
     }

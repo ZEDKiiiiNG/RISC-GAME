@@ -690,7 +690,7 @@ public class ClientController extends WaitPlayerUI {
     public void conductMoveSpy(List<Action> nonAffectActions, String output) throws InvalidInputException, InvalidActionException {
         Action action;
         action = this.readMoveSpy(output, this.gameBoard, playerId);
-        action.simulateApply(this.gameBoard);
+        action.simulateApply(gameBoard);
         nonAffectActions.add(action);
     }
 
