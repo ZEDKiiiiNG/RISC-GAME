@@ -376,7 +376,6 @@ public class Player implements GameUser, Serializable {
      * @param used resources used
      */
     public void useResources(ResourceType resourceType, int used) {
-        assert hasEnoughResources(resourceType, used) == null;
         this.resources.put(resourceType, resources.get(resourceType) - used);
     }
 
@@ -428,7 +427,6 @@ public class Player implements GameUser, Serializable {
      * @return null if success, error message if failed
      */
     public String upgradeTechLevel(boolean isReal) {
-        assert hasEnoughResourcesForTechUpgrade() == null;
         int nextTech = TechHelper.getNextTechLevel(technology);
 
         Map<ResourceType, Integer> required = null;
