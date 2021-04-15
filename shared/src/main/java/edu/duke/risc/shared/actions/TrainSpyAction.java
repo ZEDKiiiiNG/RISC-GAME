@@ -63,6 +63,11 @@ public class TrainSpyAction implements Action {
         Player player = board.getPlayers().get(playerId);
         Territory territory = board.findTerritory(destinationId);
 
+        // player does not own territory
+        if (!player.ownsTerritory(destinationId)) {
+            return "The player does not own the destination territory " + board.findTerritory(destinationId);
+        }
+
         //player should have enough resources
         String error;
         if ((error = player.hasEnoughResources(ResourceType.TECH,

@@ -170,8 +170,6 @@ public class AttackAction extends AbstractSourceAction implements TwoStepsAction
                     defenderType = UnitType.getHighestLevelUnitType(defenderMap);
                 }
                 System.out.println("Attacker: " + attackerType + " V.S Defender: " + defenderType);
-                assert attackerType != null;
-                assert defenderType != null;
                 Integer random = randomWin(attackerType, defenderType);
                 if (random == 0) {
                     //attacked(defender) win, attacker lost

@@ -139,7 +139,7 @@ public class Territory implements Serializable {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         //print territory info
-        builder.append(territoryName).append("(").append(this.territoryId).append(")").append(System.lineSeparator());
+        builder.append(territoryName).append("(").append(this.territoryId).append(")");
 
         return builder.toString();
     }

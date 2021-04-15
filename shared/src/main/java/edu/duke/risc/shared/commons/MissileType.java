@@ -42,7 +42,12 @@ public enum MissileType implements Serializable {
     /**
      * MISSILE_LV6, kills SOLDIER(I), Infantry(II),  Cavalry(III), Knight(IV), Rook(V), Queen(VI)
      */
-    MISSILE_LV6(6, "MISSILE LV6", 6);
+    MISSILE_LV6(6, "MISSILE LV6", 6),
+
+    /**
+     * For testing of exception thrown
+     */
+    MISSILE_TEST(7, "MISSILE_TEST", 7);
 
     /**
      * Technology level required to get this missile

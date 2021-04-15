@@ -72,7 +72,7 @@ public class MoveSpyAction implements Action {
         //player should have enough spies in that territory
         int numSpies = sourceTerritory.getNumberOfSpies(playerId);
         if (numSpies < amount) {
-            return "Player " + player + " does not has enough spies (" + numSpies + " < " + amount
+            return "Player " + playerId + " does not has enough spies (" + numSpies + " < " + amount
                     + ") in territory " + sourceTerritory;
         }
 
