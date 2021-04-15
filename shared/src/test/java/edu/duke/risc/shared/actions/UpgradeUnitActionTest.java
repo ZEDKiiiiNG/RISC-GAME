@@ -53,7 +53,7 @@ public class UpgradeUnitActionTest {
         Map<UnitType, Integer> notOwnTerritoryUnitMap = new HashMap<>();
         notOwnTerritoryUnitMap.put(UnitType.SOLDIER, 1);
         AbstractAction notOwnTerritoryUnitAction = new UpgradeUnitAction(1, 4, notOwnTerritoryUnitMap);
-        Assertions.assertEquals("The player does not own the target territory Colorado(4)" + System.lineSeparator(),
+        Assertions.assertEquals("The player does not own the target territory Colorado(4)",
                 notOwnTerritoryUnitAction.isValid(gameBoard));
 
         //invalid action: not enough unit type

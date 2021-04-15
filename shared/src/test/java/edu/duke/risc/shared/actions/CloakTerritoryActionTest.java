@@ -49,7 +49,7 @@ public class CloakTerritoryActionTest {
         player2.doResearchCloaking();
         Action notOwnTerritoryAction = new CloakTerritoryAction(2, ActionType.CLOAK_CONDUCT,
                 0, null);
-        Assertions.assertEquals("The player does not own the destination territory Utah(0)" + System.lineSeparator(),
+        Assertions.assertEquals("The player does not own the destination territory Utah(0)",
                 notOwnTerritoryAction.isValid(gameBoard));
 
         //invalid action: not have enough resources

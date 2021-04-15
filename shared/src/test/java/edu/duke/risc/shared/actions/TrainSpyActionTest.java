@@ -41,7 +41,7 @@ public class TrainSpyActionTest {
 
         //invalid input: invalid player id
         Action notOwnTerritoryAction = new TrainSpyAction(1, ActionType.TRAIN_SPY, 4, 1);
-        Assertions.assertEquals("The player does not own the destination territory Colorado(4)" + System.lineSeparator(),
+        Assertions.assertEquals("The player does not own the destination territory Colorado(4)",
                 notOwnTerritoryAction.isValid(gameBoard));
 
         //invalid input: invalid player id
@@ -54,7 +54,7 @@ public class TrainSpyActionTest {
         //invalid input: not enough units
         player1.updateResourceMap(ResourceType.TECH, 500);
         Action notEnoughUnitsAction = new TrainSpyAction(1, ActionType.TRAIN_SPY, 0, 10);
-        Assertions.assertEquals("Does not have enough units (5<10) in territory Utah(0)" + System.lineSeparator(),
+        Assertions.assertEquals("Does not have enough units (5<10) in territory Utah(0)",
                 notEnoughUnitsAction.isValid(gameBoard));
 
 
@@ -63,6 +63,13 @@ public class TrainSpyActionTest {
         gameBoard.findTerritory(1).updateUnitsMap(UnitType.SOLDIER, 10);
         Action validAction = new TrainSpyAction(1, ActionType.TRAIN_SPY, 1, 1);
         Assertions.assertNotNull(validAction.simulateApply(gameBoard));
+
+        //valid action: not have enough current type
+        player3.updateResourceMap(ResourceType.TECH, 500);
+        gameBoard.findTerritory(4).updateUnitsMap(UnitType.SOLDIER, 1);
+        gameBoard.findTerritory(4).updateUnitsMap(UnitType.INFANTRY, 1);
+        Action validAction2 = new TrainSpyAction(3, ActionType.TRAIN_SPY, 4, 2);
+        Assertions.assertNotNull(validAction2.simulateApply(gameBoard));
 
     }
 }

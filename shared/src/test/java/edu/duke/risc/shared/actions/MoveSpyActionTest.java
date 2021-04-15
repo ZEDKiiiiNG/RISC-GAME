@@ -47,7 +47,7 @@ public class MoveSpyActionTest {
         Action notEnoughSpiesAction = new MoveSpyAction(1, ActionType.MOVE_SPY,
                 1, 0, 2);
         Assertions.assertEquals(
-                "Player 1 does not has enough spies (0 < 2) in territory Nevada(1)" + System.lineSeparator(),
+                "Player 1 does not has enough spies (0 < 2) in territory Nevada(1)",
                 notEnoughSpiesAction.isValid(gameBoard));
 
         //valid action
