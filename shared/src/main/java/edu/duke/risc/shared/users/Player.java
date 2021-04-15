@@ -399,7 +399,7 @@ public class Player implements GameUser, Serializable {
      * @return getResources
      */
     public int getResources(ResourceType resourceType) {
-        return resources.get(resourceType);
+        return resources.getOrDefault(resourceType, 0);
     }
 
     /**
