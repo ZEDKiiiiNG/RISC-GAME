@@ -1,7 +1,5 @@
 package edu.duke.risc.shared.commons;
 
-import org.checkerframework.checker.units.qual.K;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,7 +47,12 @@ public enum UnitType implements Serializable {
     /**
      * INFANTRY with 15 bonus, the highest level of units
      */
-    MASTER("(M)aster(VII)", 15, Integer.MAX_VALUE);
+    MASTER("(M)aster(VII)", 15, Integer.MAX_VALUE),
+
+    /**
+     * Only for testing
+     */
+    TEST("(T)EST(VIII)", 100, Integer.MAX_VALUE);
 
     /**
      * String representation of the unit type
@@ -176,50 +179,56 @@ public enum UnitType implements Serializable {
         return unitTypeMapper;
     }
 
+    /**
+     * getHighestLevelUnitType
+     *
+     * @param map map
+     * @return getHighestLevelUnitType
+     */
     public static UnitType getHighestLevelUnitType(Map<UnitType, Integer> map) {
-        for (UnitType entry : map.keySet()) {
-            if (map.containsKey(MASTER)) {
-                return MASTER;
-            } else if (map.containsKey(QUEEN)) {
-                return QUEEN;
-            } else if (map.containsKey(ROOK)) {
-                return ROOK;
-            } else if (map.containsKey(KNIGHT)) {
-                return KNIGHT;
-            } else if (map.containsKey(CAVALRY)) {
-                return CAVALRY;
-            } else if (map.containsKey(INFANTRY)) {
-                return INFANTRY;
-            } else if (map.containsKey(SOLDIER)) {
-                return SOLDIER;
-            } else {
-                return null;
-            }
+        if (map.containsKey(MASTER)) {
+            return MASTER;
+        } else if (map.containsKey(QUEEN)) {
+            return QUEEN;
+        } else if (map.containsKey(ROOK)) {
+            return ROOK;
+        } else if (map.containsKey(KNIGHT)) {
+            return KNIGHT;
+        } else if (map.containsKey(CAVALRY)) {
+            return CAVALRY;
+        } else if (map.containsKey(INFANTRY)) {
+            return INFANTRY;
+        } else if (map.containsKey(SOLDIER)) {
+            return SOLDIER;
+        } else {
+            return null;
         }
-        return null;
     }
 
+    /**
+     * getLowestLevelUnitType
+     *
+     * @param map map
+     * @return getLowestLevelUnitType
+     */
     public static UnitType getLowestLevelUnitType(Map<UnitType, Integer> map) {
-        for (UnitType entry : map.keySet()) {
-            if (map.containsKey(SOLDIER)) {
-                return SOLDIER;
-            } else if (map.containsKey(INFANTRY)) {
-                return INFANTRY;
-            } else if (map.containsKey(CAVALRY)) {
-                return CAVALRY;
-            } else if (map.containsKey(KNIGHT)) {
-                return KNIGHT;
-            } else if (map.containsKey(ROOK)) {
-                return ROOK;
-            } else if (map.containsKey(QUEEN)) {
-                return QUEEN;
-            } else if (map.containsKey(MASTER)) {
-                return MASTER;
-            } else {
-                return null;
-            }
+        if (map.containsKey(SOLDIER)) {
+            return SOLDIER;
+        } else if (map.containsKey(INFANTRY)) {
+            return INFANTRY;
+        } else if (map.containsKey(CAVALRY)) {
+            return CAVALRY;
+        } else if (map.containsKey(KNIGHT)) {
+            return KNIGHT;
+        } else if (map.containsKey(ROOK)) {
+            return ROOK;
+        } else if (map.containsKey(QUEEN)) {
+            return QUEEN;
+        } else if (map.containsKey(MASTER)) {
+            return MASTER;
+        } else {
+            return null;
         }
-        return null;
     }
 
     public int getBonus() {
