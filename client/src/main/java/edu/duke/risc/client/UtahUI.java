@@ -12,14 +12,14 @@ public class UtahUI extends TerritoryUI {
         Button newButton = new javafx.scene.control.Button("Utah(0)");
         setButton(newButton);
         //
-        Rectangle newRect = new Rectangle(350,200,100, 250);
+        Rectangle newRect = new Rectangle(315,290,100, 170);
         newRect.setStyle("-fx-stroke: black; -fx-stroke-width: 3;");
         newRect.setFill(color);
         setRect(newRect);
         //
         StackPane newPane = new StackPane();
-        newPane.setLayoutX(350);
-        newPane.setLayoutY(200);
+        newPane.setLayoutX(315);
+        newPane.setLayoutY(290);
         newPane.getChildren().addAll(newRect, newButton);
         setPane(newPane);
         //

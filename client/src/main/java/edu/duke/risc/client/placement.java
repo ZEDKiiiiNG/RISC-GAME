@@ -11,6 +11,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -50,25 +51,25 @@ public class placement extends Application implements Initializable {
         //introduce text
 
         Text intro = new Text(introduce);
-        intro.setLayoutX(610);
-        intro.setLayoutY(10);
+        intro.setLayoutX(550);
+        intro.setLayoutY(160);
         g.getChildren().add(intro);
 
         //territory choice box
         Text terr_choice = new Text("choose the territory you want to put units in");
-        terr_choice.setLayoutX(610);
-        terr_choice.setLayoutY(80);
+        terr_choice.setLayoutX(550);
+        terr_choice.setLayoutY(230);
         ChoiceBox<String> terr_choice_box = new ChoiceBox<>();
         for (Integer territoryId : self.getOwnedTerritories()) {
             terr_choice_box.getItems().add(gameBoard.getTerritories().get(territoryId).toString());
         }
-        terr_choice_box.setLayoutX(610);
-        terr_choice_box.setLayoutY(110);
+        terr_choice_box.setLayoutX(550);
+        terr_choice_box.setLayoutY(250);
 
         //soldier number choice box
         Text num_choice = new Text("choose the number of soldiers you want to put");
-        num_choice.setLayoutX(610);
-        num_choice.setLayoutY(180);
+        num_choice.setLayoutX(550);
+        num_choice.setLayoutY(330);
         ChoiceBox<Integer> num_choice_box = new ChoiceBox<>();
         int max_num = 1;
         for (UnitType i:self.getInitUnitsMap().keySet()) {
@@ -79,16 +80,16 @@ public class placement extends Application implements Initializable {
         for(int i = 1;i<=max_num;i++){
             num_choice_box.getItems().add(i);
         }
-        num_choice_box.setLayoutX(610);
-        num_choice_box.setLayoutY(210);
+        num_choice_box.setLayoutX(550);
+        num_choice_box.setLayoutY(350);
 
         g.getChildren().addAll(terr_choice, terr_choice_box, num_choice, num_choice_box);
 
 
         //button commit
         javafx.scene.control.Button commit = new javafx.scene.control.Button("commit");
-        commit.setLayoutX(750);
-        commit.setLayoutY(550);
+        commit.setLayoutX(800);
+        commit.setLayoutY(540);
         commit.setOnAction(e-> {
             try {
                 getPlacements(terr_choice_box, num_choice_box, self, actions);
@@ -112,8 +113,9 @@ public class placement extends Application implements Initializable {
             }
         }
 
+        g.getChildren().add(getScrollPane());
         primaryStage.setTitle("Place your units (GameID = " + gameId+")");
-        primaryStage.setScene(new Scene(g, 1000, 620));
+        primaryStage.setScene(new Scene(g, 900, 580));
         primaryStage.show();
     }
 
@@ -147,9 +149,22 @@ public class placement extends Application implements Initializable {
             //turn to page action choose
 
         }
-
-
     }
+
+    public ScrollPane getScrollPane(){
+        ScrollPane scroll = new ScrollPane();
+        Text t = new Text("Please place your units first.");
+        t.setStyle("-fx-font: 24 arial;");
+        t.setLayoutX(50);
+        t.setLayoutY(25);
+        scroll.setPrefSize(850, 120);
+        scroll.setContent(t);
+        scroll.setLayoutX(25);
+        scroll.setLayoutY(10);
+        return scroll;
+    }
+
+
     public void showWaitingSence(){
         Text msg = new Text("You have commit you placement\n please wait for other users finishing their placement...");
         msg.setLayoutX(50);

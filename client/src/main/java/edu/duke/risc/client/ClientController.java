@@ -321,44 +321,41 @@ public class ClientController extends WaitPlayerUI {
     public String moveAndAttack(List<Action> attackActions, List<Action> missileAttackActions,
                                 List<Action> nonAffectActions) throws IOException {
         //to do non-affect actions in this part
-    while(true) {
-        //sending to the server
-        //constructing payload objects
-        Map<String, Object> content = new HashMap<>(3);
-//        content.put(Configurations.REQUEST_MOVE_ACTIONS, moveActions);
-        content.put(Configurations.REQUEST_ATTACK_ACTIONS, attackActions);
-//        content.put(Configurations.REQUEST_UPGRADE_UNITS_ACTIONS, upgradeUnitsActions);
-//        content.put(Configurations.REQUEST_UPGRADE_TECH_ACTIONS, upgradeTechActions);
-        content.put(REQUEST_NON_AFFECT_ACTIONS, nonAffectActions);
-        content.put(REQUEST_MISSILE_ATTACK_ACTIONS, missileAttackActions);
-        PayloadObject request = new PayloadObject(this.playerId,
-                Configurations.MASTER_ID, PayloadType.REQUEST, content);
-        try {
-            this.sendMessage(request);
-            System.out.println("Actions sent, please wait other players finish commit");
-            showWaitWindow();
-            this.waitAndReadServerResponse();
-            System.out.println(this.loggerInfo);
-            return this.loggerInfo;
-        } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
-            //if server returns failed, re-do the actions again
-            exception.printStackTrace();
-            continue;
+        while(true) {
+            Map<String, Object> content = new HashMap<>(3);
+            content.put(Configurations.REQUEST_ATTACK_ACTIONS, attackActions);
+            content.put(REQUEST_NON_AFFECT_ACTIONS, nonAffectActions);
+            content.put(REQUEST_MISSILE_ATTACK_ACTIONS, missileAttackActions);
+            PayloadObject request = new PayloadObject(this.playerId,
+                    Configurations.MASTER_ID, PayloadType.REQUEST, content);
+            try {
+                this.sendMessage(request);
+                System.out.println("Actions sent, please wait other players finish commit");
+                Stage waitStage = showWaitWindow();
+                this.waitAndReadServerResponse();
+                System.out.println(this.loggerInfo);
+                waitStage.close();
+                return this.loggerInfo;
+            } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
+                //if server returns failed, re-do the actions again
+                exception.printStackTrace();
+                continue;
+            }
         }
-    }
 
     }
 
-    public void showWaitWindow(){
-        Text msg = new Text("You have commit you placement\n please wait for other users finishing their commit...");
+    public Stage showWaitWindow(){
+        Text msg = new Text("Please wait for other users finishing their commit...");
         msg.setLayoutX(50);
         msg.setLayoutY(100);
         Group g= new Group();
         g.getChildren().add(msg);
-        Scene waitOthers = new Scene(g, 400, 300);
+        Scene waitOthers = new Scene(g, 400, 250);
         Stage wait = new Stage();
         wait.setScene(waitOthers);
         wait.showAndWait();
+        return wait;
     }
 
     /**
@@ -366,7 +363,6 @@ public class ClientController extends WaitPlayerUI {
      */
     public void observerMode() {
         try {
-//            System.out.println("You lost the game, entering Observer Mode, you can type exit to quit...");
             this.readExitThread = new ReadExitThread(this.consoleReader, this.communicator, this.playerId);
             this.readExitThread.run();
             while (true) {

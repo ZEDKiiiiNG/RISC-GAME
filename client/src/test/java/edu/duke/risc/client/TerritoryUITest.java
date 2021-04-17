@@ -99,6 +99,7 @@ class TerritoryUITest {
         StackPane pane = new StackPane();
         territoryUI.setPane(pane);
         territoryUI.getId();
+        territoryUI.getButton();
         assertEquals(pane, territoryUI.getPane());
         TerrUIs.add(new NevadaUI(Color.RED));
         TerrUIs.add(new IdahoUI(Color.RED));
