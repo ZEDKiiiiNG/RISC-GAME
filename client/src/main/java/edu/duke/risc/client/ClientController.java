@@ -134,6 +134,10 @@ public class ClientController {
             //try connect to the server
             //the user is already in a game, skip
             if(!stage.equals(STAGE_CREATE)){
+                assert(gameBoard != null);
+                System.out.println(gameBoard.toString());
+                this.gameBoard.getPlayers();
+                System.out.println("the player id is "+playerId);
                 System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
                 return;
             }
@@ -233,6 +237,8 @@ public class ClientController {
                     Map<String, Object> contents = readObject.getContents();
                     if (contents.containsKey(GAME_BOARD_STRING)
                             && contents.containsKey(PLAYER_STRING)) {
+                        System.out.println("------succesfully reload gameboard");
+
                         this.gameBoard = (GameBoard) contents.get(GAME_BOARD_STRING);
                         this.playerId = (Integer) contents.get(PLAYER_STRING);
                         this.loggerInfo = (String) contents.get(LOGGER_STRING);
