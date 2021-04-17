@@ -13,10 +13,6 @@ import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.*;
 import edu.duke.risc.shared.users.Player;
-import javafx.scene.Group;
-import javafx.scene.Scene;
-import javafx.scene.text.Text;
-import javafx.stage.Stage;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -334,10 +330,8 @@ public class ClientController {
             try {
                 this.sendMessage(request);
                 System.out.println("Actions sent, please wait other players finish commit");
-                Stage waitStage = showWaitWindow();
                 this.waitAndReadServerResponse();
                 System.out.println(this.loggerInfo);
-                waitStage.close();
                 return this.loggerInfo;
             } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
                 //if server returns failed, re-do the actions again
@@ -348,18 +342,7 @@ public class ClientController {
 
     }
 
-    public Stage showWaitWindow(){
-        Text msg = new Text("Please wait for other users finishing their commit...");
-        msg.setLayoutX(50);
-        msg.setLayoutY(100);
-        Group g= new Group();
-        g.getChildren().add(msg);
-        Scene waitOthers = new Scene(g, 400, 250);
-        Stage wait = new Stage();
-        wait.setScene(waitOthers);
-        wait.show();
-        return wait;
-    }
+
 
     /**
      * Entering the observer's mode

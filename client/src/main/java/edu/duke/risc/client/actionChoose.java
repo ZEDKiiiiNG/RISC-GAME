@@ -369,9 +369,9 @@ public class actionChoose extends Application  {
         if (App.cc.checkUserStatus()) {
             return;
         }
+        showSecondWindow("Please wait for other users finishing their commit...");
         String log  = App.cc.moveAndAttack(attackActions, missileAttackActions, nonAffectActions);
         scrollText = log;
-//        showSecondWindow(log);
         this.showWindow();
 
         attackActions.clear();
