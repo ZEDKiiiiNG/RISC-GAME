@@ -1,12 +1,9 @@
 package edu.duke.risc.client;
 
-import edu.duke.risc.shared.commons.UserColor;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-
-import java.awt.*;
 
 public class UtahUI extends TerritoryUI {
     public UtahUI(Color color) {

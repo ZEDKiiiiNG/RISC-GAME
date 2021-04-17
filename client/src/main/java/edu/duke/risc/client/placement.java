@@ -38,10 +38,17 @@ public class placement extends Application implements Initializable {
         Player self = App.cc.getMyself();
         GameBoard gameBoard = App.cc.getGameBoard();
 
-        //introduce text
         String introduce = "player "+self.getColor().toString()+"\n"+
                 "You are assigned " + gameBoard.getPlayerAssignedTerritoryInfo(self.getId())+"\n"
                 + "You still have " + self.getUnitsInfo(self.getInitUnitsMap()) + " available";
+        int gameId = App.cc.getGameId();
+        startPlacement(primaryStage, g,  self, gameBoard, introduce, gameId);
+
+    }
+
+    public void startPlacement(Stage primaryStage, Group g, Player self, GameBoard gameBoard, String introduce, int gameId){
+        //introduce text
+
         Text intro = new Text(introduce);
         intro.setLayoutX(610);
         intro.setLayoutY(10);
@@ -105,7 +112,7 @@ public class placement extends Application implements Initializable {
             }
         }
 
-        primaryStage.setTitle("Place your units (GameID = " + App.cc.getGameId()+")");
+        primaryStage.setTitle("Place your units (GameID = " + gameId+")");
         primaryStage.setScene(new Scene(g, 1000, 620));
         primaryStage.show();
     }
@@ -181,7 +188,6 @@ public class placement extends Application implements Initializable {
         secondStage.setScene(terrInfoScene);
         secondStage.show();
     }
-
     public String getPlaceInfo(){
         return this.place;
     }
