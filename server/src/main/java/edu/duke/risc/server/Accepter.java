@@ -7,7 +7,7 @@ import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.users.Player;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -30,18 +30,61 @@ public class Accepter extends Thread{
      */
     private Map<Integer, GameController> Games;
 
+    public void saveIdPwdMap() throws IOException{
+        //序列化持久化对象
+        File file = new File("idPwdMap.txt");
+        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file));
+        out.writeObject(this.idPwdMap);
+        out.close();
+    }
+    public Map<String, String> loadIdPwdMap() throws IOException, ClassNotFoundException {
+        File file = new File("idPwdMap.txt");
+        //反序列化，并得到对象
+        ObjectInputStream in = new ObjectInputStream(new FileInputStream(file));
+        Object idPwdMap = in.readObject(); // 没有强制转换到GC类型
+        in.close();
+        System.out.println(idPwdMap);
+        return (Map<String, String>) idPwdMap;
+    }
 
+
+
+    public void loadGames() {
+        Games =  new HashMap<>();
+        int id = 1;
+        while(true){
+            try {
+                GameController gameController = GameController.load(id);
+                Games.put(id,gameController);
+                gameController.setStart(false);
+                System.out.println("Successfully reload Game "+ id);
+                id++;
+
+            }catch (IOException e) {
+                return;
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 
     public Accepter(){
         try {
             serverSocket = new ServerSocket(Configurations.DEFAULT_SERVER_PORT);
-            idPwdMap = new HashMap<>();
-            Games = new HashMap<>();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
+        try{
+            idPwdMap =  loadIdPwdMap();
+
+        } catch (IOException e) {
+            idPwdMap = new HashMap<>();
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        loadGames();
     }
 
     private String validateLogin(SocketCommunicator communicator) throws IOException, ClassNotFoundException {
@@ -124,6 +167,9 @@ public class Accepter extends Thread{
                     content.put(PLAYER_STRING, Games.get(gameid).getIdMap().get(id).getId());
 
                     communicator.writeMessage(payloadObject);
+                    if(!Games.get(gameid).isStart()){
+                        gameStarter();
+                    }
                     return;
                 }
                 else{
@@ -175,6 +221,7 @@ public class Accepter extends Thread{
             if(entry.getValue().getUserConnections().size() == entry.getValue().getMaxPlayer()) {
                 GameHandler gameHandler = new GameHandler(entry.getValue());
                 gameHandler.start();
+                entry.getValue().setStart(true);
                 System.out.println("game"+ entry.getKey()+"start");
             }
             else{
@@ -202,6 +249,7 @@ public class Accepter extends Thread{
                 SocketCommunicator communicator = new SocketCommunicator(clientSocket);
                 String id = validateLogin(communicator);
                 gameOptions(communicator,id);
+                saveIdPwdMap();
 
             }
         }
