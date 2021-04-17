@@ -31,7 +31,7 @@ import static edu.duke.risc.shared.Configurations.*;
  * @author eason
  * @date 2021/3/10 13:58
  */
-public class ClientController extends WaitPlayerUI {
+public class ClientController {
 
     /**
      * The game board
@@ -74,10 +74,7 @@ public class ClientController extends WaitPlayerUI {
      * Thread which reads exit signal
      */
     private ReadExitThread readExitThread;
-    /*
 
-     */
-    private WaitPlayerUI waitPlayerUI;
     /**
      * stage of the client
      */
@@ -354,7 +351,7 @@ public class ClientController extends WaitPlayerUI {
         Scene waitOthers = new Scene(g, 400, 250);
         Stage wait = new Stage();
         wait.setScene(waitOthers);
-        wait.showAndWait();
+        wait.show();
         return wait;
     }
 
