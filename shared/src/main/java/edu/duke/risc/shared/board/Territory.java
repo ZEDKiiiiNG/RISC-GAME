@@ -407,4 +407,12 @@ public class Territory implements Serializable {
         cloakingCount = 0;
     }
 
+    /**
+     * Get spies map
+     * @return spies map of the territory
+     */
+    public Map<Integer, Integer> getSpies() {
+        return spies;
+    }
+
 }

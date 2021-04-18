@@ -392,10 +392,19 @@ public class GameBoard implements Serializable {
      * @return logging information
      */
     public String reduceCloaking() {
+        List<Integer> reduced = new ArrayList<>();
         for (Territory territory : territories.values()) {
-            territory.reduceCloaks();
+            if (territory.hasCloaks()){
+                territory.reduceCloaks();
+                reduced.add(territory.getTerritoryId());
+            }
         }
-        return "Reducing cloak on every territory" + System.lineSeparator();
+        StringBuilder result = new StringBuilder("Reducing cloak on territory: ");
+        for (Integer i : reduced){
+            result.append(i).append(", ");
+        }
+        result.append(System.lineSeparator());
+        return result.toString();
     }
 
 }
