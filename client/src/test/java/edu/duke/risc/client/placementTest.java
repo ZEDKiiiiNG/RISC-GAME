@@ -8,6 +8,7 @@ import edu.duke.risc.shared.users.Player;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Group;
+import javafx.scene.control.ChoiceBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,14 +22,6 @@ import java.util.List;
 @ExtendWith(ApplicationExtension.class)
 class placementTest extends Application {
     private placement placeView;
-    private ClientController clientController;
-
-    private String place ="";
-    private actionChoose actionChoosePage;
-
-    private List<Action> actions = new ArrayList<>();
-
-
 
     @Start
     public void start(Stage stage){
@@ -43,7 +36,6 @@ class placementTest extends Application {
     public void test_placement() throws Exception {
         placeView.init();
         Group g = new Group();//all widgets
-        clientController = App.cc;
         Player self = new Player(1, UserColor.RED);
         GameBoard gameBoard = new GameBoard(2);
         String introduce = "player RED";
@@ -66,7 +58,35 @@ class placementTest extends Application {
 
     @Test
     void getPlacementsTest() {
+        Platform.runLater(()->{
+            javafx.scene.control.ChoiceBox<String> terr = new ChoiceBox<>();
+            ChoiceBox<Integer> num = new ChoiceBox<>();
+            Player player = new Player(1, UserColor.RED);
+            List< Action > actions = new ArrayList<>();
+            try {
+                placeView.getPlacements(terr, num, player, actions);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
 
+    }
+
+    @Test
+    void getPlacementsTestNotNull() {
+        Platform.runLater(()->{
+            javafx.scene.control.ChoiceBox<String> terr = new ChoiceBox<>();
+            terr.setValue("Utah(1)");
+            ChoiceBox<Integer> num = new ChoiceBox<>();
+            num.setValue(1);
+            Player player = new Player(1, UserColor.RED);
+            List< Action > actions = new ArrayList<>();
+            try {
+                placeView.getPlacements(terr, num, player, actions);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
 
     }
 

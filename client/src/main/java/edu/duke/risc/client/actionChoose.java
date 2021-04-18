@@ -24,9 +24,9 @@ import java.util.*;
 public class actionChoose extends Application  {
     Stage stage=new Stage();
     String scrollText = "Please choose the action you want to take in this roll.\n" +
-            "Do not commit until you finish all actions.";;
-    private observerUI obeserver;
-    private winUI win;
+            "Do not commit until you finish all actions.";
+//    private observerUI obeserver;
+//    private winUI win;
     private loseUI lose;
     private List<Action> attackActions = new ArrayList<>();
     private List<Action> missileAttackActions = new ArrayList<>();
@@ -37,12 +37,18 @@ public class actionChoose extends Application  {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Map<Integer, String> newVisibleTerritories = new HashMap<>();
+
 
         Map<Integer, Color> territoryIds = new HashMap<>();
         Player self = App.cc.getMyself();
         GameBoard gameBoard = App.cc.getGameBoard();
         Map<Integer, Player> players = gameBoard.getPlayers();
+        startActionChoose(primaryStage, self, gameBoard, players);
+    }
+
+    public void startActionChoose(Stage primaryStage, Player self, GameBoard gameBoard, Map<Integer, Player> players) throws Exception {
+        Map<Integer, String> newVisibleTerritories = new HashMap<>();
+        Map<Integer, Color> territoryIds = new HashMap<>();
         for (Map.Entry<Integer, Player> entry : players.entrySet()) {
             Player player = entry.getValue();
             for (Integer territoryId : player.getOwnedTerritories()) {
@@ -201,7 +207,6 @@ public class actionChoose extends Application  {
             showSecondWindow("You win");
         }
     }
-
 
     public ScrollPane getScrollPane(){
         ScrollPane scroll = new ScrollPane();
@@ -681,7 +686,6 @@ public class actionChoose extends Application  {
         });
 
         for(Integer i: player.getOwnedTerritories()){
-            System.out.println(i);
             terr_id.getItems().add(i);
         }
         for(UnitType i : unitMap.keySet()){
