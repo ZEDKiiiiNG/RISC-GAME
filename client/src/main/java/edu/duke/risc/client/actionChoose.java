@@ -31,15 +31,13 @@ public class actionChoose extends Application  {
     private List<Action> attackActions = new ArrayList<>();
     private List<Action> missileAttackActions = new ArrayList<>();
     private List<Action> nonAffectActions = new ArrayList<>();
-    private Map<Integer, String> visibleTerritories = new HashMap<>();
+//    private Map<Integer, String> visibleTerritories = new HashMap<>();
     private Map<Integer, String> oldVisibleTerritories = new HashMap<>();
+    private boolean isButtonWork = true;
 
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-
-
-        Map<Integer, Color> territoryIds = new HashMap<>();
         Player self = App.cc.getMyself();
         GameBoard gameBoard = App.cc.getGameBoard();
         Map<Integer, Player> players = gameBoard.getPlayers();
@@ -47,47 +45,27 @@ public class actionChoose extends Application  {
     }
 
     public void startActionChoose(Stage primaryStage, Player self, GameBoard gameBoard, Map<Integer, Player> players) throws Exception {
-        Map<Integer, String> newVisibleTerritories = new HashMap<>();
-        Map<Integer, Color> territoryIds = new HashMap<>();
-        for (Map.Entry<Integer, Player> entry : players.entrySet()) {
-            Player player = entry.getValue();
-            for (Integer territoryId : player.getOwnedTerritories()) {
-                //printing units
-                Territory terr = gameBoard.findTerritory(territoryId);
-                String terrInfo = gameBoard.getDisplayer().displaySingleTerritory(gameBoard, terr);
-                //
-                territoryIds.put(territoryId, Color.web(player.getColor().name()));
-                //
-                if(gameBoard.isTerritoryVisible(self.getId(), territoryId)){
-                    newVisibleTerritories.put(territoryId, "used to owned by player "+player.getColor().toString()+"\n"+terrInfo);
-                }
-            }
-        }
-
-        for(Integer i:visibleTerritories.keySet()){
-            if(newVisibleTerritories.get(i)==null){
-                oldVisibleTerritories.put(i, visibleTerritories.get(i));
-            }
-            else{
-                oldVisibleTerritories.remove(i);
-            }
-        }
-
-        visibleTerritories = newVisibleTerritories;
 
         Group g = new Group();
+        oldVisibleTerritories.clear();
 
         //add territories
         for(TerritoryUI terrUI : App.TerrUIs){
+            int id = terrUI.getId();
             if(terrUI.isVisible()) {
-                int id = terrUI.getId();
                 Territory terr = gameBoard.getTerritories().get(id);
                 g.getChildren().addAll(terrUI.getPane());
                 if(gameBoard.isTerritoryVisible(self.getId(), id)){
                     App.TerrUIs.get(id).getButton().setOnAction(e -> territoryInfoScene(gameBoard, terr));
-                }
-                if(oldVisibleTerritories.get(id)!=null){
-                    App.TerrUIs.get(id).getButton().setOnAction(e->showSecondWindow(oldVisibleTerritories.get(id)));
+                }else{
+                    if(self.getTerritoryInfoCacheMap(id)!=null){
+                        App.TerrUIs.get(id).setTerritoryColor(Color.GRAY);
+                        String oldTerrInfo = self.getTerritoryInfoCacheMap(id);
+                        oldVisibleTerritories.put(id, oldTerrInfo);
+                        App.TerrUIs.get(id).getButton().setOnAction(e->showSecondWindow(oldTerrInfo));
+                    }else{
+                        App.TerrUIs.get(id).setTerritoryColor(Color.WHITE);
+                    }
                 }
             }
         }
@@ -125,7 +103,7 @@ public class actionChoose extends Application  {
         upgrade.setOnAction(e->actUpgrade(self, nonAffectActions));
 
         //tech button
-        javafx.scene.control.Button tech = new javafx.scene.control.Button("tech");
+        javafx.scene.control.Button tech = new javafx.scene.control.Button("upgrade tech");
         tech.setLayoutX(700);
         tech.setLayoutY(410);
         tech.setOnAction(e-> {
@@ -184,15 +162,19 @@ public class actionChoose extends Application  {
             }
         });
 
-        g.getChildren().addAll(commit, move, attack, upgrade, tech, attackMissile, trainSpy, moveSpy);
-
-        if(self.getTechnology()>=3){
-            if(!self.isCloakingResearched()){
-                g.getChildren().add(cloakRearch);
-            }else{
-                g.getChildren().add(cloakTerritory);
+        if(isButtonWork){
+            g.getChildren().addAll(commit, move, attack, upgrade, tech, attackMissile, trainSpy, moveSpy);
+            if(self.getTechnology()>=3){
+                if(!self.isCloakingResearched()){
+                    g.getChildren().add(cloakRearch);
+                }else{
+                    g.getChildren().add(cloakTerritory);
+                }
             }
         }
+
+
+
 
         primaryStage.setTitle("choose action (GameID = "+ App.cc.getGameId() + ")");
         primaryStage.setScene(new Scene(g, 900, 590));
@@ -262,7 +244,7 @@ public class actionChoose extends Application  {
         spy_num.setLayoutY(150);
 
         Button b = new Button("submit");
-        b.setLayoutX(370);
+        b.setLayoutX(330);
         b.setLayoutY(210);
         Stage secondStage = new Stage();
         b.setOnAction(e-> {
@@ -273,7 +255,7 @@ public class actionChoose extends Application  {
             }
         });
         g.getChildren().addAll(t,source, t1, destinate, b, t2, spy_num);
-        Scene moveScene = new Scene(g, 360, 250);
+        Scene moveScene = new Scene(g, 400, 250);
 
         secondStage.setScene(moveScene);
         secondStage.show();
@@ -374,8 +356,12 @@ public class actionChoose extends Application  {
         if (App.cc.checkUserStatus()) {
             return;
         }
-        showSecondWindow("Please wait for other users finishing their commit...");
+        isButtonWork = false;
+        scrollText = "Please wait for other users finishing their commit...";
+        this.stage.close();
+        this.showWindow();
         String log  = App.cc.moveAndAttack(attackActions, missileAttackActions, nonAffectActions);
+        isButtonWork = true;
         scrollText = log;
         this.showWindow();
 
@@ -484,7 +470,6 @@ public class actionChoose extends Application  {
         try{
             App.cc.conductMoveOrAttack(moveActions, 0, output);
             scrollText = "move action success";
-//            showSecondWindow("Instruction: "+output+"\n"+"move action success");
         }catch (NumberFormatException e){
             showSecondWindow(e.getMessage());
         } catch (InvalidInputException e) {

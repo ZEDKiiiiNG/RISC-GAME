@@ -39,7 +39,10 @@ public class Player implements GameUser, Serializable {
      */
     private final Map<UnitType, Integer> initUnitsMap;
 
-
+    /**
+     * Used to store (old) territory information
+     */
+    private final Map<Integer, String> territoryInfoCacheMap;
 
     /**
      * Spy map of the player, key for territory id and value for number of spies
@@ -102,6 +105,7 @@ public class Player implements GameUser, Serializable {
         this.color = color;
         this.totalUnitsMap = new HashMap<>();
         this.spiesMap = new HashMap<>();
+        this.territoryInfoCacheMap = new HashMap<>();
 
         //initialize missiles
         this.missiles = new HashMap<>();
@@ -162,6 +166,19 @@ public class Player implements GameUser, Serializable {
                     .append(unitTypeIntegerEntry.getValue())
                     .append(System.lineSeparator());
         }
+
+        //print spy info
+        if (this.spiesMap.isEmpty()) {
+            builder.append("You do not have spy yet").append(System.lineSeparator());
+        } else {
+            builder.append("You have spies: ");
+            for (Map.Entry<Integer, Integer> entry : this.spiesMap.entrySet()) {
+                builder.append(entry.getValue()).append(" spies in territory ")
+                        .append(entry.getKey()).append(",");
+            }
+            builder.append(System.lineSeparator());
+        }
+
         return builder.toString();
     }
 
@@ -233,7 +250,7 @@ public class Player implements GameUser, Serializable {
      * updateInitUnitMap
      *
      * @param territoryId territoryId
-     * @param diff     either add or subtract
+     * @param diff        either add or subtract
      */
     public void updateSpiesMap(Integer territoryId, Integer diff) {
         MapHelper.updateMap(this.spiesMap, territoryId, diff);
@@ -539,7 +556,6 @@ public class Player implements GameUser, Serializable {
     }
 
     /**
-     *
      * @return the player's tech level
      */
     public int getTechnology() {
@@ -547,11 +563,30 @@ public class Player implements GameUser, Serializable {
     }
 
     /**
-     *
      * @return spyMap
      */
     public Map<Integer, Integer> getSpiesMap() {
         return spiesMap;
+    }
+
+    /**
+     * Update the info of the territory for the player
+     *
+     * @param territoryId id of the territory
+     * @param info        info of the territory
+     */
+    public void updateTerritoryInfoCacheMap(Integer territoryId, String info) {
+        this.territoryInfoCacheMap.put(territoryId, info);
+    }
+
+    /**
+     * getTerritoryInfoCacheMap
+     *
+     * @param territoryId territoryId
+     * @return null if not exist
+     */
+    public String getTerritoryInfoCacheMap(Integer territoryId) {
+        return this.territoryInfoCacheMap.getOrDefault(territoryId, null);
     }
 
 }
