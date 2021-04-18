@@ -95,12 +95,19 @@ public class mainController implements Initializable{
         g.getChildren().addAll(msg, login, register, userID, userPassword, ID, pass);
         Scene userLogin = new Scene(g, 400, 300);
         //set actions, get user Id and password from text field
-        register.setOnAction(e -> showRegisterScene(ID.getText(), pass.getText()));
+        register.setOnAction(e -> showRegisterScene(ID, pass));
         login.setOnAction(e -> showLoginScene(ID.getText(), pass.getText()));
         this.mainStage.setScene(userLogin);
     }
 
-    private void showRegisterScene(String id, String passW){
+    private void showRegisterScene(TextField ID, TextField pass){
+        if(ID.getText()==""||pass.getText()==""){
+            showFailedScene("User Id and password cannot be null, try again!");
+            this.showUserPageScene();
+            return;
+        }
+        String id = ID.getText();
+        String passW= pass.getText();
         String choose = "R";
         String errorMsg = null;
         try {
