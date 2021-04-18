@@ -23,7 +23,6 @@ class placementTest extends Application {
     private placement placeView;
     private ClientController clientController;
 
-    Stage stage ;
     private String place ="";
     private actionChoose actionChoosePage;
 
@@ -49,7 +48,6 @@ class placementTest extends Application {
         GameBoard gameBoard = new GameBoard(2);
         String introduce = "player RED";
         int gameId = 1;
-//        clientController = new ClientController();
         Platform.runLater(()-> {
             try {
                 placeView.startPlacement(new Stage(), g, self, gameBoard, introduce, gameId);
@@ -75,7 +73,6 @@ class placementTest extends Application {
     @Test
     void territoryInfoSceneTest() {
         Platform.runLater(()->placeView.territoryInfoScene(new GameBoard(2), new Territory(1, "a")));
-
     }
 
 
@@ -89,7 +86,6 @@ class placementTest extends Application {
 
     @Test
     void showNullPlacementAlertTest() {
-        Platform.runLater(()->placeView.showNullPlacementAlert("")
-                );
+        Platform.runLater(()->placeView.showNullPlacementAlert(""));
     }
 }
