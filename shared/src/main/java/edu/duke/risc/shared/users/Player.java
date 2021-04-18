@@ -566,4 +566,13 @@ public class Player implements GameUser, Serializable {
         this.territoryInfoCacheMap.put(territoryId, info);
     }
 
+    /**
+     * getTerritoryInfoCacheMap
+     * @param territoryId territoryId
+     * @return null if not exist
+     */
+    public String getTerritoryInfoCacheMap(Integer territoryId) {
+        return this.territoryInfoCacheMap.getOrDefault(territoryId, null);
+    }
+
 }
