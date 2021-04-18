@@ -35,6 +35,7 @@ public class TextDisplayer implements Displayable {
         }
     }
 
+    @Override
     public String displaySingleTerritory(GameBoard gameBoard, Territory territory) {
         StringBuilder builder = new StringBuilder();
 
@@ -63,6 +64,18 @@ public class TextDisplayer implements Displayable {
         }
         builder.append(System.lineSeparator());
 
+        //add spies here
+//        builder.append(" Spies: ");
+//        if (territory.getSpies().isEmpty()) {
+//            builder.append(" No Spies");
+//        } else {
+//            for (Map.Entry<Integer, Integer> entry : territory.getSpies().entrySet()) {
+//                builder.append(" Player ").append(entry.getKey())
+//                        .append(" with ").append(entry.getValue()).append(", ");
+//            }
+//        }
+//        builder.append(System.lineSeparator());
+
         //print units in that territory
         builder.append("    Current Units: ");
         if (territory.isEmptyTerritory()) {
@@ -74,7 +87,7 @@ public class TextDisplayer implements Displayable {
             }
         }
 
-        if (!territory.getVirtualUnitsMap().isEmpty()){
+        if (!territory.getVirtualUnitsMap().isEmpty()) {
             builder.append("(Ready to attack units: ");
             //virtual units for clients
             for (Map.Entry<UnitType, Integer> mapUnit : territory.getVirtualUnitsMap().entrySet()) {

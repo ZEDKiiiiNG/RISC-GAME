@@ -1,5 +1,6 @@
 package edu.duke.risc.shared;
 
+import java.io.Serializable;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -10,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author eason
  * @date 2021/3/10 11:34
  */
-public class ThreadBarrier {
+public class ThreadBarrier implements Serializable {
 
     private Object barrierLock;
 

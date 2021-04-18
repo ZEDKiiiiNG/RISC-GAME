@@ -1,11 +1,7 @@
 package edu.duke.risc.shared;
 
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 
 /**
@@ -14,13 +10,17 @@ import java.net.Socket;
  * @author eason
  * @date 2021/3/10 10:56
  */
-public class SocketCommunicator implements Communicable {
+public class SocketCommunicator implements Communicable, Serializable {
 
     private Socket socket;
 
-    private OutputStream writer;
+    private transient OutputStream writer;
 
-    private InputStream reader;
+    public Socket getSocket() {
+        return socket;
+    }
+
+    private transient InputStream reader;
 
     public SocketCommunicator(Socket socket) {
         this.socket = socket;

@@ -6,15 +6,13 @@ import edu.duke.risc.shared.PayloadObject;
 import edu.duke.risc.shared.SocketCommunicator;
 import edu.duke.risc.shared.actions.*;
 import edu.duke.risc.shared.board.GameBoard;
+import edu.duke.risc.shared.board.Territory;
 import edu.duke.risc.shared.commons.ActionType;
+import edu.duke.risc.shared.commons.MissileType;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.commons.UnitType;
 import edu.duke.risc.shared.exceptions.*;
 import edu.duke.risc.shared.users.Player;
-import javafx.scene.Group;
-import javafx.scene.Scene;
-import javafx.scene.text.Text;
-import javafx.stage.Stage;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -29,7 +27,7 @@ import static edu.duke.risc.shared.Configurations.*;
  * @author eason
  * @date 2021/3/10 13:58
  */
-public class ClientController extends WaitPlayerUI {
+public class ClientController {
 
     /**
      * The game board
@@ -72,10 +70,7 @@ public class ClientController extends WaitPlayerUI {
      * Thread which reads exit signal
      */
     private ReadExitThread readExitThread;
-    /*
 
-     */
-    private WaitPlayerUI waitPlayerUI;
     /**
      * stage of the client
      */
@@ -135,6 +130,10 @@ public class ClientController extends WaitPlayerUI {
             //try connect to the server
             //the user is already in a game, skip
             if(!stage.equals(STAGE_CREATE)){
+                assert(gameBoard != null);
+                System.out.println(gameBoard.toString());
+                this.gameBoard.getPlayers();
+                System.out.println("the player id is "+playerId);
                 System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
                 return;
             }
@@ -145,7 +144,6 @@ public class ClientController extends WaitPlayerUI {
             this.waitAndReadServerResponse();
 
             //System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
-            //waitPlayerUI.start(new Stage());
             //System.out.println("You are current the player: " + this.gameBoard.getPlayers().get(playerId));
             stage = STAGE_ASSIGN;//if all users all ready, set their stage to ASSIGN
         } catch (UnmatchedReceiverException | InvalidPayloadContent | ServerRejectException e) {
@@ -234,6 +232,8 @@ public class ClientController extends WaitPlayerUI {
                     Map<String, Object> contents = readObject.getContents();
                     if (contents.containsKey(GAME_BOARD_STRING)
                             && contents.containsKey(PLAYER_STRING)) {
+                        System.out.println("------succesfully reload gameboard");
+
                         this.gameBoard = (GameBoard) contents.get(GAME_BOARD_STRING);
                         this.playerId = (Integer) contents.get(PLAYER_STRING);
                         this.loggerInfo = (String) contents.get(LOGGER_STRING);
@@ -316,52 +316,38 @@ public class ClientController extends WaitPlayerUI {
      *
      * @throws IOException IOException
      */
-    public String moveAndAttack(List<Action> moveActions, List<Action> attackActions,
-                              List<Action> upgradeTechActions, List<Action> upgradeUnitsActions) throws IOException {
-    while(true) {
-        //sending to the server
-        //constructing payload objects
-        Map<String, Object> content = new HashMap<>(3);
-        content.put(Configurations.REQUEST_MOVE_ACTIONS, moveActions);
-        content.put(Configurations.REQUEST_ATTACK_ACTIONS, attackActions);
-        content.put(Configurations.REQUEST_UPGRADE_UNITS_ACTIONS, upgradeUnitsActions);
-        content.put(Configurations.REQUEST_UPGRADE_TECH_ACTIONS, upgradeTechActions);
-        PayloadObject request = new PayloadObject(this.playerId,
-                Configurations.MASTER_ID, PayloadType.REQUEST, content);
-        try {
-            this.sendMessage(request);
-            System.out.println("Actions sent, please wait other players finish commit");
-            showWaitWindow();
-            this.waitAndReadServerResponse();
-            System.out.println(this.loggerInfo);
-            return this.loggerInfo;
-        } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
-            //if server returns failed, re-do the actions again
-            exception.printStackTrace();
-            continue;
+    public String moveAndAttack(List<Action> attackActions, List<Action> missileAttackActions,
+                                List<Action> nonAffectActions) throws IOException {
+        //to do non-affect actions in this part
+        while(true) {
+            Map<String, Object> content = new HashMap<>(3);
+            content.put(Configurations.REQUEST_ATTACK_ACTIONS, attackActions);
+            content.put(REQUEST_NON_AFFECT_ACTIONS, nonAffectActions);
+            content.put(REQUEST_MISSILE_ATTACK_ACTIONS, missileAttackActions);
+            PayloadObject request = new PayloadObject(this.playerId,
+                    Configurations.MASTER_ID, PayloadType.REQUEST, content);
+            try {
+                this.sendMessage(request);
+                System.out.println("Actions sent, please wait other players finish commit");
+                this.waitAndReadServerResponse();
+                System.out.println(this.loggerInfo);
+                return this.loggerInfo;
+            } catch (InvalidPayloadContent | ServerRejectException | UnmatchedReceiverException exception) {
+                //if server returns failed, re-do the actions again
+                exception.printStackTrace();
+                continue;
+            }
         }
-    }
 
     }
 
-    public void showWaitWindow(){
-        Text msg = new Text("You have commit you placement\n please wait for other users finishing their commit...");
-        msg.setLayoutX(50);
-        msg.setLayoutY(100);
-        Group g= new Group();
-        g.getChildren().add(msg);
-        Scene waitOthers = new Scene(g, 400, 300);
-        Stage wait = new Stage();
-        wait.setScene(waitOthers);
-        wait.showAndWait();
-    }
+
 
     /**
      * Entering the observer's mode
      */
     public void observerMode() {
         try {
-//            System.out.println("You lost the game, entering Observer Mode, you can type exit to quit...");
             this.readExitThread = new ReadExitThread(this.consoleReader, this.communicator, this.playerId);
             this.readExitThread.run();
             while (true) {
@@ -383,12 +369,24 @@ public class ClientController extends WaitPlayerUI {
      */
     public void conductMoveOrAttack(List<Action> actions, int actionType, String moveInput)
             throws InvalidInputException, InvalidActionException {
-//        System.out.println("Please enter instruction in the following format: " +
-//                "<sourceTerritoryId>,<destinationId>;<UnitType1>,<amount1>;<UnitType2>,<amount2>");
-//        String moveInput = this.consoleReader.readLine();
         Action action;
-
         action = this.readAttackOrMoveAction(moveInput, this.gameBoard, playerId, actionType);
+        action.simulateApply(this.gameBoard);
+        actions.add(action);
+
+    }
+
+    /**
+     * conductMissileAttack
+     *
+     * @param actions    action
+     * @throws IOException
+     */
+    public void conductMissileAttack(List<Action> actions, String moveInput)
+            throws InvalidInputException, InvalidActionException {
+
+        Action action;
+        action = this.readMissileAttack(moveInput, this.gameBoard, playerId);
         action.simulateApply(this.gameBoard);
         actions.add(action);
 
@@ -409,21 +407,62 @@ public class ClientController extends WaitPlayerUI {
     }
 
     /**
+     * conductCloakRearch
+     * @param actions
+     * @throws InvalidActionException
+     */
+    public void conductCloakRearch( Player player, List<Action> actions) throws InvalidActionException {
+        Action action;
+        action = new CloakResearchAction(player.getId());
+        action.simulateApply(this.gameBoard);
+        actions.add(action);
+    }
+
+    public void conductCloakTerritory(Player player, List<Action> actions, Integer destinationId) throws InvalidActionException {
+        Action action;
+        action = new CloakTerritoryAction(player.getId(), ActionType.CLOAK_CONDUCT,
+                destinationId, null);
+        action.simulateApply(this.gameBoard);
+        actions.add(action);
+    }
+
+    /**
      * conductUpgradeUnits
      *
      * @param actions action
      * @throws IOException IOException
      */
-    public void conductUpgradeUnits(List<Action> actions, String upgradeUnitInput) throws IOException, InvalidInputException, InvalidActionException {
-//        System.out.println("Please enter instruction in the following format: " +
-//                "<targetTerritoryId>,<UnitType>,<amount>");
-//        String upgradeUnitInput = this.consoleReader.readLine();
+    public void conductUpgradeUnits(List<Action> actions, String upgradeUnitInput) throws InvalidInputException, InvalidActionException {
+
         Action action;
 
         action = this.readUpgradeUnitAction(upgradeUnitInput, this.gameBoard, playerId);
         action.simulateApply(this.gameBoard);
         actions.add(action);
 
+    }
+
+    public void conductTrainSpy(List<Action> nonAffectActions, String output) throws InvalidInputException, InvalidActionException {
+        Action action;
+        action = this.readTrySpyAction(output, playerId);
+        action.simulateApply(this.gameBoard);
+        nonAffectActions.add(action);
+    }
+
+    private Action readTrySpyAction(String input, Integer playerId) throws InvalidInputException {
+        List<String> inputs = new ArrayList<>(Arrays.asList(input.split(",")));
+        if (inputs.size() != 2) {
+            throw new InvalidInputException("Invalid input size");
+        }
+        Action action;
+        try {
+            int targetTerritoryId = Integer.parseInt(inputs.get(0));
+            int unitNum = Integer.parseInt(inputs.get(1));
+            action = new TrainSpyAction(playerId, ActionType.TRAIN_SPY, targetTerritoryId, unitNum);
+        } catch (NumberFormatException e) {
+            throw new InvalidInputException("Cannot parse string to valid int");
+        }
+        return action;
     }
 
     /**
@@ -628,6 +667,64 @@ public class ClientController extends WaitPlayerUI {
         return action;
     }
 
+
+    public void conductMoveSpy(List<Action> nonAffectActions, String output) throws InvalidInputException, InvalidActionException {
+        Action action;
+        action = this.readMoveSpy(output, this.gameBoard, playerId);
+        action.simulateApply(gameBoard);
+        nonAffectActions.add(action);
+    }
+
+    private Action readMoveSpy(String output, GameBoard gameBoard, Integer playerId) throws InvalidInputException {
+        List<String> actionInputs = new ArrayList<>(Arrays.asList(output.split(",")));
+        if (actionInputs.size() != 3) {
+            throw new InvalidInputException("Invalid input");
+        }
+
+        //get source and destination information
+        int sourceTerritoryId = Integer.parseInt(actionInputs.get(0));
+        int destTerritoryId = Integer.parseInt(actionInputs.get(1));
+        int num = Integer.parseInt(actionInputs.get(2));
+        Action moveSpy = new MoveSpyAction(playerId, ActionType.MOVE_SPY, sourceTerritoryId, destTerritoryId, num);
+        return moveSpy;
+    }
+
+
+    /**
+     * input in the format "sourceTerritoryId,destinationId,UnitType,amount"
+     *
+     * @param input    input
+     * @param board    board
+     * @param playerId id of the player
+     * @return result action
+     * @throws InvalidInputException when input is invalid
+     */
+    private Action readMissileAttack(String input, GameBoard board, Integer playerId)
+            throws InvalidInputException {
+        List<String> inputs = new ArrayList<>(Arrays.asList(input.split(",")));
+        if (inputs.size() != 2) {
+            throw new InvalidInputException("Invalid input size");
+        }
+        Action action;
+        try {
+            int destinationTerritoryId = Integer.parseInt(inputs.get(0));
+            Territory destinationTerritory = this.gameBoard.findTerritory(destinationTerritoryId);
+            int missileTypeId = Integer.parseInt(inputs.get(1));
+            MissileType missileType = MissileType.getMissileTypeWithTechLevel(missileTypeId);
+            //check if the player still have this kind of missiletype
+            if(this.getMyself().getOwnedTerritories().contains(destinationTerritory)){
+                throw new InvalidInputException("You can not attack your own territory.");
+            }
+//            if(this.getMyself().hasEnoughMissiles(missileType, 1)){
+//                throw new InvalidInputException("This player does not have enough missile of this type.");
+//            }
+            action = new MissileAttackAction(this.playerId, ActionType.MISSILE_ATTACK, destinationTerritoryId, missileType);
+        } catch (NumberFormatException e) {
+            throw new InvalidInputException("Cannot parse string to valid int");
+        }
+        return action;
+    }
+
     /**
      * Check whether the user is win or lost
      *
@@ -684,5 +781,7 @@ public class ClientController extends WaitPlayerUI {
             e.printStackTrace();
         }
     }
+
+
 
 }

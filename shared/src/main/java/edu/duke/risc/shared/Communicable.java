@@ -3,6 +3,7 @@ package edu.duke.risc.shared;
 
 
 import java.io.IOException;
+import java.net.Socket;
 
 /**
  * @author eason
@@ -35,4 +36,6 @@ public interface Communicable {
     public void terminate() throws IOException;
 
     public void sendUrgentData() throws  IOException;
+
+    public Socket getSocket();
 }

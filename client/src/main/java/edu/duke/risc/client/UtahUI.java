@@ -1,12 +1,9 @@
 package edu.duke.risc.client;
 
-import edu.duke.risc.shared.commons.UserColor;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-
-import java.awt.*;
 
 public class UtahUI extends TerritoryUI {
     public UtahUI(Color color) {
@@ -15,14 +12,14 @@ public class UtahUI extends TerritoryUI {
         Button newButton = new javafx.scene.control.Button("Utah(0)");
         setButton(newButton);
         //
-        Rectangle newRect = new Rectangle(350,200,100, 250);
+        Rectangle newRect = new Rectangle(315,290,100, 170);
         newRect.setStyle("-fx-stroke: black; -fx-stroke-width: 3;");
         newRect.setFill(color);
         setRect(newRect);
         //
         StackPane newPane = new StackPane();
-        newPane.setLayoutX(350);
-        newPane.setLayoutY(200);
+        newPane.setLayoutX(315);
+        newPane.setLayoutY(290);
         newPane.getChildren().addAll(newRect, newButton);
         setPane(newPane);
         //

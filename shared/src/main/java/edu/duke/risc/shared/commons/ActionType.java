@@ -33,4 +33,30 @@ public enum ActionType implements Serializable {
      */
     UPGRADE_TECH,
 
+    /**
+     * Attack territory with missile
+     */
+    MISSILE_ATTACK,
+
+    /**
+     * conduct research cloak action
+     */
+    CLOAK_RESEARCH,
+
+    /**
+     * conduct cloak action
+     */
+    CLOAK_CONDUCT,
+
+    /**
+     * train the spies
+     */
+    TRAIN_SPY,
+
+    /**
+     * move the spies
+     */
+    MOVE_SPY,
+
+
 }

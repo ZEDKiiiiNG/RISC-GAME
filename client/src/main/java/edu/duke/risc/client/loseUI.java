@@ -2,7 +2,6 @@ package edu.duke.risc.client;
 
 import edu.duke.risc.shared.Configurations;
 import edu.duke.risc.shared.PayloadObject;
-import edu.duke.risc.shared.board.GameBoard;
 import edu.duke.risc.shared.commons.PayloadType;
 import edu.duke.risc.shared.users.Player;
 import javafx.application.Application;
@@ -21,8 +20,8 @@ public class loseUI extends Application {
     public void start(Stage primaryStage) throws Exception{
 
         Player self = App.cc.getMyself();
+        int gameId = App.cc.getGameId();
         Group g = new Group();//all widgets
-        GameBoard gameBoard = App.cc.getGameBoard();
 
         //introduce text
         String introduce = "player "+self.getColor().toString()+"\n"+
@@ -31,9 +30,6 @@ public class loseUI extends Application {
         intro.setLayoutX(20);
         intro.setLayoutY(50);
         g.getChildren().add(intro);
-
-
-
         //button commit
         javafx.scene.control.Button exit = new javafx.scene.control.Button("exit");
         exit.setLayoutX(50);
@@ -47,8 +43,6 @@ public class loseUI extends Application {
         });
         g.getChildren().add(exit);
 
-
-
         //button observe
         javafx.scene.control.Button observe = new javafx.scene.control.Button("observe");
         observe.setLayoutX(50);
@@ -60,17 +54,14 @@ public class loseUI extends Application {
                 exception.printStackTrace();
             }
         });
-        g.getChildren().add(observe);
+        if(!App.cc.getCommunicator().getSocket().isClosed()){
+            g.getChildren().add(observe);
+        }
 
-        primaryStage.setTitle("Lose");
+        primaryStage.setTitle("Lose(GameID = " + gameId +")");
         primaryStage.setScene(new Scene(g, 400, 300));
         primaryStage.show();
 
-    }
-
-    private void exit() {
-        this.stage.close();
-        System.exit(0);
     }
 
     private void turnToObserve() throws Exception {
@@ -80,10 +71,10 @@ public class loseUI extends Application {
     }
 
     private void exitGame(Player self) throws IOException {
-//        App.cc.setReadExitThread(new ReadExitThread(null, App.cc.getCommunicator(), self.getId()));
-        PayloadObject request = new PayloadObject(self.getId(), Configurations.MASTER_ID, PayloadType.QUIT);
-        App.cc.getCommunicator().writeMessage(request);
-//        App.cc.getReadExitThread().exit();
+        if(!App.cc.getCommunicator().getSocket().isClosed()){
+            PayloadObject request = new PayloadObject(self.getId(), Configurations.MASTER_ID, PayloadType.QUIT);
+            App.cc.getCommunicator().writeMessage(request);
+        }
         System.exit(0);
     }
 
@@ -95,6 +86,5 @@ public class loseUI extends Application {
     public void  showWindow() throws Exception {
         start(stage);
     }
-
 
 }

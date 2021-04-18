@@ -1,7 +1,10 @@
 package edu.duke.risc.shared.board;
 
+import edu.duke.risc.shared.Configurations;
+import edu.duke.risc.shared.commons.MissileType;
 import edu.duke.risc.shared.commons.ResourceType;
 import edu.duke.risc.shared.commons.UnitType;
+import edu.duke.risc.shared.util.MapHelper;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -35,9 +38,19 @@ public class Territory implements Serializable {
     private final Map<UnitType, Integer> unitsMap;
 
     /**
+     * Spies in this territory, key for player id and value for number of spies of that player
+     */
+    private final Map<Integer, Integer> spies;
+
+    /**
      * virtual unitsMap, only for client simulation of attack
      */
     private final Map<UnitType, Integer> virtualUnitsMap;
+
+    /**
+     * virtual missile map, only for client simulation of missile attack action
+     */
+    private final Map<MissileType, Integer> virtualMissileMap;
 
     /**
      * Adjacent territories
@@ -60,6 +73,11 @@ public class Territory implements Serializable {
     private final int size;
 
     /**
+     * Cloaking counting, when 0 the territory is not cloaked
+     */
+    private int cloakingCount;
+
+    /**
      * Constructor
      *
      * @param territoryId   territory id
@@ -76,7 +94,7 @@ public class Territory implements Serializable {
      * @param territoryName territory name
      */
     public Territory(int territoryId, String territoryName, int techProd, int foodProd, int size) {
-        this(territoryId, territoryName, new HashMap<>(), new HashSet<>(), new HashMap<>(),
+        this(territoryId, territoryName, new HashMap<>(), new HashSet<>(), new HashMap<>(), new HashMap<>(),
                 false, techProd, foodProd, size);
     }
 
@@ -92,13 +110,16 @@ public class Territory implements Serializable {
      */
     private Territory(int territoryId, String territoryName, Map<UnitType, Integer> unitsMap,
                       Set<Integer> adjacentTerritories, Map<UnitType, Integer> virtualUnitsMap,
+                      Map<MissileType, Integer> virtualMissileMap,
                       boolean isValid, int techProd, int foodProd, int size) {
         this.territoryId = territoryId;
         this.territoryName = territoryName;
+        this.spies = new HashMap<>();
         this.unitsMap = unitsMap;
         this.adjacentTerritories = adjacentTerritories;
         this.virtualUnitsMap = virtualUnitsMap;
         this.isValid = isValid;
+        this.virtualMissileMap = virtualMissileMap;
         this.productivity = new HashMap<>();
         productivity.put(ResourceType.FOOD, foodProd);
         productivity.put(ResourceType.TECH, techProd);
@@ -118,37 +139,8 @@ public class Territory implements Serializable {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         //print territory info
-        builder.append(territoryName).append("(").append(this.territoryId).append(")").append(System.lineSeparator());
+        builder.append(territoryName).append("(").append(this.territoryId).append(")");
 
-//        //print resources
-//        builder.append("    Productivity: ");
-//        for (Map.Entry<ResourceType, Integer> entry : productivity.entrySet()) {
-//            builder.append(entry.getValue()).append(" ").append(entry.getKey());
-//        }
-//        builder.append(System.lineSeparator());
-//
-//        //print neighbors
-//        builder.append("    ").append(" (next to: ");
-//        for (Integer adjacent : this.adjacentTerritories) {
-//            builder.append(adjacent).append(", ");
-//        }
-//        builder.append(")").append(System.lineSeparator());
-//
-//        //print units in that territory
-//        if (this.isEmptyTerritory()) {
-//            builder.append("No Units ");
-//        } else {
-//            //real units
-//            for (Map.Entry<UnitType, Integer> mapUnit : this.unitsMap.entrySet()) {
-//                builder.append(mapUnit.getValue()).append(" ").append(mapUnit.getKey()).append(" ");
-//            }
-//        }
-//
-//        //virtual units for clients
-//        for (Map.Entry<UnitType, Integer> mapUnit : this.virtualUnitsMap.entrySet()) {
-//            builder.append("(Ready to attack units: ")
-//                    .append(mapUnit.getValue()).append(" ").append(mapUnit.getKey()).append(")");
-//        }
         return builder.toString();
     }
 
@@ -185,7 +177,28 @@ public class Territory implements Serializable {
      * @param diff     difference, -1 for subtract 1,
      */
     public void updateVirtualUnitsMap(UnitType unitType, Integer diff) {
-        this.generalUpdateUnitsMap(this.virtualUnitsMap, unitType, diff);
+        MapHelper.updateMap(this.virtualUnitsMap, unitType, diff);
+    }
+
+    /**
+     * todo Update virtual missile map
+     *
+     * @param missileType missileType
+     * @param diff        difference, -1 for subtract 1,
+     */
+    public void updateVirtualMissileMap(MissileType missileType, Integer diff) {
+        MapHelper.updateMap(virtualMissileMap, missileType, diff);
+    }
+
+    /**
+     * Returns whether the current territory is adjacent to the target territory
+     * If they are the same territory, return false.
+     *
+     * @param target target territory
+     * @return whether the current territory is adjacent to the target territory
+     */
+    public boolean isAdjacentTo(Integer target) {
+        return adjacentTerritories.contains(target);
     }
 
     /**
@@ -195,32 +208,7 @@ public class Territory implements Serializable {
      * @param diff     difference, -1 for subtract 1,
      */
     public void updateUnitsMap(UnitType unitType, Integer diff) {
-        this.generalUpdateUnitsMap(this.unitsMap, unitType, diff);
-    }
-
-    /**
-     * Update units map in this territory. If no more units like this, remove from map
-     *
-     * @param unitType unit type
-     * @param diff     difference, -1 for subtract 1
-     */
-    private void generalUpdateUnitsMap(Map<UnitType, Integer> unitsMap, UnitType unitType, Integer diff) {
-        if (unitsMap.containsKey(unitType)) {
-            int originVal = unitsMap.get(unitType);
-            if (diff >= 0) {
-                unitsMap.put(unitType, diff + originVal);
-            } else {
-                if (originVal + diff <= 0) {
-                    unitsMap.remove(unitType);
-                } else {
-                    unitsMap.put(unitType, diff + originVal);
-                }
-            }
-        } else {
-            if (diff > 0) {
-                unitsMap.put(unitType, diff);
-            }
-        }
+        MapHelper.updateMap(this.unitsMap, unitType, diff);
     }
 
     /**
@@ -243,6 +231,26 @@ public class Territory implements Serializable {
     }
 
     /**
+     * Whether this territory has spies of specific player
+     *
+     * @param playerId specific player
+     * @return Whether this territory has spies of specific player
+     */
+    public boolean containsSpies(Integer playerId) {
+        return this.spies.containsKey(playerId);
+    }
+
+    /**
+     * Get the number of spies of specific player in this territory
+     *
+     * @param playerId specific player
+     * @return number of spies of specific player in this territory
+     */
+    public Integer getNumberOfSpies(Integer playerId) {
+        return this.spies.getOrDefault(playerId, 0);
+    }
+
+    /**
      * Whether this territory contains unit type
      *
      * @param unitType unitType
@@ -250,6 +258,16 @@ public class Territory implements Serializable {
      */
     public boolean containsUnitType(UnitType unitType) {
         return unitsMap.containsKey(unitType);
+    }
+
+    /**
+     * Whether this territory contains unit type
+     *
+     * @param unitType unitType
+     * @return Whether this territory contains unit type
+     */
+    public Integer getUnitsNumber(UnitType unitType) {
+        return unitsMap.getOrDefault(unitType, 0);
     }
 
     /**
@@ -271,31 +289,130 @@ public class Territory implements Serializable {
         return unitsMap;
     }
 
+    /**
+     * getAdjacentTerritories
+     *
+     * @return getAdjacentTerritories
+     */
     public Set<Integer> getAdjacentTerritories() {
         return adjacentTerritories;
     }
 
+    /**
+     * Get total number of units in this territory
+     *
+     * @return total number of units in this territory
+     */
+    public Integer getTotalNumberOfUnits() {
+        int count = 0;
+        for(Integer temp : this.unitsMap.values()){
+            count += temp;
+        }
+        return count;
+    }
+
+    /**
+     * getTerritoryId
+     *
+     * @return getTerritoryId
+     */
     public int getTerritoryId() {
         return territoryId;
     }
 
+    /**
+     * getVirtualUnitsMap
+     *
+     * @return getVirtualUnitsMap
+     */
     public Map<UnitType, Integer> getVirtualUnitsMap() {
         return virtualUnitsMap;
     }
 
+    /**
+     * setValid
+     *
+     * @param valid setValid
+     */
     public void setValid(boolean valid) {
         isValid = valid;
     }
 
+    /**
+     * get valid
+     *
+     * @return valid
+     */
     public boolean isValid() {
         return isValid;
     }
 
+    /**
+     * get territory size (cost)
+     *
+     * @return territory size (cost)
+     */
     public int getSize() {
         return size;
     }
 
+    /**
+     * Get productivity
+     *
+     * @return productivity
+     */
     public Map<ResourceType, Integer> getProductivity() {
         return productivity;
     }
+
+    /**
+     * Whether the territory has cloaks on it
+     *
+     * @return Whether the territory has cloaks on it
+     */
+    public boolean hasCloaks() {
+        return this.cloakingCount > 0;
+    }
+
+    /**
+     * updateInitUnitMap
+     *
+     * @param playerId territoryId
+     * @param diff     either add or subtract
+     */
+    public void updateSpiesMap(Integer playerId, Integer diff) {
+        MapHelper.updateMap(this.spies, playerId, diff);
+    }
+
+    /**
+     * reduce cloak in this territory
+     */
+    public void reduceCloaks() {
+        if (cloakingCount > 0) {
+            cloakingCount -= 1;
+        }
+    }
+
+    /**
+     * Enables cloaking
+     */
+    public void enableCloaking() {
+        cloakingCount = Configurations.DEFAULT_INIT_CLOAKING;
+    }
+
+    /**
+     * reset cloak in this territory (to zero)
+     */
+    public void resetCloak() {
+        cloakingCount = 0;
+    }
+
+    /**
+     * Get spies map
+     * @return spies map of the territory
+     */
+    public Map<Integer, Integer> getSpies() {
+        return spies;
+    }
+
 }

@@ -10,9 +10,7 @@ import edu.duke.risc.shared.users.GameUser;
 import edu.duke.risc.shared.users.Master;
 import edu.duke.risc.shared.users.Player;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -32,8 +30,8 @@ import static java.lang.Thread.sleep;
  * @author eason
  * @date 2021/3/10 0:01
  */
-public class GameController {
-
+public class GameController implements Serializable {
+    //private static final long serialVersionUID = 1L;
     /**
      * The game board
      */
@@ -57,33 +55,33 @@ public class GameController {
     /**
      * Player connections
      */
-    private final Map<Player, SocketCommunicator> playerConnections;
+    private transient Map<Player, SocketCommunicator> playerConnections;
 
     /**
      * Cyclic barrier
      */
-    private final ThreadBarrier barrier;
+    private transient ThreadBarrier barrier;
 
     /**
      * The buffered reader who reads input from the console
      */
-    private final BufferedReader reader;
+    private transient BufferedReader reader;
 
 
     /**
      * Maximum number of players
      */
-    private int maxPlayer;
+    private final int maxPlayer;
 
     /**
      * id with corresponding communicator
      */
-    private final Map<String, SocketCommunicator> userConnections;;
+    private transient Map<String, SocketCommunicator> userConnections;
 
     /**
      * id with corresponding player
      */
-    private Map<String, Player> idMap;
+    private final Map<String, Player> idMap;
 
 
     /**
@@ -91,12 +89,15 @@ public class GameController {
      */
     private int gameId;
 
-
-
     /**
      * stage of the controller
      */
     private String stage;
+
+    /**
+     * status of the
+     */
+    private boolean isStart;
 
     /**
      * Constructor
@@ -118,11 +119,60 @@ public class GameController {
 //            e.printStackTrace();
 //        }
     }
+    public GameController( GameBoard board,int gameId, int maxPlayer,GameUser root,ThreadBarrier barrier, Map<Player, SocketCommunicator> playerConnections, Map<String, Player> idMap, Map<String, SocketCommunicator> userConnections,String stage) {
+        this.board = board;
+        this.barrier = barrier;
+        this.root = root;
+        this.playerConnections = playerConnections;
+        this.idMap = idMap;
+        this.userConnections = userConnections;
+        this.reader = new BufferedReader(new InputStreamReader(System.in));
+        this.gameId = gameId;
+        this.maxPlayer = maxPlayer;
+        this.addColors();
+        this.stage = stage;
+        this.isStart = false;
+//        try {
+//            serverSocket = new ServerSocket(Configurations.DEFAULT_SERVER_PORT);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+    }
+
+    public void save() throws IOException, ClassNotFoundException {
+        //序列化持久化对象
+        File file = new File("gamecontoller"+gameId+".txt");
+//        File file = new File("test.txt");
+        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file));
+        GameController gameController = new GameController(this.board, this.gameId, this.maxPlayer, this.root,this.barrier, this.playerConnections, this.idMap, this.userConnections, this.stage);
+        //BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+        out.writeObject(gameController);
+        out.close();
+        //test
+//        ObjectInputStream in = new ObjectInputStream(new FileInputStream(file));
+//        Object test = in.readObject(); // 没有强制转换到GC类型
+//        in.close();
+//        System.out.println(test);
+//        System.out.println(((GameBoard) test).getPlayers());
+    }
+
+    public static GameController load(int id) throws IOException, ClassNotFoundException {
+        //序列化持久化对象
+        File file = new File("gamecontoller"+id+".txt");
+        //反序列化，并得到对象
+        ObjectInputStream in = new ObjectInputStream(new FileInputStream(file));
+        Object newgameController = in.readObject(); // 没有强制转换到GC类型
+        in.close();
+        GameController result = (GameController) newgameController;
+//        System.out.println(newgameController);
+        result.setAfterLoad();
+        return result;
+    }
     public void run() {
         try {
             this.startGame();
         }
-        catch(IOException | InterruptedException e){
+        catch(IOException | InterruptedException | ClassNotFoundException e){
             e.printStackTrace();
         }
     }
@@ -132,12 +182,12 @@ public class GameController {
      *
      * @throws IOException IOException
      */
-    public void startGame() throws IOException, InterruptedException {
+    public void startGame() throws IOException, InterruptedException, ClassNotFoundException {
         this.initWorld();
         this.waitPlayers();
-        this.stage = STAGE_ASSIGN;
+
         this.placementPhase();
-        this.stage = STAGE_MOVE;
+
         this.moveAttackPhase();
         this.stage = GAMEFINISHED;
     }
@@ -146,6 +196,9 @@ public class GameController {
      * Read the user input and initialize the world according to number of players
      */
     private void initWorld() {
+        if(!this.stage.equals(STAGE_CREATE)){
+            return;
+        }
 //        while (true) {
 //            System.out.println("Please enter number of players (2-5)");
 //            try {
@@ -171,7 +224,10 @@ public class GameController {
      *
      * @throws IOException IOException
      */
-    private void placementPhase() throws IOException {
+    private void placementPhase() throws IOException, ClassNotFoundException {
+        if(!this.stage.equals(STAGE_ASSIGN)){
+            return;
+        }
         int numberOfRequestRequired = this.board.getShouldWaitPlayers();
         List<Action> cacheActions = new ArrayList<>();
         while (numberOfRequestRequired > 0) {
@@ -204,8 +260,10 @@ public class GameController {
                 System.out.println(e.getMessage());
             }
         }
-        //todo create logger here
+        this.board.updateTerritoryCacheMapForPlayers();
         broadcastUpdatedMaps("", PayloadType.UPDATE);
+        this.stage = STAGE_MOVE;
+        save();
     }
 
     /**
@@ -213,14 +271,21 @@ public class GameController {
      *
      * @throws IOException IOException
      */
-    private void moveAttackPhase() throws IOException {
+    private void moveAttackPhase() throws IOException, ClassNotFoundException {
+        if(this.stage.equals(GAMEFINISHED)){
+            this.terminateProcess("GAME has already finished");
+            return;
+        }
+        if(!this.stage.equals(STAGE_MOVE)){
+            return;
+        }
+
         while (true) {
             this.board.setGameStart();
             int numberOfRequestRequired = this.board.getShouldWaitPlayers();
-            List<Action> moveCacheActions = new ArrayList<>();
-            List<Action> attackCacheActions = new ArrayList<>();
-            List<Action> upgradeUnitsCacheActions = new ArrayList<>();
-            List<Action> upgradeTechCacheActions = new ArrayList<>();
+            List<Action> nonAffectActionCache = new ArrayList<>();
+            List<Action> attackActionCache = new ArrayList<>();
+            List<Action> missileAttackActionCache = new ArrayList<>();
             StringBuilder logger = getLogger();
             while (numberOfRequestRequired > 0) {
                 PayloadObject request = this.barrier.consumeRequest();
@@ -230,41 +295,29 @@ public class GameController {
                 //validate move_attack_request
                 if (request.getMessageType() != PayloadType.REQUEST
                         || request.getReceiver() != this.root.getId()
-                        || !request.getContents().containsKey(Configurations.REQUEST_MOVE_ACTIONS)
+                        || !request.getContents().containsKey(Configurations.REQUEST_NON_AFFECT_ACTIONS)
+                        || !request.getContents().containsKey(Configurations.REQUEST_MISSILE_ATTACK_ACTIONS)
                         || !request.getContents().containsKey(Configurations.REQUEST_ATTACK_ACTIONS)) {
                     sendBackErrorMessage(request, "Invalid request type");
                     continue;
                 }
-                List<Action> moveActions =
-                        (List<Action>) request.getContents().get(Configurations.REQUEST_MOVE_ACTIONS);
                 List<Action> attackActions =
                         (List<Action>) request.getContents().get(Configurations.REQUEST_ATTACK_ACTIONS);
-                List<Action> upgradeUnitsAction =
-                        (List<Action>) request.getContents().get(Configurations.REQUEST_UPGRADE_UNITS_ACTIONS);
-                List<Action> upgradeTechAction =
-                        (List<Action>) request.getContents().get(Configurations.REQUEST_UPGRADE_TECH_ACTIONS);
+                List<Action> missileAttackAction =
+                        (List<Action>) request.getContents().get(REQUEST_MISSILE_ATTACK_ACTIONS);
+                List<Action> nonAffectActions =
+                        (List<Action>) request.getContents().get(Configurations.REQUEST_NON_AFFECT_ACTIONS);
                 //validate success, response the client with success message and continues the next request
-                moveCacheActions.addAll(moveActions);
-                attackCacheActions.addAll(attackActions);
-                upgradeUnitsCacheActions.addAll(upgradeUnitsAction);
-                upgradeTechCacheActions.addAll(upgradeTechAction);
+
+                attackActionCache.addAll(attackActions);
+                missileAttackActionCache.addAll(missileAttackAction);
+                nonAffectActionCache.addAll(nonAffectActions);
                 numberOfRequestRequired -= 1;
             }
             //with all requests received, process them simultaneously
 
-            //conduct upgrade tech actions
-            for (Action action : upgradeTechCacheActions) {
-                try {
-                    String result = action.apply(this.board);
-                    logger.append(result);
-                } catch (InvalidActionException e) {
-                    //simply ignore this
-                    logger.append("FAILED: ").append(action).append(e.getMessage()).append(System.lineSeparator());
-                }
-            }
-
-            //first conduct upgrade units actions
-            for (Action action : upgradeUnitsCacheActions) {
+            //then conduct non-affective actions
+            for (Action action : nonAffectActionCache) {
                 try {
                     String result = action.apply(this.board);
                     logger.append(result);
@@ -275,7 +328,7 @@ public class GameController {
             }
 
             //then conduct move actions
-            for (Action action : moveCacheActions) {
+            for (Action action : missileAttackActionCache) {
                 try {
                     String result = action.apply(this.board);
                     logger.append(result);
@@ -286,7 +339,7 @@ public class GameController {
             }
 
             //then conduct attack actions
-            List<Action> validAttackList = attackCacheActions.stream().filter((action -> {
+            List<Action> validAttackList = attackActionCache.stream().filter((action -> {
                 String error;
                 if ((error = action.isValid(board)) != null) {
                     logger.append("FAILED: ").append(action).append(" : ").append(error).append(System.lineSeparator());
@@ -316,10 +369,7 @@ public class GameController {
                 }
             }
 
-            //grow the territories owned by players
-            String growResult = this.board.territoryGrow();
-
-            logger.append(growResult);
+            logger.append(this.board.endOfTurnActions());
             System.out.println(logger.toString());
 
             if (this.checkAndUpdatePlayerStatus()) {
@@ -328,6 +378,7 @@ public class GameController {
             } else {
                 broadcastUpdatedMaps(logger.toString(), PayloadType.UPDATE);
             }
+            save();
         }
     }
 
@@ -368,7 +419,10 @@ public class GameController {
      *
      * @throws IOException IOException
      */
-    private void waitPlayers() throws IOException, InterruptedException {
+    private void waitPlayers() throws IOException, InterruptedException, ClassNotFoundException {
+        if(!this.stage.equals(STAGE_CREATE)){
+            return;
+        }
 //        while (this.board.getPlayers().size() < maxPlayer) {
 //            int playerIndex = playerConnections.size();
 //            System.out.println("Waiting for " + (maxPlayer - playerIndex)
@@ -394,6 +448,8 @@ public class GameController {
         this.board.forwardPlacementPhase();
         //share game map with every player
         broadcastUpdatedMaps("", PayloadType.UPDATE);
+        this.stage = STAGE_ASSIGN;
+        save();
     }
 
 
@@ -569,5 +625,20 @@ public class GameController {
 
     public Map<String, SocketCommunicator> getUserConnections() {
         return userConnections;
+    }
+
+    public void setStart(boolean start) {
+        isStart = start;
+    }
+
+    public boolean isStart() {
+        return isStart;
+    }
+
+    public void setAfterLoad(){
+        this.barrier = new ThreadBarrier(maxPlayer);
+        this.reader =  new BufferedReader(new InputStreamReader(System.in));
+        this.userConnections = new HashMap<>();
+        this.playerConnections = new HashMap<>();
     }
 }
