@@ -369,13 +369,7 @@ public class GameController implements Serializable {
                 }
             }
 
-            //grow the territories owned by players
-            String growResult = this.board.territoryGrow();
-
-            //reduce cloaking on every single territory
-            logger.append(board.reduceCloaking());
-
-            logger.append(growResult);
+            logger.append(this.board.endOfTurnActions());
             System.out.println(logger.toString());
 
             if (this.checkAndUpdatePlayerStatus()) {

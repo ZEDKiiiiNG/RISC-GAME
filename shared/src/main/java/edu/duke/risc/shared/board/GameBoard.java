@@ -394,17 +394,49 @@ public class GameBoard implements Serializable {
     public String reduceCloaking() {
         List<Integer> reduced = new ArrayList<>();
         for (Territory territory : territories.values()) {
-            if (territory.hasCloaks()){
+            if (territory.hasCloaks()) {
                 territory.reduceCloaks();
                 reduced.add(territory.getTerritoryId());
             }
         }
         StringBuilder result = new StringBuilder("Reducing cloak on territory: ");
-        for (Integer i : reduced){
+        for (Integer i : reduced) {
             result.append(i).append(", ");
         }
         result.append(System.lineSeparator());
         return result.toString();
     }
+
+    /**
+     * updateTerritoryCacheMapForPlayers
+     */
+    public void updateTerritoryCacheMapForPlayers() {
+        for (Player player : this.players.values()) {
+            for (Territory territory : this.territories.values()) {
+                if (territory.isValid() && isTerritoryVisible(player.getId(), territory.getTerritoryId())) {
+                    player.updateTerritoryInfoCacheMap(territory.getTerritoryId(),
+                            displayer.displaySingleTerritory(this, territory));
+                }
+            }
+        }
+    }
+
+    /**
+     * Conduct actions on the end of the turn
+     *
+     * @return action logs
+     */
+    public String endOfTurnActions() {
+        StringBuilder logger = new StringBuilder();
+        //grow the territories owned by players
+        String growResult = this.territoryGrow();
+        //reduce cloaking on every single territory
+        logger.append(this.reduceCloaking());
+        //update territory cache information for each player
+        updateTerritoryCacheMapForPlayers();
+        logger.append(growResult);
+        return logger.toString();
+    }
+
 
 }
