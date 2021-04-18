@@ -166,6 +166,19 @@ public class Player implements GameUser, Serializable {
                     .append(unitTypeIntegerEntry.getValue())
                     .append(System.lineSeparator());
         }
+
+        //print spy info
+        if (this.spiesMap.isEmpty()) {
+            builder.append("You do not have spy yet").append(System.lineSeparator());
+        } else {
+            builder.append("You have spies: ");
+            for (Map.Entry<Integer, Integer> entry : this.spiesMap.entrySet()) {
+                builder.append(entry.getValue()).append(" spies in territory ")
+                        .append(entry.getKey()).append(",");
+            }
+            builder.append(System.lineSeparator());
+        }
+
         return builder.toString();
     }
 
@@ -568,6 +581,7 @@ public class Player implements GameUser, Serializable {
 
     /**
      * getTerritoryInfoCacheMap
+     *
      * @param territoryId territoryId
      * @return null if not exist
      */

@@ -65,16 +65,16 @@ public class TextDisplayer implements Displayable {
         builder.append(System.lineSeparator());
 
         //add spies here
-        builder.append(" Spies: ");
-        if (territory.getSpies().isEmpty()) {
-            builder.append(" No Spies");
-        } else {
-            for (Map.Entry<Integer, Integer> entry : territory.getSpies().entrySet()) {
-                builder.append(" Player ").append(entry.getKey())
-                        .append(" with ").append(entry.getValue()).append(", ");
-            }
-        }
-        builder.append(System.lineSeparator());
+//        builder.append(" Spies: ");
+//        if (territory.getSpies().isEmpty()) {
+//            builder.append(" No Spies");
+//        } else {
+//            for (Map.Entry<Integer, Integer> entry : territory.getSpies().entrySet()) {
+//                builder.append(" Player ").append(entry.getKey())
+//                        .append(" with ").append(entry.getValue()).append(", ");
+//            }
+//        }
+//        builder.append(System.lineSeparator());
 
         //print units in that territory
         builder.append("    Current Units: ");
