@@ -260,7 +260,7 @@ public class GameController implements Serializable {
                 System.out.println(e.getMessage());
             }
         }
-        //todo create logger here
+        this.board.updateTerritoryCacheMapForPlayers();
         broadcastUpdatedMaps("", PayloadType.UPDATE);
         this.stage = STAGE_MOVE;
         save();
