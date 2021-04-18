@@ -24,7 +24,7 @@ import java.util.*;
 public class actionChoose extends Application  {
     Stage stage=new Stage();
     String scrollText = "Please choose the action you want to take in this roll.\n" +
-            "Do not commit until you finish all actions.";;
+            "Do not commit until you finish all actions.";
 //    private observerUI obeserver;
 //    private winUI win;
     private loseUI lose;
