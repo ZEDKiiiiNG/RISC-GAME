@@ -414,8 +414,11 @@ public class GameBoard implements Serializable {
         for (Player player : this.players.values()) {
             for (Territory territory : this.territories.values()) {
                 if (territory.isValid() && isTerritoryVisible(player.getId(), territory.getTerritoryId())) {
+                    Integer ownerId = this.findPlayerOwnsTerritory(territory.getTerritoryId());
+                    String oldInfo = "Obsolete Info" + System.lineSeparator()
+                             + " Owned by " + findPlayer(ownerId).getColor() +  " player" + System.lineSeparator();
                     player.updateTerritoryInfoCacheMap(territory.getTerritoryId(),
-                            displayer.displaySingleTerritory(this, territory));
+                            oldInfo + displayer.displaySingleTerritory(this, territory));
                 }
             }
         }
