@@ -17,6 +17,11 @@ public class winUI extends Application {
     public void start(Stage primaryStage) throws Exception{
 
         Player self = App.cc.getMyself();
+        startWinUI(primaryStage, self);
+
+    }
+
+    public void startWinUI(Stage primaryStage, Player self){
         Group g = new Group();//all widgets
 
         //introduce text
@@ -43,10 +48,9 @@ public class winUI extends Application {
         primaryStage.setTitle("Win");
         primaryStage.setScene(new Scene(g, 400, 300));
         primaryStage.show();
-
     }
 
-    private void exitGame() throws IOException {
+    public void exitGame() throws IOException {
         System.exit(0);
     }
 

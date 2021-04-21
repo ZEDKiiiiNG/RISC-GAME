@@ -32,6 +32,13 @@ public class observerUI extends Application{
         Player self = App.cc.getMyself();
         GameBoard gameBoard = App.cc.getGameBoard();
         Map<Integer, Player> players = gameBoard.getPlayers();
+        int gameId = App.cc.getGameId();
+        startObserver(primaryStage, territoryIds, self, gameBoard, players, gameId);
+
+    }
+
+    public void startObserver(Stage primaryStage, Map<Integer, Color> territoryIds, Player self,
+                              GameBoard gameBoard, Map<Integer, Player> players, int gameId) throws Exception {
         for (Map.Entry<Integer, Player> entry : players.entrySet()) {
             Player player = entry.getValue();
             for (Integer territoryId : player.getOwnedTerritories()) {
@@ -86,18 +93,28 @@ public class observerUI extends Application{
         g1.getChildren().add(exit);
         Scene techScene = new Scene(g1, 1000, 620);
         primaryStage.setScene(techScene);
-        primaryStage.setTitle("Now in observer mode, you can exit anytime. (GameID = " + App.cc.getGameId()+")");
+        primaryStage.setTitle("Now in observer mode, you can exit anytime. (GameID = " + gameId+")");
         primaryStage.show();
-        updateObserver();
-    }
-
-    public void updateObserver() throws Exception {
         while (true) {
             App.cc.waitAndReadServerResponse();
-            scrollText = App.cc.getLoggerInfo();
+            showSecondWindow(App.cc.getLoggerInfo());
             this.showWindow();
         }
     }
+
+
+    public void showSecondWindow(String introduce){
+        Text a = new Text(introduce);
+        a.setLayoutX(50);
+        a.setLayoutY(100);
+        Group g= new Group();
+        g.getChildren().add(a);
+        Stage secondStage = new Stage();
+        Scene techScene = new Scene(g, 400, 300);
+        secondStage.setScene(techScene);
+        secondStage.showAndWait();
+    }
+
 
     public ScrollPane getScrollPane(){
         ScrollPane scroll = new ScrollPane();
@@ -112,7 +129,7 @@ public class observerUI extends Application{
         return scroll;
     }
 
-    private void exitGame(Player self) throws IOException {
+    public void exitGame(Player self) throws IOException {
         PayloadObject request = new PayloadObject(self.getId(), Configurations.MASTER_ID, PayloadType.QUIT);
         App.cc.getCommunicator().writeMessage(request);
         System.exit(0);
