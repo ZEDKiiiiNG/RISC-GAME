@@ -21,6 +21,11 @@ public class loseUI extends Application {
 
         Player self = App.cc.getMyself();
         int gameId = App.cc.getGameId();
+        startLoseUI(primaryStage, self, gameId);
+
+    }
+
+    public void startLoseUI(Stage primaryStage, Player self, int gameId){
         Group g = new Group();//all widgets
 
         //introduce text
@@ -61,16 +66,15 @@ public class loseUI extends Application {
         primaryStage.setTitle("Lose(GameID = " + gameId +")");
         primaryStage.setScene(new Scene(g, 400, 300));
         primaryStage.show();
-
     }
 
-    private void turnToObserve() throws Exception {
+    public  void turnToObserve() throws Exception {
         this.stage.close();
         observer = new observerUI();
         observer.showWindow();
     }
 
-    private void exitGame(Player self) throws IOException {
+    public void exitGame(Player self) throws IOException {
         if(!App.cc.getCommunicator().getSocket().isClosed()){
             PayloadObject request = new PayloadObject(self.getId(), Configurations.MASTER_ID, PayloadType.QUIT);
             App.cc.getCommunicator().writeMessage(request);
